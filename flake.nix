@@ -36,6 +36,7 @@
           go_1_26
           zig
           pkg-config
+          upx
         ];
 
         buildInputs = with staticPkgs; [
@@ -78,9 +79,6 @@
           preBuild = ''
             export CGO_CFLAGS="$(pkg-config --cflags x11 xinerama xft xrender imlib2)"
             export CGO_LDFLAGS="$(pkg-config --libs --static x11 xinerama xft xrender imlib2)"
-            if [ ! -f internal/core/config.h ]; then
-              cp internal/core/config.def.h internal/core/config.h
-            fi
           '';
 
           ldflags = [
