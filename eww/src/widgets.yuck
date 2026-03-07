@@ -1,8 +1,0 @@
-; radial progress bar
-(defwidget progressBar [value text class ?boxstyle]
-  (circular-progress :class class 
-    :value value 
-    :thickness 5
-    (box  :style boxstyle text)
-   )
-)

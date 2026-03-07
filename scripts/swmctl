@@ -1,0 +1,36 @@
+#!/usr/bin/env dash
+
+# Target for signaling the bar refresh
+BAR_NAME="swm_bar"
+
+subcommand=$1
+action=$2
+value=$3
+
+case "$subcommand" in
+    volume)
+        case "$action" in
+            up)   wpctl set-volume @DEFAULT_AUDIO_SINK@ "$value%+" ;;
+            down) wpctl set-volume @DEFAULT_AUDIO_SINK@ "$value%-" ;;
+            mute) wpctl set-mute @DEFAULT_AUDIO_SINK@ toggle ;;
+        esac
+        ;;
+    brightness)
+        case "$action" in
+            up)   brightnessctl set "+$value%" ;;
+            down) brightnessctl set "$value%-" ;;
+        esac
+        ;;
+    quit)
+        rm -f /tmp/swm.lock
+        pkill -9 -f "$BAR_NAME"
+        pkill -TERM swm
+        exit 0
+        ;;
+    launcher)
+        rofi -show drun -theme $HOME/.config/rofi/launcher.rasi
+        ;;
+esac
+
+# Signal the bar to update the UI immediately
+pkill -ALRM -f "$BAR_NAME"
