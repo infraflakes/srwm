@@ -5,6 +5,7 @@ import (
 	"fmt"
 	"net"
 
+	"github.com/nixuris/srwm/internal/config"
 	"github.com/nixuris/srwm/internal/core"
 )
 
@@ -22,6 +23,8 @@ func handleConnection(conn net.Conn) {
 			fmt.Println("control: received restart request")
 			core.Restart()
 			return
+		case "refresh":
+			config.NotifyBarRefresh()
 		default:
 			fmt.Printf("control: unknown command received: %q\n", command)
 		}
