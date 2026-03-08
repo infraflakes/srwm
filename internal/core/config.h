@@ -8,11 +8,7 @@
 static const unsigned int borderpx = 0; /* border pixel of windows */
 static const unsigned int default_border = 0; /* to switch back to default border after dynamic border resizing via keybinds */
 static const unsigned int snap = 32;     /* snap pixel */
-static const unsigned int gap_value = 0; /* horiz inner gap between windows */
-static const unsigned int gappih = gap_value; /* horiz inner gap between windows */
-static const unsigned int gappiv = gap_value; /* vert inner gap between windows */
-static const unsigned int gappoh = gap_value; /* horiz outer gap between windows and screen edge */
-static const unsigned int gappov = gap_value; /* vert outer gap between windows and screen edge */
+static const unsigned int gaps = 0; /* set up gaps */
 static const unsigned int systraypinning = 0;   /* 0: sloppy systray follows selected monitor, >0: pin systray to monitor X */
 static const unsigned int systrayspacing = 2; /* systray spacing */
 static const int showsystray = 1; /* 0 means no systray */
@@ -91,6 +87,7 @@ static unsigned int prevtag(void);
 #define SHCMD(cmd) {.v = (const char*[]) { "sh", "-c", cmd, NULL }}
 static const Key keys[] = {
 
+    {MODKEY, XK_q, killclient, {0}},
     {MODKEY | ALTKEY, XK_s, spawn, SHCMD("flameshot full")},
     {MODKEY | ShiftMask, XK_s, spawn, SHCMD("flameshot gui")},
     {MODKEY, XK_space, spawn, SHCMD("srwmctl launcher")},

@@ -391,10 +391,7 @@ struct Monitor {
   int ty;             /* tab bar geometry */
   int mx, my, mw, mh; /* screen size */
   int wx, wy, ww, wh; /* window area  */
-  int gappih;         /* horizontal gap between windows */
-  int gappiv;         /* vertical gap between windows */
-  int gappoh;         /* horizontal outer gaps */
-  int gappov;         /* vertical outer gaps */
+  int gap;            /* gap value */
   unsigned int borderpx;
   unsigned int seltags;
   unsigned int tagset[2];
@@ -532,21 +529,21 @@ void arrangemon(Monitor* m) {
 
   updatebarpos(m);
   updatesystray();
-  XMoveWindow(dpy, m->tagwin, m->wx + m->gappov, m->by);
+  XMoveWindow(dpy, m->tagwin, m->wx + m->gap, m->by);
 
   /* Position tab bar - always below status bar */
   m->ty = m->my + bh;
-  m->wy = m->my + bh + th + m->gappoh;
-  m->wh = m->mh - bh - th - m->gappoh;
-  XMoveResizeWindow(dpy, m->tabwin, m->wx + m->gappov, m->ty,
-                    m->ww - 2 * m->gappov, th);
+  m->wy = m->my + bh + th + m->gap;
+  m->wh = m->mh - bh - th - m->gap;
+  XMoveResizeWindow(dpy, m->tabwin, m->wx + m->gap, m->ty,
+                    m->ww - 2 * m->gap, th);
 
   /* Arrange all tiled windows in fullscreen style */
   for (c = nexttiled(m->clients); c; c = nexttiled(c->next)) {
-    newx = m->wx + m->gappov - c->bw;
-    newy = m->wy + m->gappoh - c->bw;
-    neww = m->ww - 2 * (m->gappov + c->bw);
-    newh = m->wh - 2 * (m->gappoh + c->bw);
+    newx = m->wx + m->gap - c->bw;
+    newy = m->wy + m->gap - c->bw;
+    neww = m->ww - 2 * (m->gap + c->bw);
+    newh = m->wh - 2 * (m->gap + c->bw);
 
     applysizehints(c, &newx, &newy, &neww, &newh, 0);
 
@@ -624,7 +621,7 @@ void buttonpress(XEvent* e) {
       click = ClkTabBar;
       arg.ui = i;
     } else {
-      x = selmon->ww - 2 * m->gappov;
+      x = selmon->ww - 2 * m->gap;
       for (loop = 2; loop >= 0; loop--) {
         x -= selmon->tab_btn_w[loop];
         if (ev->x > x) break;
@@ -889,10 +886,7 @@ Monitor* createmon(void) {
   m->toptab = toptab;
   m->ntabs = 0;
   m->colorfultag = colorfultag ? colorfultag : 0;
-  m->gappih = gappih;
-  m->gappiv = gappiv;
-  m->gappoh = gappoh;
-  m->gappov = gappov;
+  m->gap = gaps;
   m->borderpx = borderpx;
   for (i = 0; i < LENGTH(tags); i++) m->tagmap[i] = 0;
   m->previewshow = 0;
@@ -974,8 +968,8 @@ int drawstatusbar(Monitor* m, int bh, char* stext) {
   text = p;
 
   w += horizpadbar;
-  ret = x = m->ww - m->gappov * 2 - borderpx - w;
-  x = m->ww - m->gappov * 2 - borderpx - w - getsystraywidth();
+  ret = x = m->ww - m->gap * 2 - borderpx - w;
+  x = m->ww - m->gap * 2 - borderpx - w - getsystraywidth();
 
   drw_setscheme(drw, scheme[LENGTH(colors)]);
   drw->scheme[ColFg] = scheme[SchemeNorm][ColFg];
@@ -1079,14 +1073,14 @@ void tagtoprev(const Arg* arg) {
 void drawbar(Monitor* m) {
   int x, y = borderpx, w, stw = 0;
   int bh_n = bh - borderpx * 2;
-  int mw = m->ww - m->gappov * 2 - borderpx * 2;
+  int mw = m->ww - m->gap * 2 - borderpx * 2;
   int boxs = drw->fonts->h / 9;
   int boxw = drw->fonts->h / 6 + 2;
   unsigned int i, occ = 0, urg = 0;
   Client* c;
 
   XSetForeground(drw->dpy, drw->gc, clrborder.pixel);
-  XFillRectangle(drw->dpy, drw->drawable, drw->gc, 0, 0, m->ww - m->gappov * 2,
+  XFillRectangle(drw->dpy, drw->drawable, drw->gc, 0, 0, m->ww - m->gap * 2,
                  bh);
 
   if (showsystray && m == systraytomon(m)) stw = getsystraywidth();
@@ -1138,7 +1132,7 @@ void drawbar(Monitor* m) {
         drw_rect(drw, x + boxs, boxs, boxw, boxw, m->sel->isfixed, 0);
     } else {
       drw_setscheme(drw, scheme[SchemeNorm]);
-      drw_rect(drw, x, y, w - m->gappov * 2, bh_n, 1, 1);
+      drw_rect(drw, x, y, w - m->gap * 2, bh_n, 1, 1);
     }
   }
   drw_map(drw, m->barwin, 0, 0, m->ww - stw, bh);
@@ -1270,7 +1264,7 @@ void drawtab(Monitor* m) {
   int maxsize = bh;
   int x = 0;
   int w = 0;
-  int mw = m->ww - 2 * m->gappov;
+  int mw = m->ww - 2 * m->gap;
   buttons_w += TEXTW(btn_prev) - lrpad + horizpadtabo;
   buttons_w += TEXTW(btn_next) - lrpad + horizpadtabo;
   buttons_w += TEXTW(btn_close) - lrpad + horizpadtabo;
@@ -2044,9 +2038,9 @@ void resize(Client* c, int x, int y, int w, int h, int interact) {
 }
 
 void resizebarwin(Monitor* m) {
-  unsigned int w = m->ww - 2 * m->gappov;
+  unsigned int w = m->ww - 2 * m->gap;
   if (showsystray && m == systraytomon(m)) w -= getsystraywidth();
-  XMoveResizeWindow(dpy, m->barwin, m->wx + m->gappov, m->by, w, bh);
+  XMoveResizeWindow(dpy, m->barwin, m->wx + m->gap, m->by, w, bh);
 }
 
 void resizeclient(Client* c, int x, int y, int w, int h) {
@@ -2520,8 +2514,8 @@ void togglebar(const Arg* arg) {
     if (!selmon->showbar)
       wc.y = -bh;
     else if (selmon->showbar) {
-      wc.y = selmon->gappoh;
-      if (!selmon->topbar) wc.y = selmon->mh - bh + selmon->gappoh;
+      wc.y = selmon->gap;
+      if (!selmon->topbar) wc.y = selmon->mh - bh + selmon->gap;
     }
     XConfigureWindow(dpy, systray->win, CWY, &wc);
   }
@@ -2655,14 +2649,14 @@ void updatebars(void) {
     w = m->ww;
     if (showsystray && m == systraytomon(m)) w -= getsystraywidth();
     m->barwin = XCreateWindow(
-        dpy, root, m->wx + m->gappov, m->by, w - 2 * m->gappov, bh, 0,
+        dpy, root, m->wx + m->gap, m->by, w - 2 * m->gap, bh, 0,
         DefaultDepth(dpy, screen), CopyFromParent, DefaultVisual(dpy, screen),
         CWOverrideRedirect | CWBackPixmap | CWEventMask, &wa);
     XDefineCursor(dpy, m->barwin, cursor[CurNormal]->cursor);
     if (showsystray && m == systraytomon(m)) XMapRaised(dpy, systray->win);
     XMapRaised(dpy, m->barwin);
     m->tabwin = XCreateWindow(
-        dpy, root, m->wx + m->gappov, m->ty, m->ww - 2 * m->gappov, th, 0,
+        dpy, root, m->wx + m->gap, m->ty, m->ww - 2 * m->gap, th, 0,
         DefaultDepth(dpy, screen), CopyFromParent, DefaultVisual(dpy, screen),
         CWOverrideRedirect | CWBackPixmap | CWEventMask, &wa);
     XDefineCursor(dpy, m->tabwin, cursor[CurNormal]->cursor);
@@ -2909,7 +2903,7 @@ void updatesystray(void) {
   XWindowChanges wc;
   Client* i;
   Monitor* m = systraytomon(NULL);
-  unsigned int x = m->mx + m->mw - m->gappov;
+  unsigned int x = m->mx + m->mw - m->gap;
   unsigned int w = 1;
 
   if (!showsystray) return;
@@ -3112,13 +3106,10 @@ Monitor* systraytomon(Monitor* m) {
 
 Monitor* get_neighbor_monitor(int dir) {
   Monitor* m = NULL;
-
   if (dir > 0) {
-    if (!(m = selmon->next)) m = mons;
-  } else if (selmon == mons)
-    for (m = mons; m->next; m = m->next);
-  else
-    for (m = mons; m->next != selmon; m = m->next);
+    if (!(m = selmon->next)) m = mons;} 
+  else if (selmon == mons) for (m = mons; m->next; m = m->next);
+  else for (m = mons; m->next != selmon; m = m->next);
   return m;
 }
 
