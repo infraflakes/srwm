@@ -148,13 +148,6 @@ enum {
   ClkLast
 }; /* clicks */
 
-enum showtab_modes {
-  showtab_never,
-  showtab_auto,
-  showtab_nmodes,
-  showtab_always
-}; /* tab modes */
-
 typedef union {
   int i;
   unsigned int ui;
@@ -416,7 +409,7 @@ struct Monitor {
   unsigned int seltags;
   unsigned int tagset[2];
   unsigned int colorfultag;
-  int showbar, showtab;
+  int showbar;
   int topbar, toptab;
   Client* clients;
   Client* sel;
@@ -904,7 +897,6 @@ Monitor* createmon(void) {
   m = ecalloc(1, sizeof(Monitor));
   m->tagset[0] = m->tagset[1] = 1;
   m->showbar = showbar;
-  m->showtab = showtab;
   m->topbar = topbar;
   m->toptab = toptab;
   m->ntabs = 0;
@@ -3231,9 +3223,10 @@ Monitor* systraytomon(Monitor* m) {
     return m == selmon ? m : NULL;
   }
   for (n = 1, t = mons; t && t->next; n++, t = t->next);
-  for (i = 1, t = mons; t && t->next && i < systraypinning; i++, t = t->next);
-  if (systraypinningfailfirst && n < systraypinning) return mons;
-  return t;
+  i = systraypinning - 1;
+  if (i >= n) i = 0;
+  for (t = mons; t && i > 0; i--, t = t->next);
+  return t ? t : mons;
 }
 
 /* main() removed — Go owns the entry point.

@@ -21,19 +21,11 @@ static const unsigned int gappov =
     gap_value; /* vert outer gap between windows and screen edge */
 static const int smartgaps =
     0; /* 1 means no outer gap when there is only one window */
-static const unsigned int systraypinning =
-    0; /* 0: sloppy systray follows selected monitor, >0: pin systray to monitor
-          X */
+static const unsigned int systraypinning = 0;   /* 0: sloppy systray follows selected monitor, >0: pin systray to monitor X */
 static const unsigned int systrayspacing = 2; /* systray spacing */
-static const int systraypinningfailfirst =
-    1; /* 1: if pinning fails,display systray on the 1st monitor,False: display
-          systray on last monitor*/
 static const int showsystray = 1; /* 0 means no systray */
 static const int showbar = 1;     /* 0 means no bar */
-static const int showtab = showtab_auto;
 static const int toptab = 1;   /* 0 means bottom tab */
-static const int floatbar = 1; /* 1 means the bar will float(don't have
-                                  padding),0 means the bar have padding */
 static const int topbar = 1;   /* 0 means bottom bar */
 static const int horizpadbar = 10;
 static const int vertpadbar = 15;
