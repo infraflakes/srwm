@@ -5,8 +5,8 @@ import (
 	"log"
 	"os"
 
-	"github.com/nixuris/srwm/internal/control"
 	"github.com/nixuris/srwm/internal/core"
+	"github.com/nixuris/srwm/internal/ipc"
 )
 
 // Version is set at build time via -ldflags.
@@ -18,17 +18,17 @@ func main() {
 		os.Exit(1)
 	}
 
-	socketPath := control.DefaultSocketPath()
+	socketPath := ipc.DefaultSocketPath()
 
 	switch os.Args[1] {
 	case "start":
 		runWM(socketPath)
 	case "shutdown":
-		if err := control.Send(socketPath, "shutdown"); err != nil {
+		if err := ipc.Send(socketPath, "shutdown"); err != nil {
 			log.Fatalf("shutdown failed: %v", err)
 		}
 	case "restart":
-		if err := control.Send(socketPath, "restart"); err != nil {
+		if err := ipc.Send(socketPath, "restart"); err != nil {
 			log.Fatalf("restart failed: %v", err)
 		}
 	case "version":
@@ -56,7 +56,7 @@ func runWM(socketPath string) {
 
 	// Start IPC server
 	go func() {
-		if err := control.Listen(socketPath); err != nil {
+		if err := ipc.Listen(socketPath); err != nil {
 			log.Printf("IPC server error: %v", err)
 		}
 	}()
