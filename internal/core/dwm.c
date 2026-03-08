@@ -43,7 +43,6 @@
 #endif /* XINERAMA */
 #include <Imlib2.h>
 #include <X11/Xft/Xft.h>
-
 #include "drw.h"
 #include "util.h"
 #include "bridge.h"
@@ -297,7 +296,6 @@ void scan(void);
 static int sendevent(Window w, Atom proto, int m, long d0, long d1, long d2,
                      long d3, long d4);
 static void sendmon(Client* c, Monitor* m);
-static void setborderpx(const Arg* arg);
 static void setclientstate(Client* c, long state);
 static void setclienttagprop(Client* c);
 static void setcurrentdesktop(void);
@@ -420,7 +418,6 @@ struct Monitor {
 
 #include "movestack.inc"
 #include "shiftview.inc"
-#include "vanitygaps.inc"
 
 struct Pertag {
   unsigned int curtag, prevtag;   /* current and previous tag */
@@ -2202,38 +2199,6 @@ void sendmon(Client* c, Monitor* m) {
   setclienttagprop(c);
   focus(NULL);
   arrange(NULL);
-}
-
-void setborderpx(const Arg* arg) {
-  Client* c;
-  int prev_borderpx = selmon->borderpx;
-
-  if (arg->i == 0)
-    selmon->borderpx = borderpx;
-  else if (selmon->borderpx + arg->i < 0)
-    selmon->borderpx = 0;
-  else
-    selmon->borderpx += arg->i;
-
-  for (c = selmon->clients; c; c = c->next) {
-    if (c->bw + arg->i < 0)
-      c->bw = selmon->borderpx = 0;
-    else
-      c->bw = selmon->borderpx;
-    if (c->isfloating) {
-      if (arg->i != 0 && prev_borderpx + arg->i >= 0)
-        resize(c, c->x, c->y, c->w - (arg->i * 2), c->h - (arg->i * 2), 0);
-      else if (arg->i != 0)
-        resizeclient(c, c->x, c->y, c->w, c->h);
-      else if (prev_borderpx > borderpx)
-        resize(c, c->x, c->y, c->w + 2 * (prev_borderpx - borderpx),
-               c->h + 2 * (prev_borderpx - borderpx), 0);
-      else if (prev_borderpx < borderpx)
-        resize(c, c->x, c->y, c->w - 2 * (borderpx - prev_borderpx),
-               c->h - 2 * (borderpx - prev_borderpx), 0);
-    }
-  }
-  arrange(selmon);
 }
 
 void setclientstate(Client* c, long state) {

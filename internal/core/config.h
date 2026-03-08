@@ -117,9 +117,6 @@ static const Key keys[] = {
     {MODKEY|ShiftMask, XK_comma,  move_tag_to_monitor, {.i = -1 } },
     {MODKEY|ShiftMask, XK_period, move_tag_to_monitor, {.i = +1 } },
 
-    { MODKEY|ControlMask,               XK_i,       incrgaps,       {.i = +10 } },
-    { MODKEY|ControlMask,               XK_d,       incrgaps,       {.i = -10 } },
-
     TAGKEYS(XK_1, 0)
     TAGKEYS(XK_2, 1) 
     TAGKEYS(XK_3, 2) 

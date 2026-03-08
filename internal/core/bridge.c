@@ -1,6 +1,5 @@
 /* bridge.c — Thin lifecycle wrapper around dwm.c for Go */
 #include "bridge.h"
-
 #include <X11/Xlib.h>
 #include <locale.h>
 #include <stdio.h>
