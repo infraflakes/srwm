@@ -1,5 +1,4 @@
 -- Example configuration for srwm!
-local bar = require("bar")
 
 --------------------------------------------------------------------------------
 -- Startups
@@ -59,5 +58,19 @@ end)
 -- Status Bar Setup
 --------------------------------------------------------------------------------
 
+-- Register widget shell scripts (paths are relative to ~/.config/srwm/)
+srwm.bar.widget("brightness", "widgets/brightness.sh")
+srwm.bar.widget("volume",     "widgets/volume.sh")
+srwm.bar.widget("wifi",       "widgets/wifi.sh")
+srwm.bar.widget("clock",      "widgets/clock.sh")
+srwm.bar.widget("battery",    "widgets/battery.sh")
+srwm.bar.widget("gap",        "widgets/gap.sh")
+
+-- Define the layout left-to-right
+srwm.bar.layout("brightness", "gap", "volume", "gap", "wifi", "gap", "clock", "gap", "battery")
+
+-- Set polling interval (seconds)
+srwm.bar.interval(1)
+
 -- Start the status bar loop (blocks this execution thread)
-bar.run()
+srwm.bar.run()

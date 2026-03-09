@@ -19,18 +19,42 @@ import (
 )
 
 // defaultSrwmrcScript is the embedded default srwmrc.lua, deployed to
-// ~/.config/srwm/srwmrc.lua on first run so the user has a working
-// starting point they can edit.
+// ~/.config/srwm/srwmrc.lua on first run.
 //
 //go:embed lua/srwmrc.lua
-var DefaultSrwmrcScript []byte
+var defaultSrwmrcScript []byte
 
-// DefaultBarModule is the embedded default bar.lua, deployed alongside
-// srwmrc.lua. It provides the status bar implementation as a Lua module
-// that srwmrc.lua loads via require("bar").
-//
-//go:embed lua/bar.lua
-var DefaultBarModule []byte
+//go:embed widgets/battery.sh
+var widgetBattery []byte
+
+//go:embed widgets/brightness.sh
+var widgetBrightness []byte
+
+//go:embed widgets/clock.sh
+var widgetClock []byte
+
+//go:embed widgets/gap.sh
+var widgetGap []byte
+
+//go:embed widgets/theme.sh
+var widgetTheme []byte
+
+//go:embed widgets/volume.sh
+var widgetVolume []byte
+
+//go:embed widgets/wifi.sh
+var widgetWifi []byte
+
+// defaultWidgets maps filenames to their embedded contents.
+var defaultWidgets = map[string][]byte{
+	"battery.sh":    widgetBattery,
+	"brightness.sh": widgetBrightness,
+	"clock.sh":      widgetClock,
+	"gap.sh":        widgetGap,
+	"theme.sh":      widgetTheme,
+	"volume.sh":     widgetVolume,
+	"wifi.sh":       widgetWifi,
+}
 
 // StartConfig boots the Lua runtime in a background goroutine.
 //
@@ -46,7 +70,7 @@ func StartConfig(ctx context.Context) {
 
 // runLuaConfig is the main Lua configuration goroutine. It:
 //  1. Resolves the config directory (~/.config/srwm/).
-//  2. Requires srwmrc.lua to exist (no auto-deploy).
+//  2. Deploys default scripts if missing.
 //  3. Creates and configures the Lua VM.
 //  4. Registers the srwm.* API surface.
 //  5. Executes srwmrc.lua (which blocks in the bar loop).
@@ -57,16 +81,17 @@ func runLuaConfig(ctx context.Context) {
 	}
 
 	rcPath := filepath.Join(srwmDir, "srwmrc.lua")
+	widgetsDir := filepath.Join(srwmDir, "widgets")
 
-	if err := os.MkdirAll(srwmDir, 0755); err != nil {
-		log.Printf("lua: failed to create config dir: %v", err)
+	if err := os.MkdirAll(widgetsDir, 0755); err != nil {
+		log.Printf("lua: failed to create config/widgets dir: %v", err)
 		return
 	}
 
-	if _, err := os.Stat(rcPath); os.IsNotExist(err) {
-		log.Printf("lua: config not found at %s", rcPath)
-		log.Printf("lua: run 'srwm kickstart' to deploy default config")
-		return
+	// Deploy defaults (does not overwrite existing files)
+	deployDefault(rcPath, defaultSrwmrcScript, 0644)
+	for name, content := range defaultWidgets {
+		deployDefault(filepath.Join(widgetsDir, name), content, 0755)
 	}
 
 	L := lua.NewState()
@@ -74,27 +99,13 @@ func runLuaConfig(ctx context.Context) {
 	L.SetContext(ctx)
 	defer L.Close()
 
-	// Extend package.path so require("bar") finds ~/.config/srwm/bar.lua.
-	pkg := L.GetGlobal("package")
-	luaPath := L.GetField(pkg, "path").String()
-	L.SetField(pkg, "path", lua.LString(fmt.Sprintf("%s;%s/?.lua", luaPath, srwmDir)))
-
 	// Build the srwm.* global module table.
 	srwmMod := L.NewTable()
 	L.SetGlobal("srwm", srwmMod)
 
-	RegisterBarAPI(L, srwmMod)
+	RegisterBarAPI(L, srwmMod, srwmDir)
 	RegisterKeybindAPI(L, srwmMod)
 	control.RegisterAPI(L, srwmMod)
-
-	// Preload bar.lua as a require-able module so the user can do:
-	//   local bar = require("bar")
-	L.PreloadModule("bar", func(L *lua.LState) int {
-		if err := L.DoString(string(DefaultBarModule)); err != nil {
-			L.RaiseError("failed to load bar.lua: %v", err)
-		}
-		return 1
-	})
 
 	log.Printf("lua: executing %s", rcPath)
 	if err := L.DoFile(rcPath); err != nil {
@@ -102,7 +113,7 @@ func runLuaConfig(ctx context.Context) {
 	}
 }
 
-// resolveConfigDir returns the srwm config directory path
+// ResolveConfigDir returns the srwm config directory path
 // (~/.config/srwm), respecting XDG_CONFIG_HOME.
 func ResolveConfigDir() string {
 	configDir := os.Getenv("XDG_CONFIG_HOME")
@@ -117,14 +128,50 @@ func ResolveConfigDir() string {
 	return filepath.Join(configDir, "srwm")
 }
 
+// DeployKickstart forcefully deploys default scripts to the config directory.
+// It returns an error if a config file already exists to prevent overwriting
+// user configurations.
+func DeployKickstart() error {
+	srwmDir := ResolveConfigDir()
+	if srwmDir == "" {
+		return fmt.Errorf("failed to resolve config directory")
+	}
+
+	rcPath := filepath.Join(srwmDir, "srwmrc.lua")
+	widgetsDir := filepath.Join(srwmDir, "widgets")
+
+	if _, err := os.Stat(rcPath); err == nil {
+		return fmt.Errorf("config already exists at %s", rcPath)
+	}
+
+	if err := os.MkdirAll(widgetsDir, 0755); err != nil {
+		return fmt.Errorf("failed to create config/widgets dir: %w", err)
+	}
+
+	if err := os.WriteFile(rcPath, defaultSrwmrcScript, 0644); err != nil {
+		return fmt.Errorf("failed to deploy srwmrc.lua: %w", err)
+	}
+	fmt.Printf("deployed: %s\n", rcPath)
+
+	for name, content := range defaultWidgets {
+		path := filepath.Join(widgetsDir, name)
+		if err := os.WriteFile(path, content, 0755); err != nil {
+			return fmt.Errorf("failed to deploy %s: %w", name, err)
+		}
+		fmt.Printf("deployed: %s\n", path)
+	}
+
+	return nil
+}
+
 // deployDefault writes content to path only if the file does not already
 // exist. This is used to deploy default config files on first run without
 // overwriting user edits.
-func deployDefault(path string, content []byte) {
+func deployDefault(path string, content []byte, perm os.FileMode) {
 	if _, err := os.Stat(path); err == nil {
 		return // already exists, don't overwrite
 	}
-	if err := os.WriteFile(path, content, 0644); err != nil {
+	if err := os.WriteFile(path, content, perm); err != nil {
 		log.Printf("lua: failed to deploy %s: %v", path, err)
 	}
 }
