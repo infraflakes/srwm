@@ -91,11 +91,8 @@ static const Key keys[] = {
     {MODKEY | ALTKEY, XK_s, spawn, SHCMD("flameshot full")},
     {MODKEY | ShiftMask, XK_s, spawn, SHCMD("flameshot gui")},
     {MODKEY, XK_space, spawn, SHCMD("srwmctl launcher")},
-    {MODKEY, XK_Return, spawn, SHCMD("alacritty")},
     {MODKEY, XK_l, spawn, SHCMD("slock")},
     {MODKEY, XK_v, spawn, SHCMD("copyq menu")},
-    // restart
-    {MODKEY | ShiftMask, XK_r, restart, {0}},
 
     // toggle stuff
     {MODKEY, XK_w, togglefloating, {0}},

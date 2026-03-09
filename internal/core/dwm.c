@@ -281,7 +281,6 @@ static void moveorplace(const Arg* arg);
 static Client* nexttiled(Client* c);
 static void placemouse(const Arg* arg);
 static void propertynotify(XEvent* e);
-static void restart(const Arg* arg);
 static Client* recttoclient(int x, int y, int w, int h);
 static Monitor* recttomon(int x, int y, int w, int h);
 static void removesystrayicon(Client* i);
@@ -2000,8 +1999,6 @@ void propertynotify(XEvent* e) {
     if (ev->atom == netatom[NetWMWindowType]) updatewindowtype(c);
   }
 }
-
-void restart(const Arg* arg) { srwm_request_restart(); }
 
 Client* recttoclient(int x, int y, int w, int h) {
   Client *c, *r = NULL;
