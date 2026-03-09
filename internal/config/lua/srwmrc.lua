@@ -36,6 +36,14 @@ srwm.key.bind("Mod4", "BackSpace", function()
 	srwm.quit()
 end)
 
+srwm.key.bind("Mod4", "space", function()
+	srwm.spawn("rofi -show drun")
+end)
+
+srwm.key.bind("Mod4", "Return", function()
+	srwm.spawn("alacritty")
+end)
+
 --------------------------------------------------------------------------------
 -- Status Bar Setup
 --------------------------------------------------------------------------------
