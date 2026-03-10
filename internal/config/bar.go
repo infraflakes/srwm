@@ -35,6 +35,7 @@ type barState struct {
 	configDir string            // resolved config dir for relative paths
 	themePath string            // path to theme.sh (now deprecated)
 	themeRepl *strings.Replacer // theme variable substitutor
+	palette   map[string]string // name → hex string
 }
 
 // RegisterBarAPI creates the srwm.bar namespace and populates it with
@@ -44,14 +45,17 @@ type barState struct {
 //   - srwm.bar.layout(name, ...)  — set the display order
 //   - srwm.bar.interval(seconds)  — set the polling interval
 //   - srwm.bar.theme({name="#hex"}) — configure string replacement variables
+//   - srwm.bar.workspaces.colors("name", ...) — set tag colors from palette
 //   - srwm.bar.run()              — enter the Go-managed polling loop
 func RegisterBarAPI(L *lua.LState, srwmMod *lua.LTable, configDir string) {
 	state := &barState{
 		widgets:   make(map[string]string),
+		layout:    make([]string, 0),
 		interval:  1.0,
 		configDir: configDir,
 		themePath: filepath.Join(configDir, "widgets", "theme.sh"),
 		themeRepl: strings.NewReplacer(),
+		palette:   make(map[string]string),
 	}
 
 	barTable := L.NewTable()
@@ -82,16 +86,17 @@ func RegisterBarAPI(L *lua.LState, srwmMod *lua.LTable, configDir string) {
 		return luaBarRun(L, state)
 	}))
 
+	// Nested workspaces table
+	wsTable := L.NewTable()
+	wsTable.RawSetString("colors", L.NewFunction(func(L *lua.LState) int {
+		return luaBarWorkspacesColors(L, state)
+	}))
+	barTable.RawSetString("workspaces", wsTable)
+
 	L.SetField(srwmMod, "bar", barTable)
 }
 
 // luaBarTheme registers theme variables.
-//
-// Nested tables (e.g. normal = { fg = "#hex", bg = "#hex", border = "#hex" })
-// set WM core colors via core.SetColor.
-//
-// Simple strings (e.g. purple = "#bebeda") register template replacements
-// for shell-widget output (e.g. {purple} -> #bebeda).
 func luaBarTheme(L *lua.LState, state *barState) int {
 	themeTable := L.CheckTable(1)
 	var replacements []string
@@ -106,6 +111,10 @@ func luaBarTheme(L *lua.LState, state *barState) int {
 		"tag3":         core.SchemeTag3,
 		"tag4":         core.SchemeTag4,
 		"tag5":         core.SchemeTag5,
+		"tag6":         core.SchemeTag6,
+		"tag7":         core.SchemeTag7,
+		"tag8":         core.SchemeTag8,
+		"tag9":         core.SchemeTag9,
 		"tab_selected": core.TabSel,
 		"tab_normal":   core.TabNorm,
 		"button_prev":  core.SchemeBtnPrev,
@@ -134,11 +143,34 @@ func luaBarTheme(L *lua.LState, state *barState) int {
 			return
 		}
 
-		// Simple string → widget template replacement
-		replacements = append(replacements, "{"+key+"}", v.String())
+		// Simple string → widget template replacement AND palette storage
+		color := v.String()
+		state.palette[key] = color
+		replacements = append(replacements, "{"+key+"}", color)
 	})
 
 	state.themeRepl = strings.NewReplacer(replacements...)
+	return 0
+}
+
+func luaBarWorkspacesColors(L *lua.LState, state *barState) int {
+	n := L.GetTop()
+	for i := 1; i <= n && i <= 9; i++ {
+		colorName := L.CheckString(i)
+		if hex, ok := state.palette[colorName]; ok {
+			// Map tag i-1 to SchemeTagX
+			// We have SchemeTag1 through SchemeTag9
+			scheme := core.SchemeTag1 + core.Scheme(i-1)
+			if scheme > core.SchemeTag9 {
+				scheme = core.SchemeTag9
+			}
+
+			// Set foreground for this tag scheme
+			core.SetColor(scheme, 0, hex)
+			// Map the tag to use this scheme
+			core.SetTagScheme(i-1, scheme)
+		}
+	}
 	return 0
 }
 

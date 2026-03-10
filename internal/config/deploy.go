@@ -16,6 +16,7 @@ import (
 	"strings"
 
 	"github.com/nixuris/srwm/internal/control"
+	"github.com/nixuris/srwm/internal/core"
 	lua "github.com/yuin/gopher-lua"
 )
 
@@ -127,6 +128,26 @@ func runLuaConfig(ctx context.Context) {
 	RegisterKeybindAPI(L, srwmMod)
 	RegisterConfigAPI(L, srwmMod)
 	control.RegisterAPI(L, srwmMod)
+
+	// srwm.workspaces.set("1,2,3,4,5")
+	wsTable := L.NewTable()
+	wsTable.RawSetString("set", L.NewFunction(func(L *lua.LState) int {
+		input := L.CheckString(1)
+		parts := strings.Split(input, ",")
+
+		// Map up to 9 tags
+		count := len(parts)
+		if count > 9 {
+			count = 9
+		}
+
+		for i := 0; i < count; i++ {
+			core.SetTag(i, strings.TrimSpace(parts[i]))
+		}
+		core.SetTagsLen(count)
+		return 0
+	}))
+	L.SetField(srwmMod, "workspaces", wsTable)
 
 	log.Printf("lua: executing %s", rcPath)
 	if err := L.DoFile(rcPath); err != nil {

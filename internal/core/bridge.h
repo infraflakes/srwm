@@ -84,6 +84,9 @@ int srwm_get_colorfultag(void);
 void srwm_set_colorfultag(int);
 void srwm_set_font(const char* font);
 void srwm_set_color(int scheme, int slot, const char* hex);
+void srwm_set_tag(int idx, const char* name);
+void srwm_set_tags_len(int len);
+void srwm_set_tagscheme(int idx, int scheme_idx);
 
 /* Called from C -> Go when a dynamic key is pressed */
 extern void srwm_handle_key(int id);

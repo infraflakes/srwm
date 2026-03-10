@@ -40,7 +40,7 @@ extern const char* colors[][3];
 
 // tagging
 extern char* tags[];
-extern const int tagschemes[];
+extern int tagschemes[];
 
 extern const Rule rules[];
 

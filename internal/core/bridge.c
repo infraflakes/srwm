@@ -179,5 +179,20 @@ void srwm_set_font(const char* font) { fonts[0] = font; }
 
 extern const char* colors[][3];
 void srwm_set_color(int scheme, int slot, const char* hex) {
-  if (slot >= 0 && slot < 3) colors[scheme][slot] = hex;
+  if (slot >= 0 && slot < 3) colors[scheme][slot] = strdup(hex);
+}
+
+extern char* tags[];
+extern int tags_len;
+void srwm_set_tag(int idx, const char* name) {
+  if (idx >= 0 && idx < 9) tags[idx] = strdup(name);
+}
+
+void srwm_set_tags_len(int len) {
+  if (len >= 0 && len <= 9) tags_len = len;
+}
+
+extern int tagschemes[];
+void srwm_set_tagscheme(int idx, int scheme_idx) {
+  if (idx >= 0 && idx < 9) tagschemes[idx] = scheme_idx;
 }

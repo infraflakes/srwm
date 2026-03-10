@@ -65,8 +65,10 @@
 #define MOUSEMASK (BUTTONMASK | PointerMotionMask)
 #define WIDTH(X) ((X)->w + 2 * (X)->bw)
 #define HEIGHT(X) ((X)->h + 2 * (X)->bw)
-#define TAGMASK ((1 << LENGTH(tags)) - 1)
-#define TAGSLENGTH (LENGTH(tags))
+
+extern int tags_len;
+#define TAGMASK ((1 << tags_len) - 1)
+#define TAGSLENGTH (tags_len)
 #define TEXTW(X) (drw_fontset_getwidth(drw, (X)) + lrpad)
 #define MAXTABS 50
 
@@ -98,6 +100,10 @@ enum {
   SchemeTag3,
   SchemeTag4,
   SchemeTag5,
+  SchemeTag6,
+  SchemeTag7,
+  SchemeTag8,
+  SchemeTag9,
   TabSel,
   TabNorm,
   SchemeBtnPrev,
@@ -416,14 +422,21 @@ const char* colors[][3] = {
     [SchemeTag1] = {blue, black, black},
     [SchemeTag2] = {purple, black, black},
     [SchemeTag3] = {pink, black, black},
+    [SchemeTag4] = {blue, black, black},
+    [SchemeTag5] = {purple, black, black},
+    [SchemeTag6] = {pink, black, black},
+    [SchemeTag7] = {blue, black, black},
+    [SchemeTag8] = {purple, black, black},
+    [SchemeTag9] = {pink, black, black},
     [SchemeBtnPrev] = {green, black, black},
     [SchemeBtnNext] = {yellow, black, black},
     [SchemeBtnClose] = {red, black, black},
 };
-char* tags[] = {"1", "2", "3", "4", "5"};
-const int tagschemes[] = {SchemeTag1, SchemeTag2, SchemeTag3,
-                         SchemeTag2, SchemeTag1, SchemeTag2,
-                         SchemeTag3, SchemeTag1, SchemeTag2};
+char* tags[9] = {"1", "2", "3", "4", "5", "6", "7", "8", "9"};
+int tags_len = 5;
+int tagschemes[9] = {SchemeTag1, SchemeTag2, SchemeTag3,
+                     SchemeTag4, SchemeTag5, SchemeTag6,
+                     SchemeTag7, SchemeTag8, SchemeTag9};
 
 const Rule rules[] = {
     { "Toolkit",  NULL,       "Picture-in-Picture",   0,         1,          -1 },

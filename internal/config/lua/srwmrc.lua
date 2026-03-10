@@ -15,21 +15,21 @@ srwm.cfg.gaps(0)
 srwm.cfg.showbar(true)
 srwm.cfg.topbar(true)
 srwm.cfg.toptab(true)
-srwm.cfg.colorfultag(true)
+srwm.cfg.colorfultag(true) -- should be hardcoded to source code
 
 -- Bar
-srwm.cfg.bar_horizontal_padding(10)
+srwm.cfg.bar_horizontal_padding(0)
 srwm.cfg.bar_vertical_padding(15)
 
 -- Tab
-srwm.cfg.tab_vertical_padding(35)
+srwm.cfg.tab_vertical_padding(35) -- set to 0 breaks wm
 srwm.cfg.tab_in_horizontal_padding(15)
 srwm.cfg.tab_out_horizontal_padding(15)
 
 -- Systray
 srwm.cfg.systray_enable(true)
 srwm.cfg.systray_spacing(2)
-srwm.cfg.systray_pinning(0)
+srwm.cfg.systray_pinning(0) -- value is monitors order, 0 is first monitor
 
 -- Tag preview
 srwm.cfg.tag_preview_size(4)
@@ -105,8 +105,8 @@ srwm.bar.fonts("JetBrainsMonoNerdFont:size=13")
 -- Theme: nested tables set WM core colors, simple strings set widget palette
 srwm.bar.theme({
 	-- WM Core colors (fg, bg, border)
-	normal = { fg = "#cdcdcd", bg = "#252530", border = "#606079" },
-	selected = { fg = "#cdcdcd", bg = "#6e94b2", border = "#6e94b2" },
+	normal = { fg = "#cdcdcd", bg = "#252530", border = "#606079" }, -- should be moved to srwm.theme
+	selected = { fg = "#cdcdcd", bg = "#6e94b2", border = "#6e94b2" }, -- should be moved to srwm.theme
 	title = { fg = "#d7d7d7", bg = "#252530", border = "#252530" },
 	tab_selected = { fg = "#252530", bg = "#aeaed1", border = "#aeaed1" },
 	tab_normal = { fg = "#cdcdcd", bg = "#252530", border = "#252530" },
@@ -132,7 +132,14 @@ srwm.bar.theme({
 	darkred = "#d8647e",
 	yellow = "#f5cb96",
 	darkyellow = "#f3be7c",
+	pink = "#bb9dbd",
 })
+
+-- Individual workspace colors (from the palette above)
+srwm.bar.workspaces.colors("blue", "purple", "pink", "purple", "blue", "pink")
+
+-- Define workspace names (tags)
+srwm.workspaces.set("1,2,3,4,5,6")
 
 -- Register widget shell scripts (paths are relative to ~/.config/srwm/)
 srwm.bar.widget("brightness", "widgets/brightness.sh")
