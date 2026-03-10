@@ -65,11 +65,6 @@ static unsigned int prevtag(void);
 static const Key keys[] = {
 
     {MODKEY, XK_q, killclient, {0}},
-    {MODKEY | ALTKEY, XK_s, spawn, SHCMD("flameshot full")},
-    {MODKEY | ShiftMask, XK_s, spawn, SHCMD("flameshot gui")},
-    {MODKEY, XK_space, spawn, SHCMD("srwmctl launcher")},
-    {MODKEY, XK_l, spawn, SHCMD("slock")},
-    {MODKEY, XK_v, spawn, SHCMD("copyq menu")},
 
     // toggle stuff
     {MODKEY, XK_w, togglefloating, {0}},
