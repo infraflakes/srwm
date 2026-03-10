@@ -1,5 +1,9 @@
 -- Example configuration for srwm!
 
+-- You can split your config to other <name>.lua files and include them as
+-- include("<name>")
+-- without .lua extension
+
 --------------------------------------------------------------------------------
 -- Startups
 --------------------------------------------------------------------------------
@@ -46,10 +50,6 @@ srwm.key.bind("Mod4", "BackSpace", function()
 	srwm.quit()
 end)
 
-srwm.key.bind("Mod4", "space", function()
-	srwm.spawn("rofi -show drun")
-end)
-
 srwm.key.bind("Mod4", "Return", function()
 	srwm.spawn("alacritty")
 end)
@@ -60,28 +60,28 @@ end)
 
 -- Define theme variables for widget template replacement (e.g. {purple} -> #hex)
 srwm.bar.theme({
-	purple     = "#bebeda",
+	purple = "#bebeda",
 	darkpurple = "#aeaed1",
-	black      = "#252530",
-	green      = "#99b782",
-	darkgreen  = "#7fa563",
-	white      = "#d7d7d7",
-	grey       = "#606079",
-	blue       = "#8ba9c1",
-	darkblue   = "#6e94b2",
-	red        = "#e08398",
-	darkred    = "#d8647e",
-	yellow     = "#f5cb96",
+	black = "#252530",
+	green = "#99b782",
+	darkgreen = "#7fa563",
+	white = "#d7d7d7",
+	grey = "#606079",
+	blue = "#8ba9c1",
+	darkblue = "#6e94b2",
+	red = "#e08398",
+	darkred = "#d8647e",
+	yellow = "#f5cb96",
 	darkyellow = "#f3be7c",
 })
 
 -- Register widget shell scripts (paths are relative to ~/.config/srwm/)
 srwm.bar.widget("brightness", "widgets/brightness.sh")
-srwm.bar.widget("volume",     "widgets/volume.sh")
-srwm.bar.widget("wifi",       "widgets/wifi.sh")
-srwm.bar.widget("clock",      "widgets/clock.sh")
-srwm.bar.widget("battery",    "widgets/battery.sh")
-srwm.bar.widget("gap",        "widgets/gap.sh")
+srwm.bar.widget("volume", "widgets/volume.sh")
+srwm.bar.widget("wifi", "widgets/wifi.sh")
+srwm.bar.widget("clock", "widgets/clock.sh")
+srwm.bar.widget("battery", "widgets/battery.sh")
+srwm.bar.widget("gap", "widgets/gap.sh")
 
 -- Define the layout left-to-right
 srwm.bar.layout("brightness", "gap", "volume", "gap", "wifi", "gap", "clock", "gap", "battery")

@@ -29,9 +29,9 @@ func NotifyBarRefresh() {
 
 // barState holds per-VM bar configuration set by Lua before run().
 type barState struct {
-	widgets  map[string]string // name → absolute script path
-	layout   []string          // ordered widget names
-	interval float64           // polling interval in seconds
+	widgets   map[string]string // name → absolute script path
+	layout    []string          // ordered widget names
+	interval  float64           // polling interval in seconds
 	configDir string            // resolved config dir for relative paths
 	themePath string            // path to theme.sh (now deprecated)
 	themeRepl *strings.Replacer // theme variable substitutor

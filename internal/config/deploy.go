@@ -13,6 +13,7 @@ import (
 	"log"
 	"os"
 	"path/filepath"
+	"strings"
 
 	"github.com/nixuris/srwm/internal/control"
 	lua "github.com/yuin/gopher-lua"
@@ -94,6 +95,23 @@ func runLuaConfig(ctx context.Context) {
 	L.OpenLibs()
 	L.SetContext(ctx)
 	defer L.Close()
+
+	L.SetGlobal("include", L.NewFunction(func(L *lua.LState) int {
+		path := L.CheckString(1)
+		if !strings.HasSuffix(path, ".lua") {
+			path = path + ".lua"
+		}
+		var fullPath string
+		if filepath.IsAbs(path) {
+			fullPath = path
+		} else {
+			fullPath = filepath.Join(srwmDir, path)
+		}
+		if err := L.DoFile(fullPath); err != nil {
+			L.RaiseError("%s", "include "+path+": "+err.Error())
+		}
+		return 0
+	}))
 
 	// Build the srwm.* global module table.
 	srwmMod := L.NewTable()
