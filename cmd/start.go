@@ -40,13 +40,19 @@ func runWM(socketPath string) {
 	}()
 
 	for {
-		if err := core.Init(); err != nil {
+		if err := core.InitDisplay(); err != nil {
 			log.Fatalf("init failed: %v", err)
 		}
 
-		// Start Lua Configuration and Bar WITH context
+		// Start Lua config — sets fonts, colors, padding, etc.
 		ctx, cancel := context.WithCancel(context.Background())
 		config.StartConfig(ctx)
+
+		// Wait for config values to be applied before X11 setup
+		config.WaitConfigReady()
+
+		// Now setup() reads the correct config values
+		core.InitSetup()
 
 		core.Run() // blocks until `running = 0`
 

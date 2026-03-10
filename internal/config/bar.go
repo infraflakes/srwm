@@ -185,6 +185,12 @@ func luaBarLayout(L *lua.LState, state *barState) int {
 // The loop exits when the Lua VM's context is cancelled.
 // This function blocks the calling Lua thread.
 func luaBarRun(L *lua.LState, state *barState) int {
+	// Signal that all config values have been set
+	select {
+	case configReady <- struct{}{}:
+	default:
+	}
+
 	if len(state.layout) == 0 {
 		log.Println("srwm.bar.run: no layout defined, nothing to render")
 		return 0

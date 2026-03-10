@@ -53,16 +53,22 @@ var defaultWidgets = map[string][]byte{
 	"wifi.sh":       widgetWifi,
 }
 
+// configReady is signalled by the Lua goroutine once all config setters
+// (fonts, colors, padding, etc.) have run. start.go waits on this
+// before calling core.InitSetup() so setup() reads the correct values.
+var configReady = make(chan struct{}, 1)
+
 // StartConfig boots the Lua runtime in a background goroutine.
-//
-// The provided context controls the VM lifetime: when ctx is cancelled
-// (e.g. during a WM restart), the Lua sleep loop wakes up and the VM
-// shuts down gracefully.
-//
-// Call this AFTER core.Init() to ensure the X11 display is ready before
-// Lua tries to register keybindings.
+// Call this AFTER core.InitDisplay().
 func StartConfig(ctx context.Context) {
+	configReady = make(chan struct{}, 1)
 	go runLuaConfig(ctx)
+}
+
+// WaitConfigReady blocks until the Lua config has finished setting values.
+// Call this BEFORE core.InitSetup().
+func WaitConfigReady() {
+	<-configReady
 }
 
 // runLuaConfig is the main Lua configuration goroutine. It:

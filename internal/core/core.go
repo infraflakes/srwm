@@ -27,18 +27,24 @@ import (
 	"unsafe"
 )
 
-// Init opens the X display, checks for other WMs, runs setup, and scans
-// existing windows. Must be called before Run().
+// InitDisplay opens the X display and checks for other WMs.
+// Must be called before running Lua config.
 //
 // Locks the current goroutine to its OS thread — all subsequent core
 // calls must happen on this same goroutine.
-func Init() error {
+func InitDisplay() error {
 	runtime.LockOSThread()
-	if C.srwm_init() != 0 {
+	if C.srwm_init_display() != 0 {
 		runtime.UnlockOSThread()
 		return errors.New("srwm: failed to initialize (cannot open display?)")
 	}
 	return nil
+}
+
+// InitSetup runs the X11 setup (reads fonts, colors, etc.) and scans
+// existing windows. Call this AFTER Lua config has set values.
+func InitSetup() {
+	C.srwm_init_setup()
 }
 
 // Run enters the blocking X11 event loop. Returns when the WM is asked

@@ -12,7 +12,7 @@ KeySym srwm_string_to_keysym(const char *name) {
   return XStringToKeysym(name);
 }
 
-int srwm_init(void) {
+int srwm_init_display(void) {
   /* Reset for re-init on restart */
   running = 1;
   restart_requested = 0;
@@ -29,9 +29,12 @@ int srwm_init(void) {
   }
 
   checkotherwm();
+  return 0;
+}
+
+void srwm_init_setup(void) {
   setup();
   scan();
-  return 0;
 }
 
 void srwm_run(void) {

@@ -19,7 +19,7 @@ srwm.cfg.colorfultag(true)
 
 -- Bar
 srwm.cfg.bar_horizontal_padding(10)
-srwm.cfg.bar_vertical_padding(0)
+srwm.cfg.bar_vertical_padding(15)
 
 -- Tab
 srwm.cfg.tab_vertical_padding(35)

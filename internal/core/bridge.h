@@ -19,7 +19,8 @@ extern void run(void);
 extern void cleanup(void);
 
 /* Bridge lifecycle — called by Go */
-int  srwm_init(void);
+int  srwm_init_display(void);
+void srwm_init_setup(void);
 void srwm_run(void);
 void srwm_cleanup(void);
 void srwm_quit(void);
