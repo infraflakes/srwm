@@ -6,31 +6,35 @@
 
 /* appearance */
 static const unsigned int borderpx = 0; /* border pixel of windows */
-static const unsigned int default_border = 0; /* to switch back to default border after dynamic border resizing via keybinds */
-static const unsigned int attach_to_screen_edge_px = 32;     /* snap pixel */
+static const unsigned int px_till_snapping_to_screen_edge = 32;     /* snap pixel */
 static const unsigned int gaps = 0; /* set up gaps */
 static const unsigned int systraypinning = 0;   /* 0: sloppy systray follows selected monitor, >0: pin systray to monitor X */
 static const unsigned int systrayspacing = 2; /* systray spacing */
-static const int showsystray = 1; /* 0 means no systray */
+static const int systray_enable = 1; /* 0 means no systray */
 static const int showbar = 1;     /* 0 means no bar */
+static const int bar_horizontal_padding = 10;
+static const int bar_vertical_padding= 0;
+static const int tab_vertical_padding = 35;
+static const int tab_in_horizontal_padding = 15;
+static const int tab_out_horizontal_padding = 15;
+static const int tag_preview_size = 4;
+static const int tag_preview_enable = 0; /* 1 means enable, 0 is off */
+static const unsigned int tag_underline_padding = 5; /* horizontal padding between the underline and tag */
+static const unsigned int tag_underline_size = 2; /* thickness / height of the underline */
+static const unsigned int tag_underline_offset_from_bar_bottom = 0; /* how far above the bottom of the bar the line should appear */
+static const int tag_underline_for_all_tags = 0; /* 1 to show underline on all tags, 0 for just the active ones */
+
+// Needs refactor
 static const int toptab = 1;   /* 0 means bottom tab */
 static const int topbar = 1;   /* 0 means bottom bar */
-static const int horizpadbar = 10;
-static const int vertpadbar = 0;
-static const int vertpadtab = 35;
-static const int horizpadtabi = 15;
-static const int horizpadtabo = 15;
-static const int scalepreview = 4;
-static const int tag_preview = 0; /* 1 means enable, 0 is off */
-static const int colorfultag = 1; /* 0 means use SchemeSel for selected non vacant tag */
-static const unsigned int ulinepad = 5; /* horizontal padding between the underline and tag */
-static const unsigned int ulinestroke = 2; /* thickness / height of the underline */
-static const unsigned int ulinevoffset = 0; /* how far above the bottom of the bar the line should appear */
-static const int ulineall = 0; /* 1 to show underline on all tags, 0 for just the active ones */
-static const int new_window_attach_on_end = 1; /*  1 means the new window will attach on the end; 0 means the new window will attach on the front,default is front */
+
+// TODO: Make this option hardcoded in source code
+static const int new_window_appear_on_end = 1; /*  1 means the new window will attach on the end; 0 means the new window will attach on the front,default is front */
+
+// Theming
 #define ICONSIZE 20   /* icon size */
 #define ICONSPACING 8 /* space between icon and title */
-
+static const int colorfultag = 1; /* 0 means use SchemeSel for selected non vacant tag */
 static const char* fonts[] = {"JetBrainsMonoNerdFont:size=13"};
 static const char* colors[][3] = {
     /*            fg       bg      border */
