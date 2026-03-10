@@ -12,9 +12,15 @@ After having all the dependencies you can easily build the window manager:
 make build
 ```
 
-# Start
+# Starting the WM
 
-You can start the window manager with `srwm start` for example with `sx`:
+You can generate the default config with `srwm kickstart`:
+
+```bash
+srwm kickstart
+```
+
+Then start the window manager with `srwm start` and any X11 graphical sessions launcher, for example with `sx`:
 ```bash
 sx srwm start
 ```
