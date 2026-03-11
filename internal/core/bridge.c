@@ -105,8 +105,6 @@ extern unsigned int tag_underline_offset_from_bar_bottom;
 extern int tag_underline_for_all_tags;
 extern int toptab;
 extern int topbar;
-extern int new_window_appear_on_end;
-extern int colorfultag;
 
 unsigned int srwm_get_borderpx(void) { return borderpx; }
 void srwm_set_borderpx(unsigned int v) { borderpx = v; }
@@ -168,11 +166,6 @@ void srwm_set_toptab(int v) { toptab = v; }
 int srwm_get_topbar(void) { return topbar; }
 void srwm_set_topbar(int v) { topbar = v; }
 
-int srwm_get_new_window_appear_on_end(void) { return new_window_appear_on_end; }
-void srwm_set_new_window_appear_on_end(int v) { new_window_appear_on_end = v; }
-
-int srwm_get_colorfultag(void) { return colorfultag; }
-void srwm_set_colorfultag(int v) { colorfultag = v; }
 
 extern const char* fonts[];
 void srwm_set_font(const char* font) { fonts[0] = font; }

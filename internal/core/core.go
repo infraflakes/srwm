@@ -255,22 +255,6 @@ func SetTopBar(v bool) {
 	C.srwm_set_topbar(C.int(b2i(v)))
 }
 
-func GetNewWindowAppearOnEnd() bool {
-	return C.srwm_get_new_window_appear_on_end() != 0
-}
-
-func SetNewWindowAppearOnEnd(v bool) {
-	C.srwm_set_new_window_appear_on_end(C.int(b2i(v)))
-}
-
-func GetColorfulTag() bool {
-	return C.srwm_get_colorfultag() != 0
-}
-
-func SetColorfulTag(v bool) {
-	C.srwm_set_colorfultag(C.int(b2i(v)))
-}
-
 func SetFont(font string) {
 	cs := C.CString(font)
 	// Note: intentionally not freed — C core holds this pointer for the WM lifetime

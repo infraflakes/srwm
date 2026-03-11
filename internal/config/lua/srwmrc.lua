@@ -15,7 +15,6 @@ srwm.cfg.gaps(0)
 srwm.cfg.showbar(true)
 srwm.cfg.topbar(true) -- need reimplementation
 srwm.cfg.toptab(true) -- need reimplementation
-srwm.cfg.colorfultag(true) -- should be hardcoded to source code
 
 -- Bar
 srwm.cfg.bar_horizontal_padding(0)
@@ -43,7 +42,6 @@ srwm.cfg.tag_underline_for_all_tags(false)
 
 -- Misc
 srwm.cfg.px_till_snapping_to_screen_edge(32)
-srwm.cfg.new_window_appear_on_end(true)
 
 --------------------------------------------------------------------------------
 -- Startups

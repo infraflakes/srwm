@@ -409,7 +409,6 @@ unsigned int tag_underline_offset_from_bar_bottom = 0;
 int tag_underline_for_all_tags = 0;
 int toptab = 1;
 int topbar = 1;
-int new_window_appear_on_end = 1;
 int colorfultag = 1;
 const char* fonts[] = {"JetBrainsMonoNerdFont:size=13"};
 const char* colors[][3] = {
@@ -442,6 +441,22 @@ const Rule rules[] = {
     { "Toolkit",  NULL,       "Picture-in-Picture",   0,         1,          -1 },
     { "firefox",  NULL,       "Picture-in-Picture",   0,         1,          -1 },
     { "Chromium", NULL,       "Picture-in-Picture",   0,         1,          -1 },
+};
+
+/* button definitions */
+static const Button buttons[] = {
+    {ClkClientWin, MODKEY, Button1, moveorplace, {.i = 0}},
+    {ClkClientWin, MODKEY, Button2, togglefloating, {0}},
+    {ClkClientWin, MODKEY, Button3, resizemouse, {0}},
+    {ClkTagBar, 0, Button1, view, {0}},
+    {ClkTagBar, 0, Button3, toggleview, {0}},
+    {ClkTagBar, MODKEY, Button1, tag, {0}},
+    {ClkTagBar, MODKEY, Button3, toggletag, {0}},
+    {ClkTabBar, 0, Button1, focuswin, {0}},
+    {ClkTabBar, 0, Button1, focuswin, {0}},
+    {ClkTabPrev, 0, Button1, movestack, {.i = -1}},
+    {ClkTabNext, 0, Button1, movestack, {.i = +1}},
+    {ClkTabClose, 0, Button1, killclient, {0}},
 };
 
 typedef struct Pertag Pertag;
@@ -616,14 +631,9 @@ void arrangemon(Monitor* m) {
 }
 
 void attach(Client* c) {
-  if (new_window_appear_on_end) {
     Client** tmp = &c->mon->clients;
     while (*tmp) tmp = &(*tmp)->next;
     *tmp = c;
-  } else {
-    c->next = c->mon->clients;
-    c->mon->clients = c;
-  }
 }
 
 void attachstack(Client* c) {

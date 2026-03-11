@@ -28,13 +28,9 @@ extern int tag_underline_for_all_tags;
 extern int toptab;
 extern int topbar;
 
-// TODO: Make this option hardcoded in source code
-extern int new_window_appear_on_end;
-
 // Theming
 #define ICONSIZE 20
 #define ICONSPACING 8
-extern int colorfultag;
 extern const char* fonts[];
 extern const char* colors[][3];
 
@@ -88,20 +84,4 @@ static const Key keys[] = {
     TAGKEYS(XK_7, 6) 
     TAGKEYS(XK_8, 7)
     TAGKEYS(XK_9, 8)
-};
-
-/* button definitions */
-static const Button buttons[] = {
-    {ClkClientWin, MODKEY, Button1, moveorplace, {.i = 0}},
-    {ClkClientWin, MODKEY, Button2, togglefloating, {0}},
-    {ClkClientWin, MODKEY, Button3, resizemouse, {0}},
-    {ClkTagBar, 0, Button1, view, {0}},
-    {ClkTagBar, 0, Button3, toggleview, {0}},
-    {ClkTagBar, MODKEY, Button1, tag, {0}},
-    {ClkTagBar, MODKEY, Button3, toggletag, {0}},
-    {ClkTabBar, 0, Button1, focuswin, {0}},
-    {ClkTabBar, 0, Button1, focuswin, {0}},
-    {ClkTabPrev, 0, Button1, movestack, {.i = -1}},
-    {ClkTabNext, 0, Button1, movestack, {.i = +1}},
-    {ClkTabClose, 0, Button1, killclient, {0}},
 };

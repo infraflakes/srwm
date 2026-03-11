@@ -188,23 +188,5 @@ func RegisterConfigAPI(L *lua.LState, srwmMod *lua.LTable) {
 		return 1
 	}))
 
-	L.SetField(cfgTable, "new_window_appear_on_end", L.NewFunction(func(L *lua.LState) int {
-		if L.GetTop() == 1 {
-			core.SetNewWindowAppearOnEnd(L.CheckBool(1))
-		} else {
-			L.Push(lua.LBool(core.GetNewWindowAppearOnEnd()))
-		}
-		return 1
-	}))
-
-	L.SetField(cfgTable, "colorfultag", L.NewFunction(func(L *lua.LState) int {
-		if L.GetTop() == 1 {
-			core.SetColorfulTag(L.CheckBool(1))
-		} else {
-			L.Push(lua.LBool(core.GetColorfulTag()))
-		}
-		return 1
-	}))
-
 	L.SetField(srwmMod, "cfg", cfgTable)
 }
