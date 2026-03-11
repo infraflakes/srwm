@@ -82,6 +82,7 @@ void srwm_set_font(const char* font);
 void srwm_set_color(int scheme, int slot, const char* hex);
 void srwm_set_tag(int idx, const char* name);
 void srwm_set_tags_len(int len);
+void srwm_set_tag_colorful_occupied_only(int val);
 void srwm_set_tagscheme(int idx, int scheme_idx);
 
 /* Actions (Go -> C wrappers for internal static functions) */

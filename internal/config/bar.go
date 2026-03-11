@@ -88,8 +88,9 @@ func RegisterBarAPI(L *lua.LState, srwmMod *lua.LTable, configDir string) {
 
 	// Nested tags table
 	tagTable := L.NewTable()
-	tagTable.RawSetString("colors", L.NewFunction(func(L *lua.LState) int {
-		return luaBarTagsColors(L, state)
+	tagTable.RawSetString("highlight_occupied_only", L.NewFunction(func(L *lua.LState) int {
+		core.SetTagColorfulOccupiedOnly(L.CheckBool(1))
+		return 0
 	}))
 	barTable.RawSetString("tags", tagTable)
 
@@ -101,25 +102,28 @@ func luaBarTheme(L *lua.LState, state *barState) int {
 	themeTable := L.CheckTable(1)
 	var replacements []string
 
-	schemeMap := map[string]core.Scheme{
-		"normal":       core.SchemeNorm,
-		"selected":     core.SchemeSel,
-		"title":        core.SchemeTitle,
-		"tag":          core.SchemeTag,
-		"tag1":         core.SchemeTag1,
-		"tag2":         core.SchemeTag2,
-		"tag3":         core.SchemeTag3,
-		"tag4":         core.SchemeTag4,
-		"tag5":         core.SchemeTag5,
-		"tag6":         core.SchemeTag6,
-		"tag7":         core.SchemeTag7,
-		"tag8":         core.SchemeTag8,
-		"tag9":         core.SchemeTag9,
-		"tab_selected": core.TabSel,
-		"tab_normal":   core.TabNorm,
-		"button_prev":  core.SchemeBtnPrev,
-		"button_next":  core.SchemeBtnNext,
-		"button_close": core.SchemeBtnClose,
+	schemeMap := map[string]struct {
+		scheme core.Scheme
+		tagIdx int // -1 if not a tag scheme
+	}{
+		"normal":       {core.SchemeNorm, -1},
+		"selected":     {core.SchemeSel, -1},
+		"title":        {core.SchemeTitle, -1},
+		"inactive_tag": {core.SchemeTag, -1},
+		"tag_1":        {core.SchemeTag1, 0},
+		"tag_2":        {core.SchemeTag2, 1},
+		"tag_3":        {core.SchemeTag3, 2},
+		"tag_4":        {core.SchemeTag4, 3},
+		"tag_5":        {core.SchemeTag5, 4},
+		"tag_6":        {core.SchemeTag6, 5},
+		"tag_7":        {core.SchemeTag7, 6},
+		"tag_8":        {core.SchemeTag8, 7},
+		"tag_9":        {core.SchemeTag9, 8},
+		"tab_selected": {core.TabSel, -1},
+		"tab_normal":   {core.TabNorm, -1},
+		"button_prev":  {core.SchemeBtnPrev, -1},
+		"button_next":  {core.SchemeBtnNext, -1},
+		"button_close": {core.SchemeBtnClose, -1},
 	}
 
 	themeTable.ForEach(func(k, v lua.LValue) {
@@ -127,10 +131,11 @@ func luaBarTheme(L *lua.LState, state *barState) int {
 
 		// Nested table → WM core color
 		if tbl, ok := v.(*lua.LTable); ok {
-			scheme, exists := schemeMap[key]
+			info, exists := schemeMap[key]
 			if !exists {
 				return
 			}
+			scheme := info.scheme
 			if fg := tbl.RawGetString("fg"); fg.Type() == lua.LTString {
 				core.SetColor(scheme, 0, fg.String())
 			}
@@ -139,6 +144,11 @@ func luaBarTheme(L *lua.LState, state *barState) int {
 			}
 			if border := tbl.RawGetString("border"); border.Type() == lua.LTString {
 				core.SetColor(scheme, 2, border.String())
+			}
+
+			// If it's a tag scheme, automatically map the tag to it
+			if info.tagIdx >= 0 {
+				core.SetTagScheme(info.tagIdx, scheme)
 			}
 			return
 		}
@@ -150,27 +160,6 @@ func luaBarTheme(L *lua.LState, state *barState) int {
 	})
 
 	state.themeRepl = strings.NewReplacer(replacements...)
-	return 0
-}
-
-func luaBarTagsColors(L *lua.LState, state *barState) int {
-	n := L.GetTop()
-	for i := 1; i <= n && i <= 9; i++ {
-		colorName := L.CheckString(i)
-		if hex, ok := state.palette[colorName]; ok {
-			// Map tag i-1 to SchemeTagX
-			// We have SchemeTag1 through SchemeTag9
-			scheme := core.SchemeTag1 + core.Scheme(i-1)
-			if scheme > core.SchemeTag9 {
-				scheme = core.SchemeTag9
-			}
-
-			// Set foreground for this tag scheme
-			core.SetColor(scheme, 0, hex)
-			// Map the tag to use this scheme
-			core.SetTagScheme(i-1, scheme)
-		}
-	}
 	return 0
 }
 

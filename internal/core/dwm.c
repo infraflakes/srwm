@@ -410,6 +410,7 @@ int tag_underline_for_all_tags = 0;
 int toptab = 1;
 int topbar = 1;
 int colorfultag = 1;
+int tag_colorful_occupied_only = 1;
 const char* fonts[] = {"JetBrainsMonoNerdFont:size=13"};
 const char* colors[][3] = {
     [SchemeNorm] = {gray3, black, gray2},
@@ -1174,9 +1175,9 @@ void drawbar(Monitor* m) {
   x = borderpx;
   for (i = 0; i < TAGSLENGTH; i++) {
     w = TEXTW(tags[i]);
+    int use_colorful = m->colorfultag && (!tag_colorful_occupied_only || (occ & 1 << i));
     drw_setscheme(
-        drw, scheme[occ & 1 << i ? (m->colorfultag ? tagschemes[i] : SchemeSel)
-                                 : SchemeTag]);
+        drw, scheme[use_colorful ? tagschemes[i] : (occ & 1 << i ? SchemeSel : SchemeTag)]);
     drw_text(drw, x, y, w, bh_n, lrpad / 2, tags[i], urg & 1 << i);
     if (tag_underline_for_all_tags ||
         m->tagset[m->seltags] &
@@ -3186,3 +3187,6 @@ void srwm_action_view(unsigned int mask) { view(&(Arg){.ui = mask}); }
 void srwm_action_toggleview(unsigned int mask) { toggleview(&(Arg){.ui = mask}); }
 void srwm_action_tag(unsigned int mask) { tag(&(Arg){.ui = mask}); }
 void srwm_action_toggletag(unsigned int mask) { toggletag(&(Arg){.ui = mask}); }
+void srwm_set_tag_colorful_occupied_only(int val) {
+  tag_colorful_occupied_only = val;
+}

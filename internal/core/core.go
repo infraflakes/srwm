@@ -301,6 +301,14 @@ func SetTagsLen(len int) {
 	C.srwm_set_tags_len(C.int(len))
 }
 
+func SetTagColorfulOccupiedOnly(val bool) {
+	ival := 0
+	if val {
+		ival = 1
+	}
+	C.srwm_set_tag_colorful_occupied_only(C.int(ival))
+}
+
 func SetTagScheme(idx int, scheme Scheme) {
 	C.srwm_set_tagscheme(C.int(idx), C.int(scheme))
 }
