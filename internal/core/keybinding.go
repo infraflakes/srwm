@@ -22,20 +22,16 @@ func srwm_handle_key(id C.int) {
 	cb, ok := keyCallbacks[int(id)]
 	keyMutex.RUnlock()
 
-	log.Printf("[C->GO] srwm_handle_key hit: id=%d, found=%v", id, ok)
-
 	if ok && cb != nil {
-		// Execute the callback in a goroutine so X11/C doesn't block
-		go func() {
-			log.Printf("[GO] Executing goroutine callback for key %d", id)
-
-			defer func() {
-				if r := recover(); r != nil {
-					log.Printf("srwm: recovered from panic in key callback %d: %v", id, r)
-				}
-			}()
-			cb()
+		// Execute the callback synchronously so Xlib calls via C stay
+		// on the main X11 event loop thread. Executing in a goroutine
+		// causes severe GC/theme corruption in dwm.c.
+		defer func() {
+			if r := recover(); r != nil {
+				log.Printf("srwm: recovered from panic in key callback %d: %v", id, r)
+			}
 		}()
+		cb()
 	} else {
 		log.Printf("srwm: no callback found for key id %d", id)
 	}

@@ -1,8 +1,6 @@
 package config
 
 import (
-	"log"
-
 	"github.com/nixuris/srwm/internal/core"
 	lua "github.com/yuin/gopher-lua"
 )
@@ -13,9 +11,7 @@ func RegisterActionsAPI(L *lua.LState, srwmMod *lua.LTable) {
 	windowTable := L.NewTable()
 
 	L.SetField(windowTable, "kill", L.NewFunction(func(L *lua.LState) int {
-		log.Println("[LUA API] srwm.window.kill() START")
 		core.ActionKillClient()
-		log.Println("[LUA API] srwm.window.kill() END")
 		return 0
 	}))
 
