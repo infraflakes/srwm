@@ -13,9 +13,9 @@ srwm.bar.tab_padding_outer_horizontal(15)
 
 -- Looks
 srwm.bar.show(true)
-srwm.bar.top(true) -- need reimplementation
+srwm.bar.top(true)
 -- srwm.bar.tab_show(true) -- incoming feature
-srwm.bar.tab_top(true) -- need reimplementation
+srwm.bar.tab_top(true)
 
 -- Set fonts
 srwm.bar.fonts("JetBrainsMonoNerdFont:size=13")

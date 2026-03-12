@@ -600,35 +600,40 @@ void arrange(Monitor* m) {
     for (m = mons; m; m = m->next) arrangemon(m);
 }
 
-void arrangemon(Monitor* m) {
+void arrangemon(Monitor* m) {  
   Client* c;
   int newx, newy, neww, newh;
 
   updatebarpos(m);
   updatesystray();
-  XMoveWindow(dpy, m->tagwin, m->wx + m->gap, m->by);
+  /* Position tag preview relative to bar */
+  if (m->topbar)
+    XMoveWindow(dpy, m->tagwin, m->wx + m->gap, m->by + bh);
+  else
+    XMoveWindow(dpy, m->tagwin, m->wx + m->gap, m->by - m->mh / 4);
 
-  /* Position tab bar - always below status bar */
-  int bar_offset = m->showbar ? bh : 0;  
-  m->ty = m->my + bar_offset;  
-  m->wy = m->my + bar_offset + th + m->gap;  
-  m->wh = m->mh - bar_offset - th - m->gap;
-
+  /* Position tab bar respecting topbar and toptab */
+  if (m->toptab) {
+    /* Tab at top of window area */
+    m->ty = m->wy;
+    m->wy = m->wy + th + m->gap;
+    m->wh = m->wh - th - m->gap;
+  } else {
+    /* Tab at bottom of window area */
+    m->wh = m->wh - th - m->gap;
+    m->ty = m->wy + m->wh + m->gap;
+  }
   XMoveResizeWindow(dpy, m->tabwin, m->wx + m->gap, m->ty,
                     m->ww - 2 * m->gap, th);
-
   /* Arrange all tiled windows in fullscreen style */
   for (c = nexttiled(m->clients); c; c = nexttiled(c->next)) {
     newx = m->wx + m->gap - c->bw;
     newy = m->wy + m->gap - c->bw;
     neww = m->ww - 2 * (m->gap + c->bw);
     newh = m->wh - 2 * (m->gap + c->bw);
-
     applysizehints(c, &newx, &newy, &neww, &newh, 0);
-
     if (neww < m->ww) newx = m->wx + (m->ww - (neww + 2 * c->bw)) / 2;
     if (newh < m->wh) newy = m->wy + (m->wh - (newh + 2 * c->bw)) / 2;
-
     resize(c, newx, newy, neww, newh, 0);
   }
 }
@@ -2717,15 +2722,17 @@ void updatebars(void) {
   }
 }
 
-void updatepreview(void) {
+void updatepreview(void) {  
   Monitor* m;
-
+  int preview_h;
   XSetWindowAttributes wa = {.override_redirect = True,
                              .background_pixmap = ParentRelative,
                              .event_mask = ButtonPressMask | ExposureMask};
   for (m = mons; m; m = m->next) {
+    preview_h = m->mh / 4;
+    int preview_y = m->topbar ? m->by + bh : m->by - preview_h;
     m->tagwin = XCreateWindow(
-        dpy, root, m->wx, m->by + bh, m->mw / 4, m->mh / 4, 0,
+        dpy, root, m->wx, preview_y, m->mw / 4, preview_h, 0,
         DefaultDepth(dpy, screen), CopyFromParent, DefaultVisual(dpy, screen),
         CWOverrideRedirect | CWBackPixmap | CWEventMask, &wa);
     XDefineCursor(dpy, m->tagwin, cursor[CurNormal]->cursor);
@@ -2739,12 +2746,12 @@ void updatebarpos(Monitor* m) {
   m->wh = m->mh;
 
   if (m->showbar) {
-    m->wh = m->wh - bh;
-    m->by = m->wy;
-    m->wy = bh;
+    m->wh -= bh;
+    m->by = m->topbar ? m->wy : m->wy + m->wh;
+    if (m->topbar) m->wy += bh;
   } else {
     m->by = -bh;
-  }
+  }  
 }
 
 void updateclientlist(void) {
