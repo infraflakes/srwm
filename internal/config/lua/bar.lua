@@ -3,37 +3,36 @@
 --------------------------------------------------------------------------------
 
 -- Bar
-srwm.cfg.bar_horizontal_padding(0)
-srwm.cfg.bar_vertical_padding(15)
+srwm.bar.padding_horizontal(0)
+srwm.bar.padding_vertical(15)
 
 -- Tab
-srwm.cfg.tab_vertical_padding(35) -- set to 0 breaks wm
-srwm.cfg.tab_in_horizontal_padding(15)
-srwm.cfg.tab_out_horizontal_padding(15)
+srwm.bar.tab_padding_vertical(35) -- set to 0 breaks wm
+srwm.bar.tab_padding_inner_horizontal(15)
+srwm.bar.tab_padding_outer_horizontal(15)
 
 -- Looks
-srwm.cfg.showbar(true)
-srwm.cfg.topbar(true) -- need reimplementation
-srwm.cfg.toptab(true) -- need reimplementation
+srwm.bar.show(true)
+srwm.bar.top(true) -- need reimplementation
+srwm.bar.tab_top(true) -- need reimplementation
 
 -- Set fonts
 srwm.bar.fonts("JetBrainsMonoNerdFont:size=13")
 
 -- Tag underline
-srwm.cfg.tag_underline_padding(5)
-srwm.cfg.tag_underline_size(2)
-srwm.cfg.tag_underline_offset_from_bar_bottom(0)
-srwm.cfg.tag_underline_for_all_tags(false)
+srwm.bar.tag_underline_padding(5)
+srwm.bar.tag_underline_size(2)
+srwm.bar.tag_underline_offset(0)
+srwm.bar.tag_underline_all_tags(false)
 
 -- Systray
-srwm.cfg.systray_enable(true)
-srwm.cfg.systray_spacing(2)
-srwm.cfg.systray_pinning(0) -- value is monitors order, 0 is first monitor
+srwm.bar.systray(true)
+srwm.bar.systray_spacing(2)
+srwm.bar.systray_pinning(0) -- value is monitors order, 0 is first monitor
 
 -- Tag preview
-srwm.cfg.tag_preview_size(4)
-srwm.cfg.tag_preview_enable(false)
+srwm.bar.tag_preview_size(4)
+srwm.bar.tag_preview(false)
 
 -- Set polling interval (seconds)
 srwm.bar.interval(1)
-
