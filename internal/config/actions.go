@@ -15,7 +15,6 @@ func RegisterActionsAPI(L *lua.LState, srwmMod *lua.LTable) {
 		return 0
 	}))
 
-
 	L.SetField(windowTable, "toggle_floating", L.NewFunction(func(L *lua.LState) int {
 		core.ActionToggleFloating()
 		return 0
@@ -70,7 +69,6 @@ func RegisterActionsAPI(L *lua.LState, srwmMod *lua.LTable) {
 		}
 		return 1 << (idx - 1)
 	}
-
 
 	L.SetField(tagTable, "view", L.NewFunction(func(L *lua.LState) int {
 		core.ActionView(indexToMask(L))

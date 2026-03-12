@@ -26,6 +26,30 @@ import (
 //go:embed lua/srwmrc.lua
 var defaultSrwmrcScript []byte
 
+//go:embed lua/general.lua
+var defaultGeneralScript []byte
+
+//go:embed lua/keybindings.lua
+var defaultKeybindingsScript []byte
+
+//go:embed lua/theming.lua
+var defaultThemingScript []byte
+
+//go:embed lua/bar.lua
+var defaultBarScript []byte
+
+//go:embed lua/startup.lua
+var defaultStartupScript []byte
+
+// defaultLuaModules maps filenames to their embedded contents.
+var defaultLuaModules = map[string][]byte{
+	"general.lua":     defaultGeneralScript,
+	"keybindings.lua": defaultKeybindingsScript,
+	"theming.lua":     defaultThemingScript,
+	"bar.lua":         defaultBarScript,
+	"startup.lua":     defaultStartupScript,
+}
+
 //go:embed widgets/battery.sh
 var widgetBattery []byte
 
@@ -94,6 +118,9 @@ func runLuaConfig(ctx context.Context) {
 
 	// Deploy defaults (does not overwrite existing files)
 	deployDefault(rcPath, defaultSrwmrcScript, 0644)
+	for name, content := range defaultLuaModules {
+		deployDefault(filepath.Join(srwmDir, name), content, 0644)
+	}
 	for name, content := range defaultWidgets {
 		deployDefault(filepath.Join(widgetsDir, name), content, 0755)
 	}
@@ -124,7 +151,7 @@ func runLuaConfig(ctx context.Context) {
 	srwmMod := L.NewTable()
 	L.SetGlobal("srwm", srwmMod)
 
-	RegisterBarAPI(L, srwmMod, srwmDir)
+	startBar := RegisterBarAPI(L, srwmMod, srwmDir)
 	RegisterKeybindAPI(L, srwmMod)
 	RegisterConfigAPI(L, srwmMod)
 	RegisterActionsAPI(L, srwmMod)
@@ -154,6 +181,19 @@ func runLuaConfig(ctx context.Context) {
 	if err := L.DoFile(rcPath); err != nil {
 		log.Printf("lua: error running %s: %v", rcPath, err)
 	}
+
+	// Automatically start the bar polling loop after configuration is loaded.
+	startBar()
+
+	// Signal that config is ready for core.InitSetup().
+	select {
+	case configReady <- struct{}{}:
+	default:
+	}
+
+	// Keep the Lua state alive for the duration of the WM session.
+	// Keybinding callbacks and the bar loop depend on this state.
+	<-ctx.Done()
 }
 
 // ResolveConfigDir returns the srwm config directory path
@@ -195,6 +235,14 @@ func DeployKickstart() error {
 		return fmt.Errorf("failed to deploy srwmrc.lua: %w", err)
 	}
 	fmt.Printf("deployed: %s\n", rcPath)
+
+	for name, content := range defaultLuaModules {
+		path := filepath.Join(srwmDir, name)
+		if err := os.WriteFile(path, content, 0644); err != nil {
+			return fmt.Errorf("failed to deploy %s: %w", name, err)
+		}
+		fmt.Printf("deployed: %s\n", path)
+	}
 
 	for name, content := range defaultWidgets {
 		path := filepath.Join(widgetsDir, name)
