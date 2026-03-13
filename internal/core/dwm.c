@@ -2496,6 +2496,9 @@ void tag(const Arg* arg) {
   if (selmon->sel && arg->ui & TAGMASK) {
     c = selmon->sel;
     selmon->sel->tags = arg->ui & TAGMASK;
+    selmon->occ = 0;
+    for (Client* t = selmon->clients; t; t = t->next)
+      selmon->occ |= t->tags;
     setclienttagprop(c);
     focus(NULL);
     arrange(selmon);
@@ -2545,6 +2548,9 @@ void toggletag(const Arg* arg) {
   newtags = selmon->sel->tags ^ (arg->ui & TAGMASK);
   if (newtags) {
     selmon->sel->tags = newtags;
+    selmon->occ = 0;
+    for (Client* t = selmon->clients; t; t = t->next)
+      selmon->occ |= t->tags;
     setclienttagprop(selmon->sel);
     focus(NULL);
     arrange(selmon);
