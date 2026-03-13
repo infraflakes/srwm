@@ -635,6 +635,7 @@ void arrangemon(Monitor* m) {
   updatebarpos(m);
   updatesystray();
 
+  if (th > 0) {
   /* Position tab bar respecting topbar and toptab */
   if (m->toptab) {
     /* Tab at top of window area */
@@ -648,6 +649,7 @@ void arrangemon(Monitor* m) {
   }
   XMoveResizeWindow(dpy, m->tabwin, m->wx + m->gap, m->ty,
                     m->ww - 2 * m->gap, th);
+  }
   /* Arrange all tiled windows in fullscreen style */
   for (c = nexttiled(m->clients); c; c = nexttiled(c->next)) {
     newx = m->wx + m->gap - c->bw;
@@ -802,8 +804,10 @@ void cleanupmon(Monitor* mon) {
   }
   XUnmapWindow(dpy, mon->barwin);
   XDestroyWindow(dpy, mon->barwin);
+  if (mon->tabwin) {
   XUnmapWindow(dpy, mon->tabwin);
   XDestroyWindow(dpy, mon->tabwin);
+  }
   free(mon);
 }
 
@@ -1346,6 +1350,7 @@ static int cmpint(const void* p1, const void* p2) {
 }
 
 void drawtab(Monitor* m) {
+  if (th <= 0) return;
   Client* c;
   int i;
   int nvis = 0;
@@ -2693,12 +2698,14 @@ void updatebars(void) {
     XDefineCursor(dpy, m->barwin, cursor[CurNormal]->cursor);
     if (systray_enable && m == systraytomon(m)) XMapRaised(dpy, systray->win);
     XMapRaised(dpy, m->barwin);
+    if (th > 0) {
     m->tabwin = XCreateWindow(
         dpy, root, m->wx + m->gap, m->ty, m->ww - 2 * m->gap, th, 0,
         DefaultDepth(dpy, screen), CopyFromParent, DefaultVisual(dpy, screen),
         CWOverrideRedirect | CWBackPixmap | CWEventMask, &wa);
     XDefineCursor(dpy, m->tabwin, cursor[CurNormal]->cursor);
     XMapWindow(dpy, m->tabwin);
+    }
     XSetClassHint(dpy, m->barwin, &ch);
   }
 }
