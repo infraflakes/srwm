@@ -1695,6 +1695,43 @@ void killclient(const Arg* arg) {
   }
 }
 
+/* Window -> Client hash table for O(1) lookup */
+#define WIN_HT_SIZE 256  /* must be power of 2 */
+static struct { Window win; Client* c; } win_ht[WIN_HT_SIZE];
+static unsigned int win_hash(Window w) {
+    return (unsigned int)(w * 2654435761u) & (WIN_HT_SIZE - 1);
+}
+
+static void win_ht_insert(Window w, Client* c) {
+    unsigned int h = win_hash(w);
+    while (win_ht[h].win && win_ht[h].win != w)
+        h = (h + 1) & (WIN_HT_SIZE - 1);
+    win_ht[h].win = w;
+    win_ht[h].c = c;
+}
+
+static void win_ht_remove(Window w) {
+    unsigned int h = win_hash(w);
+    while (win_ht[h].win) {
+        if (win_ht[h].win == w) {
+            win_ht[h].win = 0;
+            win_ht[h].c = NULL;
+            /* rehash subsequent entries in cluster */
+            unsigned int j = (h + 1) & (WIN_HT_SIZE - 1);
+            while (win_ht[j].win) {
+                Window tw = win_ht[j].win;
+                Client* tc = win_ht[j].c;
+                win_ht[j].win = 0;
+                win_ht[j].c = NULL;
+                win_ht_insert(tw, tc);
+                j = (j + 1) & (WIN_HT_SIZE - 1);
+            }
+            return;
+        }
+        h = (h + 1) & (WIN_HT_SIZE - 1);
+    }
+}
+
 void manage(Window w, XWindowAttributes* wa) {
   Client *c, *t = NULL;
   Window trans = None;
@@ -1702,6 +1739,7 @@ void manage(Window w, XWindowAttributes* wa) {
 
   c = ecalloc(1, sizeof(Client));
   c->win = w;
+  win_ht_insert(c->win, c);
   /* geometry */
   c->x = c->oldx = wa->x;
   c->y = c->oldy = wa->y;
@@ -2676,6 +2714,7 @@ void unmanage(Client* c, int destroyed) {
     XSetErrorHandler(xerror);
     XUngrabServer(dpy);
   }
+  win_ht_remove(c->win);
   free(c);
   focus(NULL);
   updateclientlist();
@@ -3100,13 +3139,12 @@ void view(const Arg* arg) {
 }
 
 Client* wintoclient(Window w) {
-  Client* c;
-  Monitor* m;
-
-  for (m = mons; m; m = m->next)
-    for (c = m->clients; c; c = c->next)
-      if (c->win == w) return c;
-  return NULL;
+    unsigned int h = win_hash(w);
+    while (win_ht[h].win) {
+        if (win_ht[h].win == w) return win_ht[h].c;
+        h = (h + 1) & (WIN_HT_SIZE - 1);
+    }
+    return NULL;
 }
 
 Client* wintosystrayicon(Window w) {
