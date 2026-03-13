@@ -1152,8 +1152,9 @@ void drawbar(Monitor* m) {
   if (!m->showbar) return;
 
   /* draw status first so it can be overdrawn by tags later */
-  if (m == selmon) { /* status is only drawn on selected monitor */
-    drawstatusbar(m, bh_n, stext);
+  int sbar_x = 0;
+  if (m == selmon) {
+    sbar_x = drawstatusbar(m, bh_n, stext);
   }
 
   resizebarwin(m);
@@ -1180,8 +1181,11 @@ void drawbar(Monitor* m) {
   }
 
   // CHANGE TITLE LENGTH
-  w = 850;
-  // w = m->ww - x - stw - 2 * m->gap; //TODO: this overlay the widgets
+  if (sbar_x > 0)
+    w = sbar_x - stw - x;
+  else
+    w = m->ww - x - stw - 2 * m->gap;
+  if (w < 0) w = 0;
   if (w > bh_n) {
     if (m->sel) {
       drw_setscheme(drw, scheme[m == selmon ? SchemeTitle : SchemeNorm]);
