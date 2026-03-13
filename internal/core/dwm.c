@@ -458,7 +458,6 @@ static const Button buttons[] = {
     {ClkTabClose, 0, Button1, killclient, {0}},
 };
 
-typedef struct Pertag Pertag;
 struct Monitor {
   int num;
   int by;             /* bar geometry */
@@ -487,16 +486,12 @@ struct Monitor {
   int ntabs;
   int tab_widths[MAXTABS];
   int tab_btn_w[3];
-  Pertag* pertag;
+  unsigned int curtag, prevtag;
+  unsigned int showbar_mask;  // bit i set = showbar enabled for tag i
 };
 
 #include "movestack.inc"
 #include "shiftview.inc"
-
-struct Pertag {
-  unsigned int curtag, prevtag;   /* current and previous tag */
-  int showbars[LENGTH(tags) + 1]; /* display bar for the current tag */
-};
 
 /* function implementations */
 void applyrules(Client* c) {
@@ -972,12 +967,8 @@ Monitor* createmon(void) {
   m->prev = NULL;
   for (i = 0; i < LENGTH(tags); i++) m->tagmap[i] = 0;
   m->previewshow = 0;
-  m->pertag = ecalloc(1, sizeof(Pertag));
-  m->pertag->curtag = m->pertag->prevtag = 1;
-
-  for (i = 0; i <= LENGTH(tags); i++) {
-    m->pertag->showbars[i] = m->showbar;
-  }
+  m->curtag = m->prevtag = 1;
+  m->showbar_mask = showbar ? ~0u : 0u;
 
   return m;
 }
@@ -2606,8 +2597,11 @@ void tag(const Arg* arg) {
 }
 
 void togglebar(const Arg* arg) {
-  selmon->showbar = selmon->pertag->showbars[selmon->pertag->curtag] =
-      !selmon->showbar;
+  selmon->showbar = !selmon->showbar;
+  if (selmon->showbar)
+    selmon->showbar_mask |=  (1u << selmon->curtag);
+  else
+    selmon->showbar_mask &= ~(1u << selmon->curtag);
   updatebarpos(selmon);
   resizebarwin(selmon);
   if (systray_enable) {
@@ -2653,8 +2647,7 @@ void toggletag(const Arg* arg) {
 }
 
 void toggleview(const Arg* arg) {
-  unsigned int newtagset =
-      selmon->tagset[selmon->seltags] ^ (arg->ui & TAGMASK);
+  unsigned int newtagset = selmon->tagset[selmon->seltags] ^ (arg->ui & TAGMASK);
   int i;
 
   if (newtagset) {
@@ -2662,20 +2655,17 @@ void toggleview(const Arg* arg) {
     selmon->tagset[selmon->seltags] = newtagset;
 
     if (newtagset == ~0) {
-      selmon->pertag->prevtag = selmon->pertag->curtag;
-      selmon->pertag->curtag = 0;
+      selmon->prevtag = selmon->curtag;
+      selmon->curtag = 0;
     }
 
-    /* test if the user did not select the same tag */
-    if (!(newtagset & 1 << (selmon->pertag->curtag - 1))) {
-      selmon->pertag->prevtag = selmon->pertag->curtag;
+    if (!(newtagset & 1 << (selmon->curtag - 1))) {
+      selmon->prevtag = selmon->curtag;
       for (i = 0; !(newtagset & 1 << i); i++);
-      selmon->pertag->curtag = i + 1;
+      selmon->curtag = i + 1;
     }
 
-    /* apply settings for this view */
-    if (selmon->showbar != selmon->pertag->showbars[selmon->pertag->curtag])
-      togglebar(NULL);
+    if (selmon->showbar != (int)((selmon->showbar_mask >> selmon->curtag) & 1)) togglebar(NULL);
 
     focus(NULL);
     arrange(selmon);
@@ -3113,24 +3103,24 @@ void view(const Arg* arg) {
 
   if ((arg->ui & TAGMASK) == selmon->tagset[selmon->seltags]) return;
   switchtag();
-  selmon->seltags ^= 1; /* toggle sel tagset */
+  selmon->seltags ^= 1;
   if (arg->ui & TAGMASK) {
-    selmon->pertag->prevtag = selmon->pertag->curtag;
+    selmon->prevtag = selmon->curtag;
     selmon->tagset[selmon->seltags] = arg->ui & TAGMASK;
 
     if (arg->ui == ~0)
-      selmon->pertag->curtag = 0;
+      selmon->curtag = 0;
     else {
       for (i = 0; !(arg->ui & 1 << i); i++);
-      selmon->pertag->curtag = i + 1;
+      selmon->curtag = i + 1;
     }
   } else {
-    tmptag = selmon->pertag->prevtag;
-    selmon->pertag->prevtag = selmon->pertag->curtag;
-    selmon->pertag->curtag = tmptag;
+    tmptag = selmon->prevtag;
+    selmon->prevtag = selmon->curtag;
+    selmon->curtag = tmptag;
   }
 
-  if (selmon->showbar != selmon->pertag->showbars[selmon->pertag->curtag])
+  if (selmon->showbar != (int)((selmon->showbar_mask >> selmon->curtag) & 1))
     togglebar(NULL);
   focus(NULL);
   arrange(selmon);
