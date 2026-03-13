@@ -19,6 +19,7 @@ srwm.bar.tab_top(true)
 
 -- Set fonts
 srwm.bar.fonts("JetBrainsMonoNerdFont:size=13")
+-- srwm.bar.fonts("Terminess Nerd Font:size=14")
 
 -- Tag underline
 srwm.bar.tag_underline_padding(5)
