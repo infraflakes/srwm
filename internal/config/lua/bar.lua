@@ -16,7 +16,7 @@ srwm.bar.show(true)
 srwm.bar.top(true)
 srwm.bar.tab_top(true)
 
--- Set fonts
+-- Set fonts (use fc-list to find the name of your font)
 srwm.bar.fonts("JetBrainsMonoNerdFont:size=13")
 -- srwm.bar.fonts("Terminess Nerd Font:size=14")
 
