@@ -10,7 +10,7 @@ import (
 )
 
 func handleConnection(conn net.Conn) {
-	defer conn.Close()
+	defer func() { _ = conn.Close() }()
 	scanner := bufio.NewScanner(conn)
 	for scanner.Scan() {
 		command := scanner.Text()
@@ -37,7 +37,7 @@ func Send(socketPath, command string) error {
 	if err != nil {
 		return fmt.Errorf("could not connect to srwm: %w (is it running?)", err)
 	}
-	defer conn.Close()
+	defer func() { _ = conn.Close() }()
 
 	_, err = fmt.Fprintln(conn, command)
 	if err != nil {

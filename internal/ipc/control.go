@@ -31,8 +31,8 @@ func Listen(socketPath string) error {
 	if err != nil {
 		return fmt.Errorf("failed to listen on socket: %w", err)
 	}
-	defer ln.Close()
-	defer os.Remove(socketPath)
+	defer func() { _ = ln.Close() }()
+	defer func() { _ = os.Remove(socketPath) }()
 
 	for {
 		conn, err := ln.Accept()

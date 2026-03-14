@@ -1,0 +1,46 @@
+name: srwm CI
+on:
+  push:
+    branches:
+      - main
+    paths:
+      - '**.go'
+      - '**.c'
+      - '**.h'
+      - '**.nix'
+      - '.github/workflows/ci.yml'
+      - 'Makefile'
+      - 'go.mod'
+      - 'go.sum'
+  pull_request:
+    branches:
+      - main
+    paths:
+      - '**.go'
+      - '**.c'
+      - '**.h'
+      - '**.nix'
+      - '.github/workflows/ci.yml'
+      - 'Makefile'
+      - 'go.mod'
+      - 'go.sum'
+
+jobs:
+  build:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v4
+
+      - name: Install Nix
+        uses: cachix/install-nix-action@v31
+        with:
+          nix_path: nixpkgs=channel:nixos-unstable
+
+      - name: Run Linter
+        run: |
+          nix develop --command bash -c "make lint"
+
+      - name: Format Check
+        run: |
+          nix develop --command bash -c "gofmt -l ."

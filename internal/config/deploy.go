@@ -164,10 +164,7 @@ func runLuaConfig(ctx context.Context) {
 		parts := strings.Split(input, ",")
 
 		// Map up to 9 tags
-		count := len(parts)
-		if count > 9 {
-			count = 9
-		}
+		count := min(len(parts), 9)
 
 		for i := 0; i < count; i++ {
 			core.SetTag(i, strings.TrimSpace(parts[i]))

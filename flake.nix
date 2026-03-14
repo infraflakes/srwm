@@ -77,8 +77,10 @@
           CC = "zig cc -target x86_64-linux-musl";
 
           preBuild = ''
-            export CGO_CFLAGS="$(pkg-config --cflags x11 xinerama xft xrender imlib2)"
-            export CGO_LDFLAGS="$(pkg-config --libs --static x11 xinerama xft xrender imlib2)"
+            export CGO_ENABLED=1
+            export CC="zig cc -target x86_64-linux-musl"
+            export CGO_CFLAGS="$(pkg-config --cflags x11 xinerama xft xrender imlib2) -DVERSION=\"$(VERSION)\""
+            export CGO_LDFLAGS="$(pkg-config --libs --static x11 x11-xcb xcb-shm xinerama xft xrender imlib2)"
           '';
 
           ldflags = [
@@ -89,6 +91,9 @@
             "-X main.Version=0.1.0"
           ];
           tags = ["netgo"];
+          postInstall = ''
+            upx --best --lzma $out/bin/srwm
+          '';
         };
       }
     );

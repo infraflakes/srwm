@@ -134,7 +134,7 @@ func registerBinding(L *lua.LState, mod uint, keysym uint, callback *lua.LFuncti
 //	parseModifiers("Alt+Ctrl")   → Mod1Mask | ControlMask = 12
 func parseModifiers(s string) int {
 	var mask int
-	for _, part := range strings.Split(s, "+") {
+	for part := range strings.SplitSeq(s, "+") {
 		name := strings.TrimSpace(strings.ToLower(part))
 		if val, ok := modifierAliases[name]; ok {
 			mask |= val

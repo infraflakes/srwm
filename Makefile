@@ -16,9 +16,9 @@ fmt:
 
 lint:
 	@echo "Linting..."
+	go vet ./...
 	golangci-lint run
 
 clean:
 	@echo "Cleaning..."
 	rm -rf ./bin/srwm
-	rm -f $(CONFIG_H)
