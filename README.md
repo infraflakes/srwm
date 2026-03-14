@@ -15,6 +15,12 @@ Since `srwm` is built as a zero-dependency static binary, you can run it on almo
    sudo mv srwm-v*-linux-amd64 /usr/local/bin/srwm
    ```
 
+If you use the default config, the bar's widgets depend on some dependencies:
+
+- iw
+- xset
+- bc
+
 ### Getting started
 
 > [!CAUTION]
