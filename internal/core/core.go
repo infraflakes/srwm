@@ -184,19 +184,19 @@ func SetTabTileVerticalPadding(v int) {
 }
 
 func GetTabTileOuterPaddingHorizontal() int {
-	return int(C.srwm_get_tab_tile_inner_padding_horizontal())
-}
-
-func SetTabTileOuterPaddingHorizontal(v int) {
-	C.srwm_set_tab_tile_inner_padding_horizontal(C.int(v))
-}
-
-func GetTabTileInnerPaddingHorizontal() int {
 	return int(C.srwm_get_tab_tile_outer_padding_horizontal())
 }
 
-func SetTabTileInnerPaddingHorizontal(v int) {
+func SetTabTileOuterPaddingHorizontal(v int) {
 	C.srwm_set_tab_tile_outer_padding_horizontal(C.int(v))
+}
+
+func GetTabTileInnerPaddingHorizontal() int {
+	return int(C.srwm_get_tab_tile_inner_padding_horizontal())
+}
+
+func SetTabTileInnerPaddingHorizontal(v int) {
+	C.srwm_set_tab_tile_inner_padding_horizontal(C.int(v))
 }
 
 func GetTagUnderlinePadding() uint {

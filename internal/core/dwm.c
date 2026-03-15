@@ -1375,9 +1375,9 @@ void drawtab(Monitor* m) {
   int x = 0;
   int w = 0;
   int mw = m->ww - 2 * m->gap;
-  buttons_w += TEXTW(btn_prev) - lrpad + tab_tile_outer_padding_horizontal;
-  buttons_w += TEXTW(btn_next) - lrpad + tab_tile_outer_padding_horizontal;
-  buttons_w += TEXTW(btn_close) - lrpad + tab_tile_outer_padding_horizontal;
+  buttons_w += TEXTW(btn_prev) - lrpad + tab_tile_inner_padding_horizontal;
+  buttons_w += TEXTW(btn_next) - lrpad + tab_tile_inner_padding_horizontal;
+  buttons_w += TEXTW(btn_close) - lrpad + tab_tile_inner_padding_horizontal;
   tot_width = buttons_w;
 
   /* Calculates number of labels and their width */
@@ -1385,7 +1385,7 @@ void drawtab(Monitor* m) {
   for (c = m->clients; c; c = c->next) {
     if (!ISVISIBLE(c)) continue;
     m->tab_widths[m->ntabs] =
-        MIN(TEXTW(c->name) - lrpad + tab_tile_inner_padding_horizontal + tab_tile_outer_padding_horizontal, 250);
+        MIN(TEXTW(c->name) - lrpad + tab_tile_outer_padding_horizontal + tab_tile_inner_padding_horizontal, 250);
     tot_width += m->tab_widths[m->ntabs];
     ++m->ntabs;
     if (m->ntabs >= MAXTABS) break;
@@ -1415,7 +1415,7 @@ void drawtab(Monitor* m) {
     if (m->tab_widths[i] > maxsize) m->tab_widths[i] = maxsize;
     w = m->tab_widths[i];
     drw_setscheme(drw, scheme[(c == m->sel) ? TabSel : TabNorm]);
-    drw_text(drw, x + tab_tile_outer_padding_horizontal / 2, tab_tile_vertical_padding / 2, w - tab_tile_outer_padding_horizontal, th - tab_tile_vertical_padding, tab_tile_inner_padding_horizontal / 2, c->name, 0);
+    drw_text(drw, x + tab_tile_inner_padding_horizontal / 2, tab_tile_vertical_padding / 2, w - tab_tile_outer_padding_horizontal, th - tab_tile_vertical_padding, tab_tile_outer_padding_horizontal / 2, c->name, 0);
     x += w;
     ++i;
   }
@@ -1423,19 +1423,19 @@ void drawtab(Monitor* m) {
   w = mw - buttons_w - x;
   x += w;
   drw_setscheme(drw, scheme[SchemeBtnPrev]);
-  w = TEXTW(btn_prev) - lrpad + tab_tile_outer_padding_horizontal;
+  w = TEXTW(btn_prev) - lrpad + tab_tile_inner_padding_horizontal;
   m->tab_btn_w[0] = w;
-  drw_text(drw, x + tab_tile_outer_padding_horizontal / 2, tab_tile_vertical_padding / 2, w, th - tab_tile_vertical_padding, 0, btn_prev, 0);
+  drw_text(drw, x + tab_tile_inner_padding_horizontal / 2, tab_tile_vertical_padding / 2, w, th - tab_tile_vertical_padding, 0, btn_prev, 0);
   x += w;
   drw_setscheme(drw, scheme[SchemeBtnNext]);
-  w = TEXTW(btn_next) - lrpad + tab_tile_outer_padding_horizontal;
+  w = TEXTW(btn_next) - lrpad + tab_tile_inner_padding_horizontal;
   m->tab_btn_w[1] = w;
-  drw_text(drw, x + tab_tile_outer_padding_horizontal / 2, tab_tile_vertical_padding / 2, w, th - tab_tile_vertical_padding, 0, btn_next, 0);
+  drw_text(drw, x + tab_tile_inner_padding_horizontal / 2, tab_tile_vertical_padding / 2, w, th - tab_tile_vertical_padding, 0, btn_next, 0);
   x += w;
   drw_setscheme(drw, scheme[SchemeBtnClose]);
   w = TEXTW(btn_close) - lrpad + tab_tile_outer_padding_horizontal;
   m->tab_btn_w[2] = w;
-  drw_text(drw, x + tab_tile_outer_padding_horizontal / 2, tab_tile_vertical_padding / 2, w, th - tab_tile_vertical_padding, 0, btn_close, 0);
+  drw_text(drw, x + tab_tile_inner_padding_horizontal / 2, tab_tile_vertical_padding / 2, w, th - tab_tile_vertical_padding, 0, btn_close, 0);
   x += w;
   drw_map(drw, m->tabwin, 0, 0, m->ww, th);
 }
