@@ -38,6 +38,8 @@ void srwm_clear_keybindings(void);
 void srwm_grabkeys(void);
 
 /* Config getters and setters */
+int srwm_get_layout_mode(void);  
+void srwm_set_layout_mode(int);
 unsigned int srwm_get_borderpx(void);
 void srwm_set_borderpx(unsigned int);
 unsigned int srwm_get_px_till_snapping_to_screen_edge(void);
@@ -98,7 +100,6 @@ void srwm_action_tag(unsigned int mask);
 void srwm_action_toggletag(unsigned int mask);
 
 /* Canvas mode actions */  
-void srwm_action_togglecanvas(void);  
 void srwm_action_movecanvas(int dir);  
 void srwm_action_homecanvas(void);  
 void srwm_action_centerwindowoncanvas(void);  

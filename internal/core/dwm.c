@@ -357,7 +357,6 @@ static void manuallymovecanvas(const Arg *arg);
 static void centerwindowoncanvas(const Arg *arg);
 static void homecanvas(const Arg *arg);
 static void movecanvas(const Arg *arg);
-static void togglecanvas(const Arg *arg);
 static int getcurrenttag(Monitor *m);
 static void zoomcanvas(const Arg *arg);
 
@@ -422,6 +421,7 @@ int toptab = 1;
 int topbar = 1;
 int colorfultag = 1;
 int tag_colorful_occupied_only = 1;
+int layout_mode = 0;  /* 0 = monocle (default), 1 = canvas */
 const char* fonts[] = {"JetBrainsMonoNerdFont:size=13"};
 const char* colors[][3] = {
     [SchemeNorm] = {gray3, black, gray2},
@@ -1016,7 +1016,7 @@ Monitor* createmon(void) {
   m->prev = NULL;
   m->curtag = m->prevtag = 1;
   m->showbar_mask = showbar ? ~0u : 0u;
-  m->canvas_mode = 0;  
+  m->canvas_mode = layout_mode;
   m->canvas = ecalloc(9, sizeof(CanvasOffset)); /* one per tag, max 9 */
   for (int i = 0; i < 9; i++) {
     m->canvas[i].zoom = 1.0f;
@@ -3223,50 +3223,14 @@ void srwm_action_view(unsigned int mask) { view(&(Arg){.ui = mask}); }
 void srwm_action_toggleview(unsigned int mask) { toggleview(&(Arg){.ui = mask}); }
 void srwm_action_tag(unsigned int mask) { tag(&(Arg){.ui = mask}); }
 void srwm_action_toggletag(unsigned int mask) { toggletag(&(Arg){.ui = mask}); }
-void srwm_set_tag_colorful_occupied_only(int val) {
-  tag_colorful_occupied_only = val;
-}
+void srwm_set_tag_colorful_occupied_only(int val) {tag_colorful_occupied_only = val;}
+int srwm_get_layout_mode(void) { return layout_mode; }  
+void srwm_set_layout_mode(int val) { layout_mode = val; }
 
 static int getcurrenttag(Monitor *m) {  
     unsigned int i;  
     for (i = 0; i < TAGSLENGTH && !(m->tagset[m->seltags] & (1 << i)); i++);  
     return i < TAGSLENGTH ? i : 0;  
-}  
-  
-/* Toggle canvas mode on/off for the current monitor */  
-static void togglecanvas(const Arg *arg) {  
-    if (!selmon->canvas_mode) {  
-        /* Entering canvas mode: save positions, make all tiled windows floating */  
-        selmon->canvas_mode = 1;  
-        int tagidx = getcurrenttag(selmon);  
-        Client *c;  
-        for (c = selmon->clients; c; c = c->next) {  
-            if (ISVISIBLE(c)) {  
-                c->saved_cx = c->x;  
-                c->saved_cy = c->y;  
-                c->saved_cw = c->w;  
-                c->saved_ch = c->h;  
-                c->was_on_canvas = 1;  
-                if (!c->isfloating) {  
-                    c->isfloating = 1;  
-                }  
-            }  
-        }  
-        selmon->canvas[tagidx].cx = 0;  
-        selmon->canvas[tagidx].cy = 0;  
-        selmon->canvas[tagidx].zoom = 1.0f;
-    } else {  
-        /* Leaving canvas mode: restore tiled layout */  
-        selmon->canvas_mode = 0;  
-        Client *c;  
-        for (c = selmon->clients; c; c = c->next) {  
-            if (ISVISIBLE(c) && c->was_on_canvas) {  
-                c->isfloating = 0;  
-                c->was_on_canvas = 0;  
-            }  
-        }  
-    }  
-    arrange(selmon);  
 }  
   
 static void movecanvas(const Arg *arg) {  
@@ -3472,7 +3436,6 @@ static void zoomcanvas(const Arg *arg) {
     drawbar(selmon);  
 }
 
-void srwm_action_togglecanvas(void) { togglecanvas(&(Arg){0}); }  
 void srwm_action_movecanvas(int dir) { movecanvas(&(Arg){.i = dir}); }  
 void srwm_action_homecanvas(void) { homecanvas(&(Arg){0}); }  
 void srwm_action_centerwindowoncanvas(void) { centerwindowoncanvas(&(Arg){0}); }  

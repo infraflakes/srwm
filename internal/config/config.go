@@ -36,4 +36,18 @@ func RegisterConfigAPI(L *lua.LState, srwmMod *lua.LTable) {
 	}))
 
 	L.SetField(srwmMod, "cfg", cfgTable)
+
+	// srwm.layout("monocle") or srwm.layout("canvas")
+	L.SetField(srwmMod, "layout", L.NewFunction(func(L *lua.LState) int {
+		name := L.CheckString(1)
+		switch name {
+		case "monocle":
+			core.SetLayoutMode(0)
+		case "canvas":
+			core.SetLayoutMode(1)
+		default:
+			L.RaiseError("unknown layout: %s (expected 'monocle' or 'canvas')", name)
+		}
+		return 0
+	}))
 }

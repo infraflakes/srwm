@@ -1,8 +1,3 @@
--- Toggle canvas mode
-srwm.key.bind("Mod4", "c", function()
-	srwm.canvas.toggle()
-end)
-
 -- Pan canvas with arrow keys (0=left, 1=right, 2=up, 3=down)
 srwm.key.bind("Mod4+Shift", "Left", function()
 	srwm.canvas.move(0)

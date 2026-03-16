@@ -84,11 +84,6 @@ func RegisterActionsAPI(L *lua.LState, srwmMod *lua.LTable) {
 	// srwm.canvas namespace
 	canvasTable := L.NewTable()
 
-	L.SetField(canvasTable, "toggle", L.NewFunction(func(L *lua.LState) int {
-		core.ActionToggleCanvas()
-		return 0
-	}))
-
 	L.SetField(canvasTable, "move", L.NewFunction(func(L *lua.LState) int {
 		dir := L.CheckInt(1)
 		core.ActionMoveCanvas(dir)
