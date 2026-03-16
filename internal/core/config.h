@@ -5,6 +5,7 @@
 #include "themes/vague.h"
 
 /* appearance - configurable via Lua */
+extern int layout_mode;
 extern unsigned int borderpx;
 extern unsigned int px_till_snapping_to_screen_edge;
 extern unsigned int gaps;

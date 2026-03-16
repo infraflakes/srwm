@@ -11,3 +11,4 @@ include("bar") -- Bar settings
 include("keybindings") -- Keyboard shortcuts
 include("theming") -- Palette, colors, widgets, bar layout
 include("startup") -- Autostart applications
+include("canvas") -- Canvas layout

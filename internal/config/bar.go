@@ -108,7 +108,7 @@ func RegisterBarAPI(L *lua.LState, srwmMod *lua.LTable, configDir string) func()
 		return 1
 	}))
 
-	barTable.RawSetString("tab_tile_inner_padding_horizontal", L.NewFunction(func(L *lua.LState) int {
+	barTable.RawSetString("tab_tile_outer_padding_horizontal", L.NewFunction(func(L *lua.LState) int {
 		if L.GetTop() == 1 {
 			core.SetTabTileOuterPaddingHorizontal(L.CheckInt(1))
 		} else {
@@ -117,7 +117,7 @@ func RegisterBarAPI(L *lua.LState, srwmMod *lua.LTable, configDir string) func()
 		return 1
 	}))
 
-	barTable.RawSetString("tab_tile_outer_padding_horizontal", L.NewFunction(func(L *lua.LState) int {
+	barTable.RawSetString("tab_tile_inner_padding_horizontal", L.NewFunction(func(L *lua.LState) int {
 		if L.GetTop() == 1 {
 			core.SetTabTileInnerPaddingHorizontal(L.CheckInt(1))
 		} else {

@@ -29,6 +29,9 @@ var defaultSrwmrcScript []byte
 //go:embed lua/general.lua
 var defaultGeneralScript []byte
 
+//go:embed lua/canvas.lua
+var defaultCanvasScript []byte
+
 //go:embed lua/keybindings.lua
 var defaultKeybindingsScript []byte
 
@@ -44,6 +47,7 @@ var defaultStartupScript []byte
 // defaultLuaModules maps filenames to their embedded contents.
 var defaultLuaModules = map[string][]byte{
 	"general.lua":     defaultGeneralScript,
+	"canvas.lua":      defaultCanvasScript,
 	"keybindings.lua": defaultKeybindingsScript,
 	"theming.lua":     defaultThemingScript,
 	"bar.lua":         defaultBarScript,

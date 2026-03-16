@@ -17,9 +17,8 @@ srwm.bar.tab_tile_outer_padding_horizontal(15)
 srwm.bar.show(true)
 srwm.bar.top(true)
 
--- Set fonts (use fc-list to find the name of your font)
-srwm.bar.fonts("JetBrainsMonoNerdFont:size=13")
--- srwm.bar.fonts("Terminess Nerd Font:size=14")
+-- -- Set fonts
+srwm.bar.fonts("Terminess Nerd Font:size=16")
 
 -- Tag underline
 srwm.bar.tag_underline_padding(5)

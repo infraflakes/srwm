@@ -81,4 +81,35 @@ func RegisterActionsAPI(L *lua.LState, srwmMod *lua.LTable) {
 	}))
 
 	L.SetField(srwmMod, "tag", tagTable)
+	// srwm.canvas namespace
+	canvasTable := L.NewTable()
+
+	L.SetField(canvasTable, "move", L.NewFunction(func(L *lua.LState) int {
+		dir := L.CheckInt(1)
+		core.ActionMoveCanvas(dir)
+		return 0
+	}))
+
+	L.SetField(canvasTable, "home", L.NewFunction(func(L *lua.LState) int {
+		core.ActionHomeCanvas()
+		return 0
+	}))
+
+	L.SetField(canvasTable, "center_window", L.NewFunction(func(L *lua.LState) int {
+		core.ActionCenterWindowOnCanvas()
+		return 0
+	}))
+
+	L.SetField(canvasTable, "drag", L.NewFunction(func(L *lua.LState) int {
+		core.ActionManuallyMoveCanvas()
+		return 0
+	}))
+
+	L.SetField(canvasTable, "zoom", L.NewFunction(func(L *lua.LState) int {
+		dir := L.CheckInt(1)
+		core.ActionZoomCanvas(dir)
+		return 0
+	}))
+
+	L.SetField(srwmMod, "canvas", canvasTable)
 }
