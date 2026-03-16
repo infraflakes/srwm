@@ -1836,6 +1836,19 @@ void manage(Window w, XWindowAttributes* wa) {
        not at the absolute origin which may be far off-screen after panning */  
     c->x = c->mon->wx + (c->mon->ww - WIDTH(c)) / 2;  
     c->y = c->mon->wy + (c->mon->wh - HEIGHT(c)) / 2;  
+
+    /* Scale new window to match current zoom level */
+    int tagidx = getcurrenttag(c->mon);
+    float zoom = c->mon->canvas[tagidx].zoom;
+    if (zoom != 1.0f) {
+        int cx = c->mon->wx + c->mon->ww / 2;
+        int cy = c->mon->wy + c->mon->wh / 2;
+        c->w = MAX(1, (int)(c->w * zoom));
+        c->h = MAX(1, (int)(c->h * zoom));
+        /* Re-center with new size */
+        c->x = cx - (c->w + 2 * c->bw) / 2;
+        c->y = cy - (c->h + 2 * c->bw) / 2;
+    }
   }
   if (c->isfloating) XRaiseWindow(dpy, c->win);
   attach(c);
