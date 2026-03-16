@@ -1831,6 +1831,12 @@ void manage(Window w, XWindowAttributes* wa) {
   if (c->mon->canvas_mode && !c->isfloating) {  
      c->isfloating = 1;  
   }
+  if (c->mon->canvas_mode) {  
+    /* Center new window on current viewport so it appears where the user is looking,  
+       not at the absolute origin which may be far off-screen after panning */  
+    c->x = c->mon->wx + (c->mon->ww - WIDTH(c)) / 2;  
+    c->y = c->mon->wy + (c->mon->wh - HEIGHT(c)) / 2;  
+  }
   if (c->isfloating) XRaiseWindow(dpy, c->win);
   attach(c);
   attachstack(c);
@@ -2543,7 +2549,7 @@ void showhide(Client* c) {
   if (ISVISIBLE(c)) {
     /* show clients top down */
     XMoveWindow(dpy, c->win, c->x, c->y);
-    if (c->isfloating && !c->isfullscreen) resize(c, c->x, c->y, c->w, c->h, 0);
+    if (c->isfloating && !c->isfullscreen && !c->mon->canvas_mode) resize(c, c->x, c->y, c->w, c->h, 0);
     showhide(c->snext);
   } else {
     /* hide clients bottom up */
