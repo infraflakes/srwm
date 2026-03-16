@@ -84,7 +84,6 @@
           inherit nativeBuildInputs buildInputs;
 
           preBuild = ''
-            go env -w GOPATH=$HOME/.local/share/go
             export CGO_CFLAGS="$(pkg-config --cflags x11 xinerama xft xrender imlib2)"
             export CGO_LDFLAGS="$(pkg-config --libs --static x11 x11-xcb xcb-shm xinerama xft xrender imlib2)"
           '';
