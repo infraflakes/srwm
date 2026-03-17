@@ -3,7 +3,7 @@
 --------------------------------------------------------------------------------
 
 -- Layout: "monocle" (default) or "canvas" (infinite canvas)
-srwm.layout("monocle")
+srwm.layout("canvas")
 
 -- Define workspace names (tags)
 srwm.tags.set("1,2,3,4,5,6")

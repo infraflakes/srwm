@@ -18,10 +18,10 @@ end)
 srwm.key.bind("Mod4", "f", function()
 	srwm.window.toggle_fullscreen()
 end)
-srwm.key.bind("Mod4", "Down", function()
+srwm.key.bind("Mod4+Alt", "Down", function()
 	srwm.window.focus(1)
 end)
-srwm.key.bind("Mod4", "Up", function()
+srwm.key.bind("Mod4+Alt", "Up", function()
 	srwm.window.focus(-1)
 end)
 
@@ -29,10 +29,10 @@ end)
 -- Tag Management
 --------------------------------------------------------------------------------
 
-srwm.key.bind("Mod4", "Left", function()
+srwm.key.bind("Mod4+Alt", "Left", function()
 	srwm.tag.shift_view(-1)
 end)
-srwm.key.bind("Mod4", "Right", function()
+srwm.key.bind("Mod4+Alt", "Right", function()
 	srwm.tag.shift_view(1)
 end)
 srwm.key.bind("Mod4+Ctrl", "Left", function()
@@ -97,6 +97,11 @@ end)
 
 srwm.key.bind("Mod4", "BackSpace", function()
 	srwm.quit()
+end)
+
+srwm.key.bind("Mod4", "l", function()
+	srwm.spawn("slock")
+	srwm.spawn("systemctl suspend")
 end)
 
 srwm.key.bind("Mod4", "Return", function()
