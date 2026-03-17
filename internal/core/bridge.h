@@ -103,7 +103,6 @@ void srwm_action_toggletag(unsigned int mask);
 void srwm_action_movecanvas(int dir);  
 void srwm_action_homecanvas(void);  
 void srwm_action_centerwindowoncanvas(void);  
-void srwm_action_manuallymovecanvas(void);
 void srwm_action_zoomcanvas(int dir);
 
 /* Called from C -> Go when a dynamic key is pressed */

@@ -80,11 +80,6 @@ func ActionCenterWindowOnCanvas() {
 	C.srwm_action_centerwindowoncanvas()
 }
 
-// ActionManuallyMoveCanvas starts mouse-drag canvas panning.
-func ActionManuallyMoveCanvas() {
-	C.srwm_action_manuallymovecanvas()
-}
-
 // ActionZoomCanvas zooms the canvas in (+1) or out (-1).
 func ActionZoomCanvas(dir int) {
 	C.srwm_action_zoomcanvas(C.int(dir))

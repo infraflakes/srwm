@@ -461,6 +461,7 @@ const Rule rules[] = {
 
 /* button definitions */
 static const Button buttons[] = {
+    {ClkRootWin, MODKEY, Button1, manuallymovecanvas, {0}},  // drag canvas on blank desktop
     {ClkClientWin, MODKEY, Button1, moveorplace, {.i = 0}},
     {ClkClientWin, MODKEY, Button2, togglefloating, {0}},
     {ClkClientWin, MODKEY, Button3, resizemouse, {0}},
@@ -3431,7 +3432,7 @@ static void manuallymovecanvas(const Arg *arg) {
             lasttime = ev.xmotion.time;  
   
             float zoom = selmon->canvas[tagidx].zoom;
-            float speed = 5.0f;  // base multiplier
+            float speed = 3.0f;  // base multiplier
             int nx = (int)((ev.xmotion.x - start_x) * speed / zoom);
             int ny = (int)((ev.xmotion.y - start_y) * speed / zoom);
   
@@ -3507,5 +3508,4 @@ static void zoomcanvas(const Arg *arg) {
 void srwm_action_movecanvas(int dir) { movecanvas(&(Arg){.i = dir}); }  
 void srwm_action_homecanvas(void) { homecanvas(&(Arg){0}); }  
 void srwm_action_centerwindowoncanvas(void) { centerwindowoncanvas(&(Arg){0}); }  
-void srwm_action_manuallymovecanvas(void) { manuallymovecanvas(&(Arg){0}); }
 void srwm_action_zoomcanvas(int dir) { zoomcanvas(&(Arg){.i = dir}); }

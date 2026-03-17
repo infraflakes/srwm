@@ -22,11 +22,6 @@ srwm.key.bind("Mod4", "g", function()
 	srwm.canvas.center_window()
 end)
 
--- Mouse-drag canvas panning (bind to a mouse button via srwm.key or button config)
-srwm.key.bind("Mod4+Shift", "space", function()
-	srwm.canvas.drag()
-end)
-
 -- Zoom in/out canvas
 srwm.key.bind("Mod4", "equal", function()
 	srwm.canvas.zoom(1)
