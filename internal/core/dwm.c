@@ -1559,6 +1559,7 @@ void focuswin(const Arg* arg) {
   };
   if (c) {
     focus(c);
+    centerwindowoncanvas(&(Arg){0});
     restack(selmon);
   }
 }
@@ -2681,12 +2682,11 @@ void togglebar(const Arg* arg) {
 
 void togglefloating(const Arg* arg) {
   if (!selmon->sel) return;
-  if (selmon->sel->isfullscreen) /* no support for fullscreen windows */
-    return;
+  if (selmon->sel->isfullscreen) return;
+  if (selmon->canvas_mode) return;  /* all windows are floating in canvas mode */
   selmon->sel->isfloating = !selmon->sel->isfloating || selmon->sel->isfixed;
   if (selmon->sel->isfloating)
-    resize(selmon->sel, selmon->sel->x, selmon->sel->y, selmon->sel->w,
-           selmon->sel->h, 0);
+    resize(selmon->sel, selmon->sel->x, selmon->sel->y, selmon->sel->w, selmon->sel->h, 0);
   arrange(selmon);
 }
 
@@ -3281,7 +3281,7 @@ void shiftview(const Arg *arg) {
 void srwm_action_killclient(void) { killclient(&(Arg){0}); }
 void srwm_action_togglefloating(void) { togglefloating(&(Arg){0}); }
 void srwm_action_togglefullscr(void) { togglefullscr(&(Arg){0}); }
-void srwm_action_focusstack(int dir) { focusstack(&(Arg){.i = dir}); }
+void srwm_action_focusstack(int dir) { focusstack(&(Arg){.i = dir}); centerwindowoncanvas(&(Arg){0}); }
 void srwm_action_shiftview(int dir) { shiftview(&(Arg){.i = dir}); }
 void srwm_action_tagtoprev(void) { tagtoprev(&(Arg){0}); }
 void srwm_action_tagtonext(void) { tagtonext(&(Arg){0}); }
