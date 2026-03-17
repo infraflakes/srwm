@@ -8,7 +8,6 @@ all: build
 build:
 	@echo "Building srwm $(VERSION)..."
 	go build -ldflags="-w -s -X github.com/infraflakes/srwm/cmd.Version=$(VERSION)" -o ./bin/srwm .
-	upx --best --lzma ./bin/srwm
 
 fmt:
 	@echo "Formatting code..."

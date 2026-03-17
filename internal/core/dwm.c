@@ -3372,8 +3372,10 @@ static void manuallymovecanvas(const Arg *arg) {
                 continue;  
             lasttime = ev.xmotion.time;  
   
-            int nx = ev.xmotion.x - start_x;  
-            int ny = ev.xmotion.y - start_y;  
+            float zoom = selmon->canvas[tagidx].zoom;
+            float speed = 2.5f;  // base multiplier
+            int nx = (int)((ev.xmotion.x - start_x) * speed / zoom);
+            int ny = (int)((ev.xmotion.y - start_y) * speed / zoom);
   
             Client *c;  
             for (c = selmon->clients; c; c = c->next) {  
