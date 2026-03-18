@@ -410,7 +410,7 @@ void unmapnotify(XEvent* e) {
   if ((c = wintoclient(ev->window))) {
     if (ev->send_event)
       setclientstate(c, WithdrawnState);
-    else
+    else if (c->ismapped)
       unmanage(c, 0);
   } else if ((c = wintosystrayicon(ev->window))) {
     /* KLUDGE! sometimes icons occasionally unmap their windows, but do
