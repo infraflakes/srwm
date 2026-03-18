@@ -1,5 +1,6 @@
 /* bridge.c — Thin lifecycle wrapper around dwm.c for Go */
 #include "bridge.h"
+#include "wm.h"
 #include <X11/Xlib.h>
 #include <locale.h>
 #include <stdio.h>
@@ -84,27 +85,6 @@ void srwm_grabkeys(void) {
   grabkeys();
 }
 
-/* Config getters and setters */
-extern unsigned int borderpx;
-extern unsigned int px_till_snapping_to_screen_edge;
-extern unsigned int gaps;
-extern unsigned int systraypinning;
-extern unsigned int systrayspacing;
-extern int systray_enable;
-extern int showbar;
-extern int bar_horizontal_padding;
-extern int bar_vertical_padding;
-extern int tab_height;
-extern int tab_tile_vertical_padding;
-extern int tab_tile_inner_padding_horizontal;
-extern int tab_tile_outer_padding_horizontal;
-extern unsigned int tag_underline_padding;
-extern unsigned int tag_underline_size;
-extern unsigned int tag_underline_offset_from_bar_bottom;
-extern int tag_underline_for_all_tags;
-extern int toptab;
-extern int topbar;
-
 unsigned int srwm_get_borderpx(void) { return borderpx; }
 void srwm_set_borderpx(unsigned int v) { borderpx = v; }
 
@@ -185,3 +165,25 @@ extern int tagschemes[];
 void srwm_set_tagscheme(int idx, int scheme_idx) {
   if (idx >= 0 && idx < 9) tagschemes[idx] = scheme_idx;
 }
+
+/* srwm_action bindings mapping primitives to internal Arg structs */
+void srwm_action_killclient(void) { killclient(&(Arg){0}); }
+void srwm_action_togglefloating(void) { togglefloating(&(Arg){0}); }
+void srwm_action_togglefullscr(void) { togglefullscr(&(Arg){0}); }
+void srwm_action_focusstack(int dir) { focusstack(&(Arg){.i = dir}); centerwindowoncanvas(&(Arg){0}); }
+void srwm_action_shiftview(int dir) { shiftview(&(Arg){.i = dir}); }
+void srwm_action_tagtoprev(void) { tagtoprev(&(Arg){0}); }
+void srwm_action_tagtonext(void) { tagtonext(&(Arg){0}); }
+void srwm_action_move_tag_to_monitor(int dir) { move_tag_to_monitor(&(Arg){.i = dir}); }
+void srwm_action_view(unsigned int mask) { view(&(Arg){.ui = mask}); }
+void srwm_action_toggleview(unsigned int mask) { toggleview(&(Arg){.ui = mask}); }
+void srwm_action_tag(unsigned int mask) { tag(&(Arg){.ui = mask}); }
+void srwm_action_toggletag(unsigned int mask) { toggletag(&(Arg){.ui = mask}); }
+void srwm_set_tag_colorful_occupied_only(int val) {tag_colorful_occupied_only = val;}
+int srwm_get_layout_mode(void) { return layout_mode; }  
+void srwm_set_layout_mode(int val) { layout_mode = val; }
+
+void srwm_action_movecanvas(int dir) { movecanvas(&(Arg){.i = dir}); }  
+void srwm_action_homecanvas(void) { homecanvas(&(Arg){0}); }  
+void srwm_action_centerwindowoncanvas(void) { centerwindowoncanvas(&(Arg){0}); }  
+void srwm_action_zoomcanvas(int dir) { zoomcanvas(&(Arg){.i = dir}); }

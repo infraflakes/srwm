@@ -1,0 +1,457 @@
+#include "wm.h"
+
+int drawstatusbar(Monitor* m, int bh, char* stext) {
+  int ret, i, w, x, len;
+  short isCode = 0;
+  char* text;
+  char* p;
+
+  len = strlen(stext) + 1;
+  if (!(text = (char*)malloc(sizeof(char) * len))) die("malloc");
+  p = text;
+  memcpy(text, stext, len);
+
+  /* compute width of the status text */
+  w = 0;
+  i = -1;
+  while (text[++i]) {
+    if (text[i] == '^') {
+      if (!isCode) {
+        isCode = 1;
+        text[i] = '\0';
+        w += TEXTW(text) - lrpad;
+        text[i] = '^';
+        if (text[++i] == 'f') w += atoi(text + ++i);
+      } else {
+        isCode = 0;
+        text = text + i + 1;
+        i = -1;
+      }
+    }
+  }
+  if (!isCode)
+    w += TEXTW(text) - lrpad;
+  else
+    isCode = 0;
+  text = p;
+
+  w += bar_horizontal_padding;
+  ret = x = m->ww - m->gap * 2 - borderpx - w;
+  x = m->ww - m->gap * 2 - borderpx - w - getsystraywidth();
+
+  drw_setscheme(drw, scheme[LENGTH(colors)]);
+  drw->scheme[ColFg] = scheme[SchemeNorm][ColFg];
+  drw->scheme[ColBg] = scheme[SchemeNorm][ColBg];
+  drw_rect(drw, x, borderpx, w, bh, 1, 1);
+  x += bar_horizontal_padding / 2;
+
+  /* process status text */
+  i = -1;
+  while (text[++i]) {
+    if (text[i] == '^' && !isCode) {
+      isCode = 1;
+
+      text[i] = '\0';
+      w = TEXTW(text) - lrpad;
+      drw_text(drw, x, borderpx + bar_vertical_padding / 2, w, bh - bar_vertical_padding, 0, text,
+               0);
+
+      x += w;
+
+      /* process code */
+      while (text[++i] != '^') {
+        if (text[i] == 'c') {
+          char buf[8];
+          memcpy(buf, (char*)text + i + 1, 7);
+          buf[7] = '\0';
+          drw_clr_create(drw, &drw->scheme[ColFg], buf);
+          i += 7;
+        } else if (text[i] == 'b') {
+          char buf[8];
+          memcpy(buf, (char*)text + i + 1, 7);
+          buf[7] = '\0';
+          drw_clr_create(drw, &drw->scheme[ColBg], buf);
+          i += 7;
+        } else if (text[i] == 'd') {
+          drw->scheme[ColFg] = scheme[SchemeNorm][ColFg];
+          drw->scheme[ColBg] = scheme[SchemeNorm][ColBg];
+        } else if (text[i] == 'r') {
+          int rx = atoi(text + ++i);
+          while (text[++i] != ',');
+          int ry = atoi(text + ++i);
+          while (text[++i] != ',');
+          int rw = atoi(text + ++i);
+          while (text[++i] != ',');
+          int rh = atoi(text + ++i);
+
+          drw_rect(drw, rx + x, ry + borderpx + bar_vertical_padding / 2, rw, rh, 1, 0);
+        } else if (text[i] == 'f') {
+          x += atoi(text + ++i);
+        }
+      }
+
+      text = text + i + 1;
+      i = -1;
+      isCode = 0;
+    }
+  }
+
+  if (!isCode) {
+    w = TEXTW(text) - lrpad;
+    drw_text(drw, x, borderpx + bar_vertical_padding / 2, w, bh - bar_vertical_padding, 0, text, 0);
+  }
+
+  drw_setscheme(drw, scheme[SchemeNorm]);
+  free(p);
+
+  return ret;
+}
+
+
+void drawbar(Monitor* m) {
+  int x, y = borderpx, w, stw = 0;
+  int bh_n = bh - borderpx * 2;
+  int boxs = drw->fonts->h / 9;
+  int boxw = drw->fonts->h / 6 + 2;
+  unsigned int i, occ = 0, urg = 0;
+
+  XSetForeground(drw->dpy, drw->gc, clrborder.pixel);
+  XFillRectangle(drw->dpy, drw->drawable, drw->gc, 0, 0, m->ww - m->gap * 2,
+                 bh);
+
+  if (systray_enable && m == systraytomon(m)) stw = getsystraywidth();
+
+  if (!m->showbar) return;
+
+  /* draw status first so it can be overdrawn by tags later */
+  int sbar_x = 0;
+  if (m == selmon) {
+    sbar_x = drawstatusbar(m, bh_n, stext);
+  }
+
+  resizebarwin(m);
+  occ = m->occ;
+  urg = m->urg;
+  x = borderpx;
+  for (i = 0; i < TAGSLENGTH; i++) {
+    w = TEXTW(tags[i]);
+    int use_colorful = m->colorfultag && (!tag_colorful_occupied_only || (occ & 1 << i));
+    drw_setscheme(
+        drw, scheme[use_colorful ? tagschemes[i] : (occ & 1 << i ? SchemeSel : SchemeTag)]);
+    drw_text(drw, x, y, w, bh_n, lrpad / 2, tags[i], urg & 1 << i);
+    if (tag_underline_for_all_tags ||
+        m->tagset[m->seltags] &
+            1 << i) /* if there are conflicts, just move these lines directly
+                       underneath both 'drw_setscheme' and 'drw_text' :) */
+      drw_rect(drw, x + tag_underline_padding, bh_n - tag_underline_size - tag_underline_offset_from_bar_bottom,
+               w - (tag_underline_padding * 2), tag_underline_size, 1, 0);
+    /*if (occ & 1 << i)
+       drw_rect(drw, x + boxs, y + boxs, boxw, boxw,
+               m == selmon && selmon->sel && selmon->sel->tags & 1 << i,
+               urg & 1 << i); */
+    x += w;
+  }
+
+  // CHANGE TITLE LENGTH
+  if (sbar_x > 0)
+    w = sbar_x - stw - x;
+  else
+    w = m->ww - x - stw - 2 * m->gap;
+  if (w < 0) w = 0;
+  if (w > bh_n) {
+    if (m->sel) {
+      drw_setscheme(drw, scheme[m == selmon ? SchemeTitle : SchemeNorm]);
+      drw_text(drw, x, 0, w, bh,
+               lrpad / 2 + (m->sel->icon ? m->sel->icw + ICONSPACING : 0),
+               m->sel->name, 0);
+      if (m->sel->icon)
+        drw_pic(drw, x + lrpad / 2, (bh - m->sel->ich) / 2, m->sel->icw,
+                m->sel->ich, m->sel->icon);
+      if (m->sel->isfloating)
+        drw_rect(drw, x + boxs, boxs, boxw, boxw, m->sel->isfixed, 0);
+    } else {
+      drw_setscheme(drw, scheme[SchemeNorm]);
+      drw_rect(drw, x, y, w - m->gap * 2, bh_n, 1, 1);
+    }
+  }
+  drw_map(drw, m->barwin, 0, 0, m->ww - stw, bh);
+}
+
+void drawbars(void) {
+  Monitor* m;
+
+  for (m = mons; m; m = m->next) drawbar(m);
+}
+
+void drawtabs(void) {
+  Monitor* m;
+
+  for (m = mons; m; m = m->next) drawtab(m);
+}
+
+int cmpint(const void* p1, const void* p2) {
+  return *(const int*)p1 - *(const int*)p2;
+}
+
+void drawtab(Monitor* m) {
+  if (th <= 0) return;
+  Client* c;
+  int i;
+  int nvis = 0;
+  for (c = m->clients; c; c = c->next)
+    if (ISVISIBLE(c)) ++nvis;
+
+  /* Hide tab bar when no windows, show when there are windows */
+  if (nvis == 0) {
+    XUnmapWindow(dpy, m->tabwin);
+    return;
+  }
+  XMapWindow(dpy, m->tabwin);
+
+  char* btn_prev = "";
+  char* btn_next = "";
+  char* btn_close = " ";
+  int buttons_w = 0;
+  int sorted_label_widths[MAXTABS];
+  int tot_width = 0;
+  int maxsize = bh;
+  int x = 0;
+  int w = 0;
+  int mw = m->ww - 2 * m->gap;
+  buttons_w += TEXTW(btn_prev) - lrpad + tab_tile_inner_padding_horizontal;
+  buttons_w += TEXTW(btn_next) - lrpad + tab_tile_inner_padding_horizontal;
+  buttons_w += TEXTW(btn_close) - lrpad + tab_tile_inner_padding_horizontal;
+  tot_width = buttons_w;
+
+  /* Calculates number of labels and their width */
+  m->ntabs = 0;
+  for (c = m->clients; c; c = c->next) {
+    if (!ISVISIBLE(c)) continue;
+    m->tab_widths[m->ntabs] =
+        MIN(TEXTW(c->name) - lrpad + tab_tile_outer_padding_horizontal + tab_tile_inner_padding_horizontal, 250);
+    tot_width += m->tab_widths[m->ntabs];
+    ++m->ntabs;
+    if (m->ntabs >= MAXTABS) break;
+  }
+
+  if (tot_width > mw) {  // not enough space to display the labels, they need to
+                         // be truncated
+    memcpy(sorted_label_widths, m->tab_widths, sizeof(int) * m->ntabs);
+    qsort(sorted_label_widths, m->ntabs, sizeof(int), cmpint);
+    for (i = 0; i < m->ntabs; ++i) {
+      if (tot_width + (m->ntabs - i) * sorted_label_widths[i] > mw) break;
+      tot_width += sorted_label_widths[i];
+    }
+    maxsize = (mw - tot_width) / (m->ntabs - i);
+  } else {
+    maxsize = mw;
+  }
+  i = 0;
+
+  /* cleans window */
+  drw_setscheme(drw, scheme[TabNorm]);
+  drw_rect(drw, 0, 0, mw, th, 1, 1);
+
+  for (c = m->clients; c; c = c->next) {
+    if (!ISVISIBLE(c)) continue;
+    if (i >= m->ntabs) break;
+    if (m->tab_widths[i] > maxsize) m->tab_widths[i] = maxsize;
+    w = m->tab_widths[i];
+    drw_setscheme(drw, scheme[(c == m->sel) ? TabSel : TabNorm]);
+    drw_text(drw, x + tab_tile_inner_padding_horizontal / 2, tab_tile_vertical_padding / 2, w - tab_tile_outer_padding_horizontal, th - tab_tile_vertical_padding, tab_tile_outer_padding_horizontal / 2, c->name, 0);
+    x += w;
+    ++i;
+  }
+
+  w = mw - buttons_w - x;
+  x += w;
+  drw_setscheme(drw, scheme[SchemeBtnPrev]);
+  w = TEXTW(btn_prev) - lrpad + tab_tile_inner_padding_horizontal;
+  m->tab_btn_w[0] = w;
+  drw_text(drw, x + tab_tile_inner_padding_horizontal / 2, tab_tile_vertical_padding / 2, w, th - tab_tile_vertical_padding, 0, btn_prev, 0);
+  x += w;
+  drw_setscheme(drw, scheme[SchemeBtnNext]);
+  w = TEXTW(btn_next) - lrpad + tab_tile_inner_padding_horizontal;
+  m->tab_btn_w[1] = w;
+  drw_text(drw, x + tab_tile_inner_padding_horizontal / 2, tab_tile_vertical_padding / 2, w, th - tab_tile_vertical_padding, 0, btn_next, 0);
+  x += w;
+  drw_setscheme(drw, scheme[SchemeBtnClose]);
+  w = TEXTW(btn_close) - lrpad + tab_tile_outer_padding_horizontal;
+  m->tab_btn_w[2] = w;
+  drw_text(drw, x + tab_tile_inner_padding_horizontal / 2, tab_tile_vertical_padding / 2, w, th - tab_tile_vertical_padding, 0, btn_close, 0);
+  x += w;
+  drw_map(drw, m->tabwin, 0, 0, m->ww, th);
+}
+
+void updatebarpos(Monitor* m) {
+  m->wy = m->my;
+  m->wh = m->mh;
+
+  if (m->showbar) {
+    m->wh -= bh;
+    m->by = m->topbar ? m->wy : m->wy + m->wh;
+    if (m->topbar) m->wy += bh;
+  } else {
+    m->by = -bh;
+  }  
+}
+
+void updatebars(void) {
+  unsigned int w;
+  Monitor* m;
+  XSetWindowAttributes wa = {
+      .override_redirect = True,
+      .background_pixmap = ParentRelative,
+      .event_mask = ButtonPressMask | ExposureMask | PointerMotionMask};
+
+  XClassHint ch = {"dwm", "dwm"};
+  for (m = mons; m; m = m->next) {
+    if (m->barwin) continue;
+    w = m->ww;
+    if (systray_enable && m == systraytomon(m)) w -= getsystraywidth();
+    m->barwin = XCreateWindow(
+        dpy, root, m->wx + m->gap, m->by, w - 2 * m->gap, bh, 0,
+        DefaultDepth(dpy, screen), CopyFromParent, DefaultVisual(dpy, screen),
+        CWOverrideRedirect | CWBackPixmap | CWEventMask, &wa);
+    XDefineCursor(dpy, m->barwin, cursor[CurNormal]->cursor);
+    if (systray_enable && m == systraytomon(m)) XMapRaised(dpy, systray->win);
+    XMapRaised(dpy, m->barwin);
+    if (th > 0) {
+    m->tabwin = XCreateWindow(
+        dpy, root, m->wx + m->gap, m->ty, m->ww - 2 * m->gap, th, 0,
+        DefaultDepth(dpy, screen), CopyFromParent, DefaultVisual(dpy, screen),
+        CWOverrideRedirect | CWBackPixmap | CWEventMask, &wa);
+    XDefineCursor(dpy, m->tabwin, cursor[CurNormal]->cursor);
+    XMapWindow(dpy, m->tabwin);
+    }
+    XSetClassHint(dpy, m->barwin, &ch);
+  }
+}
+
+void resizebarwin(Monitor* m) {
+  unsigned int w = m->ww - 2 * m->gap;
+  if (systray_enable && m == systraytomon(m)) w -= getsystraywidth();
+  XMoveResizeWindow(dpy, m->barwin, m->wx + m->gap, m->by, w, bh);
+}
+
+void updatestatus(void) {
+  if (!gettextprop(root, XA_WM_NAME, stext, sizeof(stext)))
+    strcpy(stext, "srwm"); //fallback string
+  drawbar(selmon);
+  updatesystray();
+}
+
+uint32_t prealpha(uint32_t p) {
+  uint8_t a = p >> 24u;
+  uint32_t rb = (a * (p & 0xFF00FFu)) >> 8u;
+  uint32_t g = (a * (p & 0x00FF00u)) >> 8u;
+  return (rb & 0xFF00FFu) | (g & 0x00FF00u) | (a << 24u);
+}
+
+Picture geticonprop(Window win, unsigned int* picw, unsigned int* pich) {
+  int format;
+  unsigned long n, extra, *p = NULL;
+  Atom real;
+
+  if (XGetWindowProperty(dpy, win, netatom[NetWMIcon], 0L, LONG_MAX, False,
+                         AnyPropertyType, &real, &format, &n, &extra,
+                         (unsigned char**)&p) != Success)
+    return None;
+  if (n == 0 || format != 32) {
+    XFree(p);
+    return None;
+  }
+
+  unsigned long* bstp = NULL;
+  uint32_t w, h, sz;
+  {
+    unsigned long* i;
+    const unsigned long* end = p + n;
+    uint32_t bstd = UINT32_MAX, d, m;
+    for (i = p; i < end - 1; i += sz) {
+      if ((w = *i++) >= 16384 || (h = *i++) >= 16384) {
+        XFree(p);
+        return None;
+      }
+      if ((sz = w * h) > end - i) break;
+      if ((m = w > h ? w : h) >= ICONSIZE && (d = m - ICONSIZE) < bstd) {
+        bstd = d;
+        bstp = i;
+      }
+    }
+    if (!bstp) {
+      for (i = p; i < end - 1; i += sz) {
+        if ((w = *i++) >= 16384 || (h = *i++) >= 16384) {
+          XFree(p);
+          return None;
+        }
+        if ((sz = w * h) > end - i) break;
+        if ((d = ICONSIZE - (w > h ? w : h)) < bstd) {
+          bstd = d;
+          bstp = i;
+        }
+      }
+    }
+    if (!bstp) {
+      XFree(p);
+      return None;
+    }
+  }
+
+  if ((w = *(bstp - 2)) == 0 || (h = *(bstp - 1)) == 0) {
+    XFree(p);
+    return None;
+  }
+
+  uint32_t icw, ich;
+  if (w <= h) {
+    ich = ICONSIZE;
+    icw = w * ICONSIZE / h;
+    if (icw == 0) icw = 1;
+  } else {
+    icw = ICONSIZE;
+    ich = h * ICONSIZE / w;
+    if (ich == 0) ich = 1;
+  }
+  *picw = icw;
+  *pich = ich;
+
+  uint32_t i, *bstp32 = (uint32_t*)bstp;
+  for (sz = w * h, i = 0; i < sz; ++i) bstp32[i] = prealpha(bstp[i]);
+
+  Picture ret = drw_picture_create_resized(drw, (char*)bstp, w, h, icw, ich);
+  XFree(p);
+
+  return ret;
+}
+
+// Move window to next tag
+unsigned int nexttag(void) {
+  unsigned int seltag = selmon->tagset[selmon->seltags];
+  return seltag == (1 << (TAGSLENGTH - 1)) ? 1 : seltag << 1;
+}
+
+unsigned int prevtag(void) {
+  unsigned int seltag = selmon->tagset[selmon->seltags];
+  return seltag == 1 ? (1 << (TAGSLENGTH - 1)) : seltag >> 1;
+}
+
+void tagtonext(const Arg* arg) {
+  unsigned int tmp;
+
+  if (selmon->sel == NULL) return;
+
+  tmp = nexttag();
+  tag(&(const Arg){.ui = tmp});
+  view(&(const Arg){.ui = tmp});
+}
+
+void tagtoprev(const Arg* arg) {
+  unsigned int tmp;
+
+  if (selmon->sel == NULL) return;
+
+  tmp = prevtag();
+  tag(&(const Arg){.ui = tmp});
+  view(&(const Arg){.ui = tmp});
+}
