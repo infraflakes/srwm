@@ -8,7 +8,7 @@ A fully statically linked X11 floating, zooming window manager. Built with Go, C
 ### Download Binary (Recommended)
 Since `srwm` is built as a zero-dependency static binary, you can run it on almost any Linux distribution.
 
-1. Download the latest release for your architecture from the [Releases](https://github.com/infraflakes/srwm/releases) page.
+1. Download the latest release from the [Releases](https://github.com/infraflakes/srwm/releases) page.
 2. Make it executable and move it to your path:
    ```bash
    chmod +x srwm-v*-linux-amd64
@@ -27,9 +27,9 @@ You can generate the default config with `srwm kickstart`:
 srwm kickstart
 ```
 
-Then start the window manager with `srwm start` and any X11 graphical sessions launcher, for example with `sx`:
+Then start the window manager with `srwm start` (srwm already has X Server process handler built in):
 ```bash
-sx srwm start
+srwm start
 ```
 
 If you use the default bar's widgets config, the bar's widgets depend on some dependencies:
@@ -40,17 +40,17 @@ If you use the default bar's widgets config, the bar's widgets depend on some de
 
 ### Building from scratch
 
-Current the project only supports building with flakes.
+Current the project only supports building with flakes (fully statically linked).
 After having all the dependencies you can easily build the window manager:
 
 ```bash
-make build
+nix build .#default
 ```
 
 Or
 
 ```bash
-nix build .#default
+make build
 ```
 
 ## Acknowledgements
