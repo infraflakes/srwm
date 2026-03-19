@@ -25,7 +25,7 @@ func srwm_handle_key(id C.int) {
 	if ok && cb != nil {
 		// Execute the callback synchronously so Xlib calls via C stay
 		// on the main X11 event loop thread. Executing in a goroutine
-		// causes severe GC/theme corruption in dwm.c.
+		// causes severe GC/theme corruption.
 		defer func() {
 			if r := recover(); r != nil {
 				log.Printf("srwm: recovered from panic in key callback %d: %v", id, r)

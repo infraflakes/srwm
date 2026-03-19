@@ -76,7 +76,7 @@ func Restart() {
 	C.srwm_request_restart()
 }
 
-// SetStatus sets the X root window name, which dwm renders as the
+// SetStatus sets the X root window name, which srwm renders as the
 // status bar text. Thread-safe (guarded by XInitThreads).
 func SetStatus(text string) {
 	cs := C.CString(text)
@@ -261,7 +261,6 @@ func SetFont(font string) {
 	C.srwm_set_font(cs)
 }
 
-// Scheme mirrors the C enum in dwm.c — order must match exactly.
 type Scheme int
 
 const (

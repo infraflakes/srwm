@@ -50,19 +50,9 @@ func ActionView(mask uint) {
 	C.srwm_action_view(C.uint(mask))
 }
 
-// ActionToggleView toggles the tags matching the given bitmask into the current view.
-func ActionToggleView(mask uint) {
-	C.srwm_action_toggleview(C.uint(mask))
-}
-
 // ActionTag tags the currently focused client with the given bitmask.
 func ActionTag(mask uint) {
 	C.srwm_action_tag(C.uint(mask))
-}
-
-// ActionToggleTag toggles the given bitmask on the currently focused client's tags.
-func ActionToggleTag(mask uint) {
-	C.srwm_action_toggletag(C.uint(mask))
 }
 
 // ActionMoveCanvas pans the canvas: 0=left, 1=right, 2=up, 3=down.

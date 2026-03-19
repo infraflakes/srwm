@@ -8,7 +8,7 @@
 /* Helper to convert string to Keysym */
 KeySym srwm_string_to_keysym(const char *name);
 
-/* These are defined in dwm.c (non-static) */
+/* These are defined in srwm.c (non-static) */
 extern int running;
 extern Display* dpy;
 
@@ -29,7 +29,7 @@ int  srwm_should_restart(void);
 /* Status bar — Go sets the root window name */
 void srwm_set_status(const char *text);
 
-/* Called from dwm.c restart() to distinguish restart from quit */
+/* Called from srwm.c restart() to distinguish restart from quit */
 void srwm_request_restart(void);
 
 /* Dynamic keybindings (Go -> C) */

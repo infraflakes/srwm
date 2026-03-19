@@ -34,7 +34,6 @@ type barState struct {
 	layout    []string          // ordered widget names
 	interval  float64           // polling interval in seconds
 	configDir string            // resolved config dir for relative paths
-	themePath string            // path to theme.sh (now deprecated)
 	themeRepl *strings.Replacer // theme variable substitutor
 	palette   map[string]string // name → hex string
 }
@@ -47,7 +46,6 @@ func RegisterBarAPI(L *lua.LState, srwmMod *lua.LTable, configDir string) func()
 		layout:    make([]string, 0),
 		interval:  1.0,
 		configDir: configDir,
-		themePath: filepath.Join(configDir, "widgets", "theme.sh"),
 		themeRepl: strings.NewReplacer(),
 		palette:   make(map[string]string),
 	}

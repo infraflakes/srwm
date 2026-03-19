@@ -20,4 +20,5 @@ lint:
 
 clean:
 	@echo "Cleaning..."
-	rm -rf ./bin/srwm
+	rm -rf ./bin
+	rm -rf ./result
