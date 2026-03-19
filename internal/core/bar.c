@@ -234,15 +234,16 @@ void drawtab(Monitor* m) {
     if (m->ntabs >= MAXTABS) break;
   }
 
-  if (tot_width > mw) {  // not enough space to display the labels, they need to
-                         // be truncated
+  if (tot_width > mw) {  // not enough space to display the labels, they need to be truncated
     memcpy(sorted_label_widths, m->tab_widths, sizeof(int) * m->ntabs);
     qsort(sorted_label_widths, m->ntabs, sizeof(int), cmpint);
+    tot_width = buttons_w;  /* reset — only buttons are "locked in" so far */
     for (i = 0; i < m->ntabs; ++i) {
       if (tot_width + (m->ntabs - i) * sorted_label_widths[i] > mw) break;
       tot_width += sorted_label_widths[i];
     }
-    maxsize = (mw - tot_width) / (m->ntabs - i);
+    maxsize = (m->ntabs - i > 0) ? (mw - tot_width) / (m->ntabs - i) : mw;
+    if (maxsize < 1) maxsize = 1;  /* prevent zero/negative tab widths */
   } else {
     maxsize = mw;
   }
