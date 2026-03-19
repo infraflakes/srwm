@@ -333,14 +333,19 @@ int gettextprop(Window w, Atom atom, char* text, unsigned int size) {
   char** list = NULL;
   int n;
   XTextProperty name;
+  static Atom utf8string = None;
 
   if (!text || size == 0) return 0;
   text[0] = '\0';
   if (!XGetTextProperty(dpy, w, &name, atom) || !name.nitems) return 0;
-  if (name.encoding == XA_STRING) {
+
+  if (utf8string == None)
+    utf8string = XInternAtom(dpy, "UTF8_STRING", False);
+
+  if (name.encoding == XA_STRING || name.encoding == utf8string) {
+    /* XA_STRING (Latin-1) and UTF8_STRING are both byte-safe to copy directly */
     strncpy(text, (char*)name.value, size - 1);
-  } else if (XmbTextPropertyToTextList(dpy, &name, &list, &n) >= Success &&
-             n > 0 && *list) {
+  } else if (XmbTextPropertyToTextList(dpy, &name, &list, &n) >= Success && n > 0 && *list) {
     strncpy(text, *list, size - 1);
     XFreeStringList(list);
   }
