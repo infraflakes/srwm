@@ -379,7 +379,7 @@ int sendevent(Window w, Atom proto, int mask, long d0, long d1, long d2, long d3
  * ignored (especially on UnmapNotify's). Other types of errors call Xlibs
  * default error handler, which may call exit. */
 int xerror(Display* dpy, XErrorEvent* ee) {
-  if (ee->error_code == BadWindow ||
+  if (ee->error_code == BadWindow || ee->error_code == BadLength ||  /* oversized RENDER glyph requests (e.g. Nerd Fonts on XLibre) */
       (ee->request_code == X_SetInputFocus && ee->error_code == BadMatch) ||
       (ee->request_code == X_PolyText8 && ee->error_code == BadDrawable) ||
       (ee->request_code == X_PolyFillRectangle &&
