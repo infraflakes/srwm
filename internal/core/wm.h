@@ -448,6 +448,5 @@ extern int dkeys_len;
 #define orange      "#c7a06f"  
 #define pink        "#c56a97"  
 #define purple      "#9a71db"  
-#define col_borderbar "#0e0e12"  
 #define yellow      "#c7a06f"  
 #define white       "#ffffff"

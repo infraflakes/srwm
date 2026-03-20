@@ -36,13 +36,13 @@ int drawstatusbar(Monitor* m, int bh, char* stext) {
   text = p;
 
   w += bar_horizontal_padding;
-  ret = x = m->ww - m->gap * 2 - borderpx - w;
-  x = m->ww - m->gap * 2 - borderpx - w - getsystraywidth();
+  ret = x = m->ww - m->gap * 2 - w;
+  x = m->ww - m->gap * 2 - w - getsystraywidth();
 
   drw_setscheme(drw, scheme[LENGTH(colors)]);
   drw->scheme[ColFg] = scheme[SchemeNorm][ColFg];
   drw->scheme[ColBg] = scheme[SchemeNorm][ColBg];
-  drw_rect(drw, x, borderpx, w, bh, 1, 1);
+  drw_rect(drw, x, 0, w, bh, 1, 1);
   x += bar_horizontal_padding / 2;
 
   /* process status text */
@@ -53,8 +53,7 @@ int drawstatusbar(Monitor* m, int bh, char* stext) {
 
       text[i] = '\0';
       w = TEXTW(text) - lrpad;
-      drw_text(drw, x, borderpx + bar_vertical_padding / 2, w, bh - bar_vertical_padding, 0, text,
-               0);
+      drw_text(drw, x, bar_vertical_padding / 2, w, bh - bar_vertical_padding, 0, text, 0);
 
       x += w;
 
@@ -84,7 +83,7 @@ int drawstatusbar(Monitor* m, int bh, char* stext) {
           while (text[++i] != ',');
           int rh = atoi(text + ++i);
 
-          drw_rect(drw, rx + x, ry + borderpx + bar_vertical_padding / 2, rw, rh, 1, 0);
+          drw_rect(drw, rx + x, ry + bar_vertical_padding / 2, rw, rh, 1, 0);
         } else if (text[i] == 'f') {
           x += atoi(text + ++i);
         }
@@ -98,7 +97,7 @@ int drawstatusbar(Monitor* m, int bh, char* stext) {
 
   if (!isCode) {
     w = TEXTW(text) - lrpad;
-    drw_text(drw, x, borderpx + bar_vertical_padding / 2, w, bh - bar_vertical_padding, 0, text, 0);
+    drw_text(drw, x, bar_vertical_padding / 2, w, bh - bar_vertical_padding, 0, text, 0);
   }
 
   drw_setscheme(drw, scheme[SchemeNorm]);
@@ -109,15 +108,14 @@ int drawstatusbar(Monitor* m, int bh, char* stext) {
 
 
 void drawbar(Monitor* m) {
-  int x, y = borderpx, w, stw = 0;
-  int bh_n = bh - borderpx * 2;
+  int x, y = 0, w, stw = 0;
+  int bh_n = bh;
   int boxs = drw->fonts->h / 9;
   int boxw = drw->fonts->h / 6 + 2;
   unsigned int i, occ = 0, urg = 0;
 
-  XSetForeground(drw->dpy, drw->gc, clrborder.pixel);
-  XFillRectangle(drw->dpy, drw->drawable, drw->gc, 0, 0, m->ww - m->gap * 2,
-                 bh);
+  XSetForeground(drw->dpy, drw->gc, scheme[SchemeNorm][ColBg].pixel);
+  XFillRectangle(drw->dpy, drw->drawable, drw->gc, 0, 0, m->ww - m->gap * 2, bh);
 
   if (systray_enable && m == systraytomon(m)) stw = getsystraywidth();
 
@@ -132,7 +130,7 @@ void drawbar(Monitor* m) {
   resizebarwin(m);
   occ = m->occ;
   urg = m->urg;
-  x = borderpx;
+  x = 0;
   for (i = 0; i < TAGSLENGTH; i++) {
     w = TEXTW(tags[i]);
     int use_colorful = m->colorfultag && (!tag_colorful_occupied_only || (occ & 1 << i));
