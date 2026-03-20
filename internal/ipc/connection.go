@@ -5,9 +5,14 @@ import (
 	"fmt"
 	"net"
 
-	"github.com/infraflakes/srwm/internal/config"
 	"github.com/infraflakes/srwm/internal/core"
 )
+
+var onRefresh func()
+
+func SetRefreshHandler(fn func()) {
+	onRefresh = fn
+}
 
 func handleConnection(conn net.Conn) {
 	defer func() { _ = conn.Close() }()
@@ -24,14 +29,15 @@ func handleConnection(conn net.Conn) {
 			core.Restart()
 			return
 		case "refresh":
-			config.NotifyBarRefresh()
+			if onRefresh != nil {
+				onRefresh()
+			}
 		default:
 			fmt.Printf("control: unknown command received: %q\n", command)
 		}
 	}
 }
 
-// Send sends a command to a running srwm instance via the Unix socket.
 func Send(socketPath, command string) error {
 	conn, err := net.Dial("unix", socketPath)
 	if err != nil {

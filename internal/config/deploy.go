@@ -7,17 +7,11 @@
 package config
 
 import (
-	"context"
 	_ "embed"
 	"fmt"
 	"log"
 	"os"
 	"path/filepath"
-	"strings"
-
-	"github.com/infraflakes/srwm/internal/control"
-	"github.com/infraflakes/srwm/internal/core"
-	lua "github.com/yuin/gopher-lua"
 )
 
 // defaultSrwmrcScript is the embedded default srwmrc.lua, deployed to
@@ -80,121 +74,6 @@ var defaultWidgets = map[string][]byte{
 	"gap.sh":        widgetGap,
 	"volume.sh":     widgetVolume,
 	"wifi.sh":       widgetWifi,
-}
-
-// configReady is signalled by the Lua goroutine once all config setters
-// (fonts, colors, padding, etc.) have run. start.go waits on this
-// before calling core.InitSetup() so setup() reads the correct values.
-var configReady = make(chan struct{}, 1)
-
-// StartConfig boots the Lua runtime in a background goroutine.
-// Call this AFTER core.InitDisplay().
-func StartConfig(ctx context.Context) {
-	configReady = make(chan struct{}, 1)
-	go runLuaConfig(ctx)
-}
-
-// WaitConfigReady blocks until the Lua config has finished setting values.
-// Call this BEFORE core.InitSetup().
-func WaitConfigReady() {
-	<-configReady
-}
-
-// runLuaConfig is the main Lua configuration goroutine. It:
-//  1. Resolves the config directory (~/.config/srwm/).
-//  2. Deploys default scripts if missing.
-//  3. Creates and configures the Lua VM.
-//  4. Registers the srwm.* API surface.
-//  5. Executes srwmrc.lua (which blocks in the bar loop).
-func runLuaConfig(ctx context.Context) {
-	srwmDir := ResolveConfigDir()
-	if srwmDir == "" {
-		return
-	}
-
-	rcPath := filepath.Join(srwmDir, "srwmrc.lua")
-	widgetsDir := filepath.Join(srwmDir, "widgets")
-
-	if err := os.MkdirAll(widgetsDir, 0755); err != nil {
-		log.Printf("lua: failed to create config/widgets dir: %v", err)
-		return
-	}
-
-	// Deploy defaults (does not overwrite existing files)
-	deployDefault(rcPath, defaultSrwmrcScript, 0644)
-	for name, content := range defaultLuaModules {
-		deployDefault(filepath.Join(srwmDir, name), content, 0644)
-	}
-	for name, content := range defaultWidgets {
-		deployDefault(filepath.Join(widgetsDir, name), content, 0755)
-	}
-
-	L := lua.NewState()
-	L.OpenLibs()
-	L.SetContext(ctx)
-	defer L.Close()
-
-	L.SetGlobal("include", L.NewFunction(func(L *lua.LState) int {
-		path := L.CheckString(1)
-		if !strings.HasSuffix(path, ".lua") {
-			path = path + ".lua"
-		}
-		var fullPath string
-		if filepath.IsAbs(path) {
-			fullPath = path
-		} else {
-			fullPath = filepath.Join(srwmDir, path)
-		}
-		if err := L.DoFile(fullPath); err != nil {
-			L.RaiseError("%s", "include "+path+": "+err.Error())
-		}
-		return 0
-	}))
-
-	// Build the srwm.* global module table.
-	srwmMod := L.NewTable()
-	L.SetGlobal("srwm", srwmMod)
-
-	startBar := RegisterBarAPI(L, srwmMod, srwmDir)
-	RegisterKeybindAPI(L, srwmMod)
-	RegisterConfigAPI(L, srwmMod)
-	RegisterActionsAPI(L, srwmMod)
-	control.RegisterAPI(L, srwmMod)
-
-	// srwm.tags.set("1,2,3,4,5")
-	tagsTable := L.NewTable()
-	tagsTable.RawSetString("set", L.NewFunction(func(L *lua.LState) int {
-		input := L.CheckString(1)
-		parts := strings.Split(input, ",")
-
-		// Map up to 9 tags
-		count := min(len(parts), 9)
-
-		for i := range count {
-			core.SetTag(i, strings.TrimSpace(parts[i]))
-		}
-		core.SetTagsLen(count)
-		return 0
-	}))
-	L.SetField(srwmMod, "tags", tagsTable)
-
-	log.Printf("lua: executing %s", rcPath)
-	if err := L.DoFile(rcPath); err != nil {
-		log.Printf("lua: error running %s: %v", rcPath, err)
-	}
-
-	// Automatically start the bar polling loop after configuration is loaded.
-	startBar()
-
-	// Signal that config is ready for core.InitSetup().
-	select {
-	case configReady <- struct{}{}:
-	default:
-	}
-
-	// Keep the Lua state alive for the duration of the WM session.
-	// Keybinding callbacks and the bar loop depend on this state.
-	<-ctx.Done()
 }
 
 // ResolveConfigDir returns the srwm config directory path

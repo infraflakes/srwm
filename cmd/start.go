@@ -54,6 +54,7 @@ func runWM(socketPath string) {
 	log.SetFlags(0)
 
 	control.SetRefreshNotifier(config.NotifyBarRefresh)
+	ipc.SetRefreshHandler(config.NotifyBarRefresh)
 
 	go func() {
 		if err := ipc.Listen(socketPath); err != nil {

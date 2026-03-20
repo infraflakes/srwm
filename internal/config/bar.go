@@ -71,147 +71,67 @@ func RegisterBarAPI(L *lua.LState, srwmMod *lua.LTable, configDir string) func()
 	}))
 
 	barTable.RawSetString("padding_horizontal", L.NewFunction(func(L *lua.LState) int {
-		if L.GetTop() == 1 {
-			core.SetBarHorizontalPadding(L.CheckInt(1))
-		} else {
-			L.Push(lua.LNumber(core.GetBarHorizontalPadding()))
-		}
-		return 1
+		return intProp(L, core.GetBarHorizontalPadding, core.SetBarHorizontalPadding)
 	}))
 
 	barTable.RawSetString("padding_vertical", L.NewFunction(func(L *lua.LState) int {
-		if L.GetTop() == 1 {
-			core.SetBarVerticalPadding(L.CheckInt(1))
-		} else {
-			L.Push(lua.LNumber(core.GetBarVerticalPadding()))
-		}
-		return 1
+		return intProp(L, core.GetBarVerticalPadding, core.SetBarVerticalPadding)
 	}))
 
 	barTable.RawSetString("tab_height", L.NewFunction(func(L *lua.LState) int {
-		if L.GetTop() == 1 {
-			core.SetTabHeight(L.CheckInt(1))
-		} else {
-			L.Push(lua.LNumber(core.GetTabHeight()))
-		}
-		return 1
+		return intProp(L, core.GetTabHeight, core.SetTabHeight)
 	}))
 
 	barTable.RawSetString("tab_tile_vertical_padding", L.NewFunction(func(L *lua.LState) int {
-		if L.GetTop() == 1 {
-			core.SetTabTileVerticalPadding(L.CheckInt(1))
-		} else {
-			L.Push(lua.LNumber(core.GetTabTileVerticalPadding()))
-		}
-		return 1
+		return intProp(L, core.GetTabTileVerticalPadding, core.SetTabTileVerticalPadding)
 	}))
 
 	barTable.RawSetString("tab_tile_outer_padding_horizontal", L.NewFunction(func(L *lua.LState) int {
-		if L.GetTop() == 1 {
-			core.SetTabTileOuterPaddingHorizontal(L.CheckInt(1))
-		} else {
-			L.Push(lua.LNumber(core.GetTabTileOuterPaddingHorizontal()))
-		}
-		return 1
+		return intProp(L, core.GetTabTileOuterPaddingHorizontal, core.SetTabTileOuterPaddingHorizontal)
 	}))
 
 	barTable.RawSetString("tab_tile_inner_padding_horizontal", L.NewFunction(func(L *lua.LState) int {
-		if L.GetTop() == 1 {
-			core.SetTabTileInnerPaddingHorizontal(L.CheckInt(1))
-		} else {
-			L.Push(lua.LNumber(core.GetTabTileInnerPaddingHorizontal()))
-		}
-		return 1
+		return intProp(L, core.GetTabTileInnerPaddingHorizontal, core.SetTabTileInnerPaddingHorizontal)
 	}))
 
 	barTable.RawSetString("show", L.NewFunction(func(L *lua.LState) int {
-		if L.GetTop() == 1 {
-			core.SetShowbar(L.CheckBool(1))
-		} else {
-			L.Push(lua.LBool(core.GetShowbar()))
-		}
-		return 1
+		return boolProp(L, core.GetShowbar, core.SetShowbar)
 	}))
 
 	barTable.RawSetString("top", L.NewFunction(func(L *lua.LState) int {
-		if L.GetTop() == 1 {
-			core.SetTopBar(L.CheckBool(1))
-		} else {
-			L.Push(lua.LBool(core.GetTopBar()))
-		}
-		return 1
+		return boolProp(L, core.GetTopBar, core.SetTopBar)
 	}))
 
 	barTable.RawSetString("tab_top", L.NewFunction(func(L *lua.LState) int {
-		if L.GetTop() == 1 {
-			core.SetTopTab(L.CheckBool(1))
-		} else {
-			L.Push(lua.LBool(core.GetTopTab()))
-		}
-		return 1
+		return boolProp(L, core.GetTopTab, core.SetTopTab)
 	}))
 
 	barTable.RawSetString("systray", L.NewFunction(func(L *lua.LState) int {
-		if L.GetTop() == 1 {
-			core.SetSystrayEnable(L.CheckBool(1))
-		} else {
-			L.Push(lua.LBool(core.GetSystrayEnable()))
-		}
-		return 1
+		return boolProp(L, core.GetSystrayEnable, core.SetSystrayEnable)
 	}))
 
 	barTable.RawSetString("systray_spacing", L.NewFunction(func(L *lua.LState) int {
-		if L.GetTop() == 1 {
-			core.SetSystraySpacing(uint(L.CheckInt(1)))
-		} else {
-			L.Push(lua.LNumber(core.GetSystraySpacing()))
-		}
-		return 1
+		return uintProp(L, core.GetSystraySpacing, core.SetSystraySpacing)
 	}))
 
 	barTable.RawSetString("systray_pinning", L.NewFunction(func(L *lua.LState) int {
-		if L.GetTop() == 1 {
-			core.SetSystrayPinning(uint(L.CheckInt(1)))
-		} else {
-			L.Push(lua.LNumber(core.GetSystrayPinning()))
-		}
-		return 1
+		return uintProp(L, core.GetSystrayPinning, core.SetSystrayPinning)
 	}))
 
 	barTable.RawSetString("tag_underline_padding", L.NewFunction(func(L *lua.LState) int {
-		if L.GetTop() == 1 {
-			core.SetTagUnderlinePadding(uint(L.CheckInt(1)))
-		} else {
-			L.Push(lua.LNumber(core.GetTagUnderlinePadding()))
-		}
-		return 1
+		return uintProp(L, core.GetTagUnderlinePadding, core.SetTagUnderlinePadding)
 	}))
 
 	barTable.RawSetString("tag_underline_size", L.NewFunction(func(L *lua.LState) int {
-		if L.GetTop() == 1 {
-			core.SetTagUnderlineSize(uint(L.CheckInt(1)))
-		} else {
-			L.Push(lua.LNumber(core.GetTagUnderlineSize()))
-		}
-		return 1
+		return uintProp(L, core.GetTagUnderlineSize, core.SetTagUnderlineSize)
 	}))
 
 	barTable.RawSetString("tag_underline_offset", L.NewFunction(func(L *lua.LState) int {
-		if L.GetTop() == 1 {
-			core.SetTagUnderlineOffsetFromBarBottom(uint(L.CheckInt(1)))
-		} else {
-			L.Push(lua.LNumber(core.GetTagUnderlineOffsetFromBarBottom()))
-		}
-		return 1
+		return uintProp(L, core.GetTagUnderlineOffsetFromBarBottom, core.SetTagUnderlineOffsetFromBarBottom)
 	}))
 
 	barTable.RawSetString("tag_underline_all_tags", L.NewFunction(func(L *lua.LState) int {
-		if L.GetTop() == 1 {
-			core.SetTagUnderlineForAllTags(L.CheckBool(1))
-		} else {
-			L.Push(lua.LBool(core.GetTagUnderlineForAllTags()))
-		}
-		return 1
+		return boolProp(L, core.GetTagUnderlineForAllTags, core.SetTagUnderlineForAllTags)
 	}))
 
 	barTable.RawSetString("theme", L.NewFunction(func(L *lua.LState) int {
