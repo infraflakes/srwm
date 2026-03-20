@@ -12,10 +12,40 @@ KeySym srwm_string_to_keysym(const char *name) {
   return XStringToKeysym(name);
 }
 
+#include <fontconfig/fontconfig.h>
+#include <sys/stat.h>
+  
+static void ensure_fontconfig(void) {
+  /* If FONTCONFIG_FILE is already set, trust the user/wrapper */
+  if (getenv("FONTCONFIG_FILE")) return;
+  
+  /* Common system fontconfig paths */
+  static const char *candidates[] = {
+    "/etc/fonts/fonts.conf",
+    "/usr/share/fontconfig/fonts.conf",
+    "/usr/local/etc/fonts/fonts.conf",
+    NULL
+  };
+
+  /* Check if fontconfig can find its config without help */
+  if (FcConfigGetCurrent()) return;
+
+  struct stat st;
+  for (const char **p = candidates; *p; p++) {
+    if (stat(*p, &st) == 0) {
+      setenv("FONTCONFIG_FILE", *p, 0);
+      FcInitReinitialize();
+      return;
+    }
+  }
+  /* If nothing found, fontconfig will use its compiled-in default (may fail) */
+}
+
 int srwm_init_display(void) {
   /* Reset for re-init on restart */
   running = 1;
   restart_requested = 0;
+  ensure_fontconfig();
 
   /* Initialize threads for multi-threaded Xlib access (Lua handles keys) */
   XInitThreads();
@@ -146,14 +176,26 @@ extern const char* fonts[];
 void srwm_set_font(const char* font) { fonts[0] = font; }
 
 extern const char* colors[][3];
-void srwm_set_color(int scheme, int slot, const char* hex) {
-  if (slot >= 0 && slot < 3) colors[scheme][slot] = strdup(hex);
+static int colors_owned[18][3] = {0}; /* tracks which slots were strdup'd */  
+  
+void srwm_set_color(int scheme, int slot, const char* hex) {  
+  if (slot < 0 || slot >= 3) return;  
+  if (colors_owned[scheme][slot])  
+    free((void*)colors[scheme][slot]);  
+  colors[scheme][slot] = strdup(hex);  
+  colors_owned[scheme][slot] = 1;  
 }
 
 extern char* tags[];
 extern int tags_len;
-void srwm_set_tag(int idx, const char* name) {
-  if (idx >= 0 && idx < 9) tags[idx] = strdup(name);
+static int tags_owned[9] = {0};  
+  
+void srwm_set_tag(int idx, const char* name) {  
+  if (idx < 0 || idx >= 9) return;  
+  if (tags_owned[idx])  
+    free(tags[idx]);  
+  tags[idx] = strdup(name);  
+  tags_owned[idx] = 1;  
 }
 
 void srwm_set_tags_len(int len) {

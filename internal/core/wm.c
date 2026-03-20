@@ -651,9 +651,9 @@ void setfullscreen(Client* c, int fullscreen) {
     c->isfloating = 1;
     resizeclient(c, c->mon->mx, c->mon->my, c->mon->mw, c->mon->mh);
     XRaiseWindow(dpy, c->win);
-  } else if (!fullscreen && c->isfullscreen) {
-    XChangeProperty(dpy, c->win, netatom[NetWMState], XA_ATOM, 32,
-                    PropModeReplace, (unsigned char*)0, 0);
+  } 
+  else if (!fullscreen && c->isfullscreen) {  
+    XDeleteProperty(dpy, c->win, netatom[NetWMState]);
     c->isfullscreen = 0;
     c->isfloating = c->oldstate;
     c->bw = c->oldbw;
