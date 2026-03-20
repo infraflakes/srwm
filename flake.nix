@@ -11,7 +11,7 @@
   }:
     flake-utils.lib.eachDefaultSystem (
       system: let
-        version = "0.2.0";
+        version = "0.2.5";
         pkgs = import nixpkgs {inherit system;};
         # Use pkgsStatic to get X11 libs compiled against musl
         staticPkgs = pkgs.pkgsStatic;

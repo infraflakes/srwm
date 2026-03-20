@@ -10,7 +10,7 @@ unsigned int numlockmask = 0;
 Atom wmatom[WMLast], netatom[NetLast], xatom[XLast];  
 int running = 1;  
 Cur* cursor[CurLast];  
-Clr **scheme, clrborder;  
+Clr **scheme;
 Display* dpy;  
 Drw* drw;  
 Monitor *mons, *selmon;  
@@ -116,7 +116,7 @@ void setup(void) {
   if (!drw_fontset_create(drw, fonts, LENGTH(fonts)))
     die("no fonts could be loaded.");
   lrpad = drw->fonts->h;
-  bh = drw->fonts->h + 2 + bar_vertical_padding + borderpx * 2;
+  bh = drw->fonts->h + 2 + bar_vertical_padding;
   th = tab_height;
   // bh_n = tab_height;
   updategeom();
@@ -143,6 +143,8 @@ void setup(void) {
   netatom[NetWMWindowType] = XInternAtom(dpy, "_NET_WM_WINDOW_TYPE", False);
   netatom[NetWMWindowTypeDialog] =
       XInternAtom(dpy, "_NET_WM_WINDOW_TYPE_DIALOG", False);
+  netatom[NetWMWindowTypeDock] =
+    XInternAtom(dpy, "_NET_WM_WINDOW_TYPE_DOCK", False);
   netatom[NetClientList] = XInternAtom(dpy, "_NET_CLIENT_LIST", False);
   xatom[Manager] = XInternAtom(dpy, "MANAGER", False);
   xatom[Xembed] = XInternAtom(dpy, "_XEMBED", False);
@@ -163,7 +165,6 @@ void setup(void) {
   scheme[LENGTH(colors)] = drw_scm_create(drw, colors[0], 3);
   for (i = 0; i < LENGTH(colors); i++)
     scheme[i] = drw_scm_create(drw, colors[i], 3);
-  drw_clr_create(drw, &clrborder, col_borderbar);
   /* init system tray */
   updatesystray();
   /* init bars */

@@ -27,6 +27,10 @@ void updatesystray(void) {
     XChangeWindowAttributes(
         dpy, systray->win, CWEventMask | CWOverrideRedirect | CWBackPixel, &wa);
     XMapRaised(dpy, systray->win);
+    XChangeProperty(dpy, systray->win, netatom[NetWMWindowType], XA_ATOM, 32,  
+                PropModeReplace, (unsigned char*)&netatom[NetWMWindowTypeDock], 1);
+    XClassHint systray_ch = {"srwm", "srwm"};
+    XSetClassHint(dpy, systray->win, &systray_ch);
     XSetSelectionOwner(dpy, netatom[NetSystemTray], systray->win, CurrentTime);
     if (XGetSelectionOwner(dpy, netatom[NetSystemTray]) == systray->win) {
       sendevent(root, xatom[Manager], StructureNotifyMask, CurrentTime,
