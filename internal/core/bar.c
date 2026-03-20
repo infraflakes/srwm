@@ -317,6 +317,8 @@ void updatebars(void) {
     XDefineCursor(dpy, m->barwin, cursor[CurNormal]->cursor);
     if (systray_enable && m == systraytomon(m)) XMapRaised(dpy, systray->win);
     XMapRaised(dpy, m->barwin);
+    XChangeProperty(dpy, m->barwin, netatom[NetWMWindowType], XA_ATOM, 32,
+                PropModeReplace, (unsigned char*)&netatom[NetWMWindowTypeDock], 1);
     if (th > 0) {
     m->tabwin = XCreateWindow(
         dpy, root, m->wx + m->gap, m->ty, m->ww - 2 * m->gap, th, 0,
@@ -324,6 +326,9 @@ void updatebars(void) {
         CWOverrideRedirect | CWBackPixmap | CWEventMask, &wa);
     XDefineCursor(dpy, m->tabwin, cursor[CurNormal]->cursor);
     XMapWindow(dpy, m->tabwin);
+    XChangeProperty(dpy, m->tabwin, netatom[NetWMWindowType], XA_ATOM, 32,
+               PropModeReplace, (unsigned char*)&netatom[NetWMWindowTypeDock], 1);
+    XSetClassHint(dpy, m->tabwin, &ch);
     }
     XSetClassHint(dpy, m->barwin, &ch);
   }

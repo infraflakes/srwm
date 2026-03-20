@@ -101,6 +101,7 @@ enum {
   NetActiveWindow,
   NetWMWindowType,
   NetWMWindowTypeDialog,
+  NetWMWindowTypeDock,
   NetClientList,
   NetClientInfo,
   NetDesktopNames,
