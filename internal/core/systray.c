@@ -47,10 +47,10 @@ void updatesystray(void) {
     /* make sure the background color stays the same */
     wa.background_pixel = scheme[SchemeNorm][ColBg].pixel;
     XChangeWindowAttributes(dpy, i->win, CWBackPixel, &wa);
-    XMapRaised(dpy, i->win);
     w += systrayspacing;
     i->x = w;
     XMoveResizeWindow(dpy, i->win, i->x, bar_vertical_padding / 2, i->w, i->h);
+    XMapRaised(dpy, i->win);
     w += i->w;
     if (i->mon != m) i->mon = m;
   }
@@ -108,16 +108,8 @@ void updatesystrayicongeom(Client* i, int w, int h) {
       i->w = w;
     else
       i->w = (int)((float)rh * ((float)w / (float)h));
-    i->y = i->y + bar_vertical_padding / 2;
-    applysizehints(i, &(i->x), &(i->y), &(i->w), &(i->h), False);
-    /* force icons into the systray dimensions if they don't want to */
-    if (i->h > rh) {
-      if (i->w == i->h)
-        i->w = rh;
-      else
-        i->w = (int)((float)rh * ((float)i->w / (float)i->h));
-      i->h = rh;
-    }
+    if (i->w < 1) i->w = 1;
+    if (i->h < 1) i->h = 1;
   }
 }
 

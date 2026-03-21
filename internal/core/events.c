@@ -134,6 +134,7 @@ void clientmessage(XEvent* e) {
       XClassHint ch = {"srwmsystray", "srwmsystray"};
       XSetClassHint(dpy, c->win, &ch);
       XReparentWindow(dpy, c->win, systray->win, 0, 0);
+      XResizeWindow(dpy, c->win, c->w, c->h);
       /* use parents background color */
       swa.background_pixel = scheme[SchemeNorm][ColBg].pixel;
       XChangeWindowAttributes(dpy, c->win, CWBackPixel, &swa);
