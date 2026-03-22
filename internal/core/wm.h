@@ -108,6 +108,10 @@ enum {
   NetDesktopViewport,
   NetNumberOfDesktops,
   NetCurrentDesktop,
+  SrwmCanvasZoom,
+  SrwmCanvasCenterX,
+  SrwmCanvasCenterY,
+  SrwmCanvasActive,
   NetLast
 }; /* EWMH atoms */
 enum { Manager, Xembed, XembedInfo, XLast }; /* Xembed atoms */
@@ -358,6 +362,7 @@ void homecanvas(const Arg *arg);
 void movecanvas(const Arg *arg);
 int getcurrenttag(Monitor *m);
 void zoomcanvas(const Arg *arg);
+int compositor_running(void);
 void window_set_state(Window win, long state);  
 void window_map(Client *c, int deiconify);  
 void window_unmap(Window win, int iconify);

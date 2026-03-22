@@ -156,6 +156,10 @@ void setup(void) {
   netatom[NetCurrentDesktop] = XInternAtom(dpy, "_NET_CURRENT_DESKTOP", False);
   netatom[NetDesktopNames] = XInternAtom(dpy, "_NET_DESKTOP_NAMES", False);
   netatom[NetClientInfo] = XInternAtom(dpy, "_NET_CLIENT_INFO", False);
+  netatom[SrwmCanvasZoom] = XInternAtom(dpy, "_SRWM_CANVAS_ZOOM", False);
+  netatom[SrwmCanvasCenterX] = XInternAtom(dpy, "_SRWM_CANVAS_CENTER_X", False);
+  netatom[SrwmCanvasCenterY] = XInternAtom(dpy, "_SRWM_CANVAS_CENTER_Y", False);
+  netatom[SrwmCanvasActive] = XInternAtom(dpy, "_SRWM_CANVAS_ACTIVE", False);
   /* init cursors */
   cursor[CurNormal] = drw_cur_create(drw, XC_left_ptr);
   cursor[CurResize] = drw_cur_create(drw, XC_sizing);

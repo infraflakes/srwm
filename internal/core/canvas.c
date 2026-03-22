@@ -4,6 +4,35 @@
 #define CANVAS_ZOOM_MIN  0.2f  
 #define CANVAS_ZOOM_MAX  5.0f  
 
+static int compositor_running(void) {
+    char atom_name[32];
+    snprintf(atom_name, sizeof(atom_name), "_NET_WM_CM_S%d", DefaultScreen(dpy));
+    Atom cm_atom = XInternAtom(dpy, atom_name, False);
+    Window owner = XGetSelectionOwner(dpy, cm_atom);
+    return (owner != None);
+}
+
+static void publish_canvas_state(Monitor *m) {
+    int tagidx = getcurrenttag(m);
+    
+    int32_t zoom_fp = (int32_t)(m->canvas[tagidx].zoom * 10000.0f);
+    XChangeProperty(dpy, root, netatom[SrwmCanvasZoom],
+        XA_CARDINAL, 32, PropModeReplace, (unsigned char *)&zoom_fp, 1);
+    
+    int32_t cx = m->wx + m->ww / 2;
+    int32_t cy = m->wy + m->wh / 2;
+    XChangeProperty(dpy, root, netatom[SrwmCanvasCenterX],
+        XA_CARDINAL, 32, PropModeReplace, (unsigned char *)&cx, 1);
+    XChangeProperty(dpy, root, netatom[SrwmCanvasCenterY],
+        XA_CARDINAL, 32, PropModeReplace, (unsigned char *)&cy, 1);
+    
+    int32_t active = m->canvas_mode ? 1 : 0;
+    XChangeProperty(dpy, root, netatom[SrwmCanvasActive],
+        XA_CARDINAL, 32, PropModeReplace, (unsigned char *)&active, 1);
+    
+    XFlush(dpy);
+}
+
 int getcurrenttag(Monitor *m) {  
     unsigned int i;  
     for (i = 0; i < TAGSLENGTH && !(m->tagset[m->seltags] & (1 << i)); i++);  
@@ -42,11 +71,11 @@ void movecanvas(const Arg *arg) {
 void homecanvas(const Arg *arg) {  
     if (!selmon->canvas_mode)  
         return;  
-  
+   
     int tagidx = getcurrenttag(selmon);  
     int cx = selmon->canvas[tagidx].cx;  
     int cy = selmon->canvas[tagidx].cy;  
-  
+   
     Client *c;  
     for (c = selmon->clients; c; c = c->next) {  
         if (ISVISIBLE(c)) {  
@@ -55,29 +84,34 @@ void homecanvas(const Arg *arg) {
             XMoveWindow(dpy, c->win, c->x, c->y);  
         }  
     }  
-  
+   
     selmon->canvas[tagidx].cx = 0;  
     selmon->canvas[tagidx].cy = 0;  
     /* Reset zoom to 1.0 */  
     float old_zoom = selmon->canvas[tagidx].zoom;  
     if (old_zoom != 1.0f) {  
-        float scale = 1.0f / old_zoom;  
-        int scx = selmon->wx + selmon->ww / 2;  
-        int scy = selmon->wy + selmon->wh / 2;  
-        for (c = selmon->clients; c; c = c->next) {  
-            if (ISVISIBLE(c)) {  
-                int new_x = scx + (int)((c->x - scx) * scale);  
-                int new_y = scy + (int)((c->y - scy) * scale);  
-                int new_w = MAX(1, (int)(c->w * scale));  
-                int new_h = MAX(1, (int)(c->h * scale));  
-                resizeclient(c, new_x, new_y, new_w, new_h);  
+        if (compositor_running()) {
+            selmon->canvas[tagidx].zoom = 1.0f;  
+            publish_canvas_state(selmon);  
+        } else {
+            float scale = 1.0f / old_zoom;  
+            int scx = selmon->wx + selmon->ww / 2;  
+            int scy = selmon->wy + selmon->wh / 2;  
+            for (c = selmon->clients; c; c = c->next) {  
+                if (ISVISIBLE(c)) {  
+                    int new_x = scx + (int)((c->x - scx) * scale);  
+                    int new_y = scy + (int)((c->y - scy) * scale);  
+                    int new_w = MAX(1, (int)(c->w * scale));  
+                    int new_h = MAX(1, (int)(c->h * scale));  
+                    resizeclient(c, new_x, new_y, new_w, new_h);  
+                }  
             }  
-        }  
-        selmon->canvas[tagidx].zoom = 1.0f;  
+            selmon->canvas[tagidx].zoom = 1.0f;  
+        }
     }
     drawbar(selmon);  
     XFlush(dpy);  
-}  
+}
   
 void centerwindowoncanvas(const Arg *arg) {  
     Client *c = selmon->sel;  
@@ -170,43 +204,46 @@ void manuallymovecanvas(const Arg *arg) {
 void zoomcanvas(const Arg *arg) {  
     if (!selmon->canvas_mode)  
         return;  
-  
+   
     int tagidx = getcurrenttag(selmon);  
     float old_zoom = selmon->canvas[tagidx].zoom;  
     float new_zoom;  
-  
+   
     if (arg->i > 0)  
         new_zoom = old_zoom * CANVAS_ZOOM_STEP;  /* zoom in */  
     else  
         new_zoom = old_zoom / CANVAS_ZOOM_STEP;  /* zoom out */  
-  
+   
     /* clamp */  
     if (new_zoom < CANVAS_ZOOM_MIN) new_zoom = CANVAS_ZOOM_MIN;  
     if (new_zoom > CANVAS_ZOOM_MAX) new_zoom = CANVAS_ZOOM_MAX;  
     if (new_zoom == old_zoom)  
         return;  
-  
-    float scale = new_zoom / old_zoom;  
-  
-    /* zoom relative to screen center */  
-    int cx = selmon->wx + selmon->ww / 2;  
-    int cy = selmon->wy + selmon->wh / 2;  
-  
-    Client *c;  
-    for (c = selmon->clients; c; c = c->next) {  
-        if (ISVISIBLE(c)) {  
-            int new_x = cx + (int)((c->x - cx) * scale);  
-            int new_y = cy + (int)((c->y - cy) * scale);  
-            int new_w = MAX(1, (int)(c->w * scale));  
-            int new_h = MAX(1, (int)(c->h * scale));  
-  
-            resizeclient(c, new_x, new_y, new_w, new_h);  
+   
+    if (compositor_running()) {
+        selmon->canvas[tagidx].zoom = new_zoom;  
+        publish_canvas_state(selmon);  
+    } else {
+        float scale = new_zoom / old_zoom;  
+        int cx = selmon->wx + selmon->ww / 2;  
+        int cy = selmon->wy + selmon->wh / 2;  
+   
+        Client *c;  
+        for (c = selmon->clients; c; c = c->next) {  
+            if (ISVISIBLE(c)) {  
+                int new_x = cx + (int)((c->x - cx) * scale);  
+                int new_y = cy + (int)((c->y - cy) * scale);  
+                int new_w = MAX(1, (int)(c->w * scale));  
+                int new_h = MAX(1, (int)(c->h * scale));  
+   
+                resizeclient(c, new_x, new_y, new_w, new_h);  
+            }  
         }  
-    }  
-  
-    selmon->canvas[tagidx].cx = (int)(selmon->canvas[tagidx].cx * scale);  
-    selmon->canvas[tagidx].cy = (int)(selmon->canvas[tagidx].cy * scale);  
-    selmon->canvas[tagidx].zoom = new_zoom;  
-  
+   
+        selmon->canvas[tagidx].cx = (int)(selmon->canvas[tagidx].cx * scale);  
+        selmon->canvas[tagidx].cy = (int)(selmon->canvas[tagidx].cy * scale);  
+        selmon->canvas[tagidx].zoom = new_zoom;  
+    }
+   
     drawbar(selmon);  
 }
