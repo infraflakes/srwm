@@ -28,34 +28,45 @@ void movemouse(const Arg* arg) {
   int x11_fd = ConnectionNumber(dpy);
   int got_release = 0;
   while (!got_release) {
-    // Check if we need continuous auto-pan (zoomed out in canvas mode)
     int need_autopan = selmon->canvas_mode &&
                        selmon->canvas[getcurrenttag(selmon)].zoom < 1.0f;
 
-    if (need_autopan && !XPending(dpy)) {
-      // Use select() with 16ms timeout for ~60fps continuous panning
-      fd_set fds;
-      FD_ZERO(&fds);
-      FD_SET(x11_fd, &fds);
-      struct timeval tv = { .tv_sec = 0, .tv_usec = 16000 };
-      int ret = select(x11_fd + 1, &fds, NULL, NULL, &tv);
+    if (need_autopan) {
+        // Non-blocking check for matching events
+        if (!XCheckMaskEvent(dpy, MOUSEMASK | ExposureMask | SubstructureRedirectMask, &ev)) {
+            // No matching event available — wait with timeout for continuous auto-pan
+            fd_set fds;
+            FD_ZERO(&fds);
+            FD_SET(x11_fd, &fds);
+            struct timeval tv = { .tv_sec = 0, .tv_usec = 16000 };
+            int ret = select(x11_fd + 1, &fds, NULL, NULL, &tv);
 
-      if (ret == 0) {
-        // Timeout — no X event, but we should still auto-pan if cursor is at edge
-        int cx, cy;
-        Window dummy_w;
-        int di;
-        unsigned int dui;
-        if (XQueryPointer(dpy, root, &dummy_w, &dummy_w, &cx, &cy, &di, &di, &dui)) {
-          int pan_dx = 0, pan_dy = 0;
-          canvas_edge_autopan(cx, cy, c, &pan_dx, &pan_dy);
+            if (ret == 0) {
+                // Timeout — auto-pan if cursor is at edge
+                int cx, cy;
+                Window dummy_w;
+                int di;
+                unsigned int dui;
+                if (XQueryPointer(dpy, root, &dummy_w, &dummy_w, &cx, &cy, &di, &di, &dui)) {
+                    int pan_dx = 0, pan_dy = 0;
+                    if (canvas_edge_autopan(cx, cy, c, &pan_dx, &pan_dy)) {
+                        ocx -= pan_dx;
+                        ocy -= pan_dy;
+                        nx = ocx + (cx - x);
+                        ny = ocy + (cy - y);
+                        if (c->isfloating) resize(c, nx, ny, c->w, c->h, 1);
+                    }
+                }
+            }
+            // If ret > 0, loop back and XCheckMaskEvent will find the new event
+            continue;
         }
-        continue;
-      }
-      // If ret > 0, fall through to process the X event normally
+        // If XCheckMaskEvent returned true, ev is populated — fall through to process it
+    } else {
+        // No auto-pan needed — use blocking wait (original behavior)
+        XMaskEvent(dpy, MOUSEMASK | ExposureMask | SubstructureRedirectMask, &ev);
     }
 
-    XMaskEvent(dpy, MOUSEMASK | ExposureMask | SubstructureRedirectMask, &ev);
     switch (ev.type) {
       case ConfigureRequest:
       case Expose:
@@ -66,8 +77,14 @@ void movemouse(const Arg* arg) {
         if ((ev.xmotion.time - lasttime) <= (1000 / 120)) continue;
         lasttime = ev.xmotion.time;
 
-      // Pan canvas but don't adjust drag reference — window follows cursor
-      canvas_edge_autopan(ev.xmotion.x_root, ev.xmotion.y_root, c, NULL, NULL);
+        // Edge auto-pan on mouse movement
+        {
+            int pan_dx = 0, pan_dy = 0;
+            if (canvas_edge_autopan(ev.xmotion.x_root, ev.xmotion.y_root, c, &pan_dx, &pan_dy)) {
+                ocx -= pan_dx;
+                ocy -= pan_dy;
+            }
+        }
 
         nx = ocx + (ev.xmotion.x - x);
         ny = ocy + (ev.xmotion.y - y);
@@ -91,7 +108,7 @@ void movemouse(const Arg* arg) {
         got_release = 1;
         break;
     }
-  }
+}
   XUngrabPointer(dpy, CurrentTime);
   if ((m = recttomon(c->x, c->y, c->w, c->h)) != selmon) {
     sendmon(c, m);
@@ -250,27 +267,36 @@ void resizemouse(const Arg* arg) {
     int need_autopan = selmon->canvas_mode &&
                        selmon->canvas[getcurrenttag(selmon)].zoom < 1.0f;
 
-    if (need_autopan && !XPending(dpy)) {
-      fd_set fds;
-      FD_ZERO(&fds);
-      FD_SET(x11_fd, &fds);
-      struct timeval tv = { .tv_sec = 0, .tv_usec = 16000 };
-      int ret = select(x11_fd + 1, &fds, NULL, NULL, &tv);
+    if (need_autopan) {
+        if (!XCheckMaskEvent(dpy, MOUSEMASK | ExposureMask | SubstructureRedirectMask, &ev)) {
+            fd_set fds;
+            FD_ZERO(&fds);
+            FD_SET(x11_fd, &fds);
+            struct timeval tv = { .tv_sec = 0, .tv_usec = 16000 };
+            int ret = select(x11_fd + 1, &fds, NULL, NULL, &tv);
 
-      if (ret == 0) {
-        int cx, cy;
-        Window dummy_w;
-        int di;
-        unsigned int dui;
-        if (XQueryPointer(dpy, root, &dummy_w, &dummy_w, &cx, &cy, &di, &di, &dui)) {
-          canvas_edge_autopan(cx, cy, c, NULL, NULL);
-          // Canvas pans but resized window stays at current size
+            if (ret == 0) {
+                int cx, cy;
+                Window dummy_w;
+                int di;
+                unsigned int dui;
+                if (XQueryPointer(dpy, root, &dummy_w, &dummy_w, &cx, &cy, &di, &di, &dui)) {
+                    int pan_dx = 0, pan_dy = 0;
+                    if (canvas_edge_autopan(cx, cy, c, &pan_dx, &pan_dy)) {
+                        ocx -= pan_dx;
+                        ocy -= pan_dy;
+                        nw = MAX(cx - ocx - 2 * c->bw + 1, 1);
+                        nh = MAX(cy - ocy - 2 * c->bw + 1, 1);
+                        if (c->isfloating) resize(c, c->x, c->y, nw, nh, 1);
+                    }
+                }
+            }
+            continue;
         }
-        continue;
-      }
+    } else {
+        XMaskEvent(dpy, MOUSEMASK | ExposureMask | SubstructureRedirectMask, &ev);
     }
 
-    XMaskEvent(dpy, MOUSEMASK | ExposureMask | SubstructureRedirectMask, &ev);
     switch (ev.type) {
       case ConfigureRequest:
       case Expose:
@@ -281,8 +307,13 @@ void resizemouse(const Arg* arg) {
         if ((ev.xmotion.time - lasttime) <= (1000 / 60)) continue;
         lasttime = ev.xmotion.time;
 
-        // --- Edge auto-pan when zoomed out ---
-        canvas_edge_autopan(ev.xmotion.x_root, ev.xmotion.y_root, NULL, NULL, NULL);
+        {
+            int pan_dx = 0, pan_dy = 0;
+            if (canvas_edge_autopan(ev.xmotion.x_root, ev.xmotion.y_root, c, &pan_dx, &pan_dy)) {
+                ocx -= pan_dx;
+                ocy -= pan_dy;
+            }
+        }
 
         nw = MAX(ev.xmotion.x - ocx - 2 * c->bw + 1, 1);
         nh = MAX(ev.xmotion.y - ocy - 2 * c->bw + 1, 1);
@@ -301,7 +332,7 @@ void resizemouse(const Arg* arg) {
         got_release = 1;
         break;
     }
-  }
+}
   XWarpPointer(dpy, None, c->win, 0, 0, 0, 0, c->w + c->bw - 1,
                c->h + c->bw - 1);
   XUngrabPointer(dpy, CurrentTime);
