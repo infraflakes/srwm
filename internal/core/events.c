@@ -332,6 +332,13 @@ void motionnotify(XEvent* e) {
     static Monitor* mon = NULL;
     Monitor* m;
     XMotionEvent* ev = &e->xmotion;
+
+    // Edge auto-pan should work regardless of which window the cursor is over
+    if (selmon && selmon->canvas_mode &&
+        selmon->canvas[getcurrenttag(selmon)].zoom < 1.0f) {
+        canvas_edge_autopan(ev->x_root, ev->y_root, NULL, NULL, NULL);
+    }
+
     if (ev->window != root) return;
     if ((m = recttomon(ev->x_root, ev->y_root, 1, 1)) != mon && mon) {
         unfocus(selmon->sel, 1);
@@ -339,8 +346,6 @@ void motionnotify(XEvent* e) {
         focus(NULL);
     }
     mon = m;
-    // Edge auto-pan when zoomed out (general cursor movement)
-    canvas_edge_autopan(ev->x_root, ev->y_root, NULL, NULL, NULL);
 }
 
 void propertynotify(XEvent* e) {

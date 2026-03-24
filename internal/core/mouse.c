@@ -48,15 +48,7 @@ void movemouse(const Arg* arg) {
         unsigned int dui;
         if (XQueryPointer(dpy, root, &dummy_w, &dummy_w, &cx, &cy, &di, &di, &dui)) {
           int pan_dx = 0, pan_dy = 0;
-          if (canvas_edge_autopan(cx, cy, c, &pan_dx, &pan_dy)) {
-            // Adjust drag reference so the window follows the pan
-            ocx -= pan_dx;
-            ocy -= pan_dy;
-            // Also move the dragged window
-            nx = ocx + (cx - x);
-            ny = ocy + (cy - y);
-            if (c->isfloating) resize(c, nx, ny, c->w, c->h, 1);
-          }
+          canvas_edge_autopan(cx, cy, c, &pan_dx, &pan_dy);
         }
         continue;
       }
@@ -74,15 +66,8 @@ void movemouse(const Arg* arg) {
         if ((ev.xmotion.time - lasttime) <= (1000 / 120)) continue;
         lasttime = ev.xmotion.time;
 
-        // --- Edge auto-pan when zoomed out in canvas mode ---  
-        {
-            int pan_dx = 0, pan_dy = 0;
-            if (canvas_edge_autopan(ev.xmotion.x_root, ev.xmotion.y_root, c, &pan_dx, &pan_dy)) {
-            // Shift drag reference so the dragged window moves with canvas
-                ocx -= pan_dx;
-                ocy -= pan_dy;
-            }
-        }
+      // Pan canvas but don't adjust drag reference — window follows cursor
+      canvas_edge_autopan(ev.xmotion.x_root, ev.xmotion.y_root, c, NULL, NULL);
 
         nx = ocx + (ev.xmotion.x - x);
         ny = ocy + (ev.xmotion.y - y);
@@ -278,14 +263,8 @@ void resizemouse(const Arg* arg) {
         int di;
         unsigned int dui;
         if (XQueryPointer(dpy, root, &dummy_w, &dummy_w, &cx, &cy, &di, &di, &dui)) {
-          int pan_dx = 0, pan_dy = 0;
-          if (canvas_edge_autopan(cx, cy, c, &pan_dx, &pan_dy)) {
-            ocx -= pan_dx;
-            ocy -= pan_dy;
-            nw = MAX(cx - ocx - 2 * c->bw + 1, 1);
-            nh = MAX(cy - ocy - 2 * c->bw + 1, 1);
-            if (c->isfloating) resize(c, c->x, c->y, nw, nh, 1);
-          }
+          canvas_edge_autopan(cx, cy, c, NULL, NULL);
+          // Canvas pans but resized window stays at current size
         }
         continue;
       }
@@ -303,13 +282,7 @@ void resizemouse(const Arg* arg) {
         lasttime = ev.xmotion.time;
 
         // --- Edge auto-pan when zoomed out ---
-        {
-            int pan_dx = 0, pan_dy = 0;
-            if (canvas_edge_autopan(ev.xmotion.x_root, ev.xmotion.y_root, c, &pan_dx, &pan_dy)) {
-                ocx -= pan_dx;
-                ocy -= pan_dy;
-            }
-        }
+        canvas_edge_autopan(ev.xmotion.x_root, ev.xmotion.y_root, NULL, NULL, NULL);
 
         nw = MAX(ev.xmotion.x - ocx - 2 * c->bw + 1, 1);
         nh = MAX(ev.xmotion.y - ocy - 2 * c->bw + 1, 1);
