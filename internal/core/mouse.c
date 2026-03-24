@@ -48,14 +48,9 @@ void movemouse(const Arg* arg) {
                 int di;
                 unsigned int dui;
                 if (XQueryPointer(dpy, root, &dummy_w, &dummy_w, &cx, &cy, &di, &di, &dui)) {
-                    int pan_dx = 0, pan_dy = 0;
-                    if (canvas_edge_autopan(cx, cy, c, &pan_dx, &pan_dy)) {
-                        ocx -= pan_dx;
-                        ocy -= pan_dy;
-                        nx = ocx + (cx - x);
-                        ny = ocy + (cy - y);
-                        if (c->isfloating) resize(c, nx, ny, c->w, c->h, 1);
-                    }
+                    canvas_edge_autopan(cx, cy, c, NULL, NULL);
+                // Don't adjust ocx/ocy — the dragged window stays under the cursor
+                // while the canvas (other windows) slides underneath
                 }
             }
             // If ret > 0, loop back and XCheckMaskEvent will find the new event
@@ -77,14 +72,8 @@ void movemouse(const Arg* arg) {
         if ((ev.xmotion.time - lasttime) <= (1000 / 120)) continue;
         lasttime = ev.xmotion.time;
 
-        // Edge auto-pan on mouse movement
-        {
-            int pan_dx = 0, pan_dy = 0;
-            if (canvas_edge_autopan(ev.xmotion.x_root, ev.xmotion.y_root, c, &pan_dx, &pan_dy)) {
-                ocx -= pan_dx;
-                ocy -= pan_dy;
-            }
-        }
+        // --- Edge auto-pan when zoomed out in canvas mode ---
+        canvas_edge_autopan(ev.xmotion.x_root, ev.xmotion.y_root, c, NULL, NULL);
 
         nx = ocx + (ev.xmotion.x - x);
         ny = ocy + (ev.xmotion.y - y);
@@ -282,13 +271,7 @@ void resizemouse(const Arg* arg) {
                 unsigned int dui;
                 if (XQueryPointer(dpy, root, &dummy_w, &dummy_w, &cx, &cy, &di, &di, &dui)) {
                     int pan_dx = 0, pan_dy = 0;
-                    if (canvas_edge_autopan(cx, cy, c, &pan_dx, &pan_dy)) {
-                        ocx -= pan_dx;
-                        ocy -= pan_dy;
-                        nw = MAX(cx - ocx - 2 * c->bw + 1, 1);
-                        nh = MAX(cy - ocy - 2 * c->bw + 1, 1);
-                        if (c->isfloating) resize(c, c->x, c->y, nw, nh, 1);
-                    }
+                    canvas_edge_autopan(cx, cy, c, &pan_dx, &pan_dy);
                 }
             }
             continue;
@@ -307,13 +290,7 @@ void resizemouse(const Arg* arg) {
         if ((ev.xmotion.time - lasttime) <= (1000 / 60)) continue;
         lasttime = ev.xmotion.time;
 
-        {
-            int pan_dx = 0, pan_dy = 0;
-            if (canvas_edge_autopan(ev.xmotion.x_root, ev.xmotion.y_root, c, &pan_dx, &pan_dy)) {
-                ocx -= pan_dx;
-                ocy -= pan_dy;
-            }
-        }
+        canvas_edge_autopan(ev.xmotion.x_root, ev.xmotion.y_root, c, NULL, NULL);
 
         nw = MAX(ev.xmotion.x - ocx - 2 * c->bw + 1, 1);
         nh = MAX(ev.xmotion.y - ocy - 2 * c->bw + 1, 1);
