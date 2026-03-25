@@ -71,6 +71,7 @@ func runLuaConfig(ctx context.Context) {
 
 	startBar := RegisterBarAPI(L, srwmMod, srwmDir)
 	RegisterKeybindAPI(L, srwmMod)
+	RegisterMousebindAPI(L, srwmMod)
 	RegisterConfigAPI(L, srwmMod)
 	RegisterActionsAPI(L, srwmMod)
 	control.RegisterAPI(L, srwmMod)

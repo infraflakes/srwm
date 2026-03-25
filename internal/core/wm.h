@@ -199,6 +199,17 @@ extern DynamicKey dkeys[MAX_DYNAMIC_KEYS];
 extern int dkeys_len;
 
 typedef struct {
+  unsigned int click;   // ClkRootWin, ClkClientWin, etc.
+  unsigned int mod;     // modifier mask
+  unsigned int button;  // Button1-Button5
+  int id;               // callback ID for Go
+} DynamicButton;
+
+#define MAX_DYNAMIC_BUTTONS 64
+extern DynamicButton dbuttons[MAX_DYNAMIC_BUTTONS];
+extern int dbuttons_len;
+
+typedef struct {
   const char *class;
   const char *instance;
   const char *title;
@@ -367,6 +378,7 @@ void publish_canvas_state(Monitor *m);
 void window_set_state(Window win, long state);
 void window_map(Client *c, int deiconify);
 void window_unmap(Window win, int iconify);
+extern void srwm_handle_mouse(int id);
 
 extern void (*handler[LASTEvent])(XEvent *);
 
@@ -413,7 +425,6 @@ extern Window root, wmcheckwin;
 
 /* Config globals */
 extern unsigned int borderpx;
-extern unsigned int px_till_snapping_to_screen_edge;
 extern unsigned int gaps;
 extern unsigned int systraypinning;
 extern unsigned int systrayspacing;
@@ -439,7 +450,8 @@ extern int tagschemes[];
 extern const char *colors[18][3]; // 18 = SchemeBtnClose + 1
 extern const char *fonts[1];
 extern const Rule rules[3];
-extern const Button buttons[12];
+extern const Button buttons[];
+extern const int buttons_len;
 
 /* Dynamic keys */
 extern DynamicKey dkeys[];

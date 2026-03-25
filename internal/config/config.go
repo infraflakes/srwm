@@ -16,10 +16,6 @@ func RegisterConfigAPI(L *lua.LState, srwmMod *lua.LTable) {
 		return uintProp(L, core.GetGaps, core.SetGaps)
 	}))
 
-	L.SetField(cfgTable, "px_till_snapping_to_screen_edge", L.NewFunction(func(L *lua.LState) int {
-		return uintProp(L, core.GetPxTillSnappingToScreenEdge, core.SetPxTillSnappingToScreenEdge)
-	}))
-
 	L.SetField(srwmMod, "cfg", cfgTable)
 
 	// srwm.layout("monocle") or srwm.layout("canvas")

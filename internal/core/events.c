@@ -1,31 +1,29 @@
 #include "wm.h"
 
-void (*handler[LASTEvent])(XEvent*) = {  
-    [ButtonPress] = buttonpress,  
-    [ClientMessage] = clientmessage,  
-    [ConfigureRequest] = configurerequest,  
-    [ConfigureNotify] = configurenotify,  
-    [DestroyNotify] = destroynotify,  
-    [EnterNotify] = enternotify,  
-    [Expose] = expose,  
-    [FocusIn] = focusin,  
-    [KeyPress] = keypress,  
-    [MappingNotify] = mappingnotify,  
-    [MapRequest] = maprequest,  
-    [MotionNotify] = motionnotify,  
-    [PropertyNotify] = propertynotify,  
-    [ResizeRequest] = resizerequest,  
-    [UnmapNotify] = unmapnotify  
-};
+void (*handler[LASTEvent])(XEvent *) = {[ButtonPress] = buttonpress,
+                                        [ClientMessage] = clientmessage,
+                                        [ConfigureRequest] = configurerequest,
+                                        [ConfigureNotify] = configurenotify,
+                                        [DestroyNotify] = destroynotify,
+                                        [EnterNotify] = enternotify,
+                                        [Expose] = expose,
+                                        [FocusIn] = focusin,
+                                        [KeyPress] = keypress,
+                                        [MappingNotify] = mappingnotify,
+                                        [MapRequest] = maprequest,
+                                        [MotionNotify] = motionnotify,
+                                        [PropertyNotify] = propertynotify,
+                                        [ResizeRequest] = resizerequest,
+                                        [UnmapNotify] = unmapnotify};
 char stext[1024];
 
-void buttonpress(XEvent* e) {
+void buttonpress(XEvent *e) {
   unsigned int i, x, click;
   int loop;
   Arg arg = {0};
-  Client* c;
-  Monitor* m;
-  XButtonPressedEvent* ev = &e->xbutton;
+  Client *c;
+  Monitor *m;
+  XButtonPressedEvent *ev = &e->xbutton;
 
   click = ClkRootWin;
   /* focus monitor if necessary */
@@ -36,7 +34,8 @@ void buttonpress(XEvent* e) {
   }
   if (ev->window == selmon->barwin) {
     i = x = 0;
-    do x += TEXTW(tags[i]);
+    do
+      x += TEXTW(tags[i]);
     while (ev->x >= x && ++i < TAGSLENGTH);
     if (i < TAGSLENGTH) {
       click = ClkTagBar;
@@ -54,13 +53,15 @@ void buttonpress(XEvent* e) {
     i = 0;
     x = 0;
     for (c = selmon->clients; c; c = c->next) {
-      if (!ISVISIBLE(c)) continue;
+      if (!ISVISIBLE(c))
+        continue;
       x += selmon->tab_widths[i];
       if (ev->x > x)
         ++i;
       else
         break;
-      if (i >= m->ntabs) break;
+      if (i >= m->ntabs)
+        break;
     }
     if (c && ev->x <= x) {
       click = ClkTabBar;
@@ -69,9 +70,11 @@ void buttonpress(XEvent* e) {
       x = selmon->ww - 2 * m->gap;
       for (loop = 2; loop >= 0; loop--) {
         x -= selmon->tab_btn_w[loop];
-        if (ev->x > x) break;
+        if (ev->x > x)
+          break;
       }
-      if (ev->x >= x) click = ClkTabPrev + loop;
+      if (ev->x >= x)
+        click = ClkTabPrev + loop;
     }
   } else if ((c = wintoclient(ev->window))) {
     focus(c);
@@ -82,7 +85,7 @@ void buttonpress(XEvent* e) {
 
 execute_handler:
 
-  for (i = 0; i < LENGTH(buttons); i++)
+  for (i = 0; i < buttons_len; i++)
     if (click == buttons[i].click && buttons[i].func &&
         buttons[i].button == ev->button &&
         CLEANMASK(buttons[i].mask) == CLEANMASK(ev->state))
@@ -90,19 +93,24 @@ execute_handler:
           ((click == ClkTagBar || click == ClkTabBar) && buttons[i].arg.i == 0)
               ? &arg
               : &buttons[i].arg);
+
+  for (i = 0; i < (unsigned int)dbuttons_len; i++)
+    if (click == dbuttons[i].click && dbuttons[i].button == ev->button &&
+        CLEANMASK(dbuttons[i].mod) == CLEANMASK(ev->state))
+      srwm_handle_mouse(dbuttons[i].id);
 }
 
-void clientmessage(XEvent* e) {
+void clientmessage(XEvent *e) {
   XWindowAttributes wa;
   XSetWindowAttributes swa;
-  XClientMessageEvent* cme = &e->xclient;
-  Client* c = wintoclient(cme->window);
+  XClientMessageEvent *cme = &e->xclient;
+  Client *c = wintoclient(cme->window);
 
   if (systray_enable && cme->window == systray->win &&
       cme->message_type == netatom[NetSystemTrayOP]) {
     /* add systray icons */
     if (cme->data.l[1] == SYSTEM_TRAY_REQUEST_DOCK) {
-      if (!(c = (Client*)calloc(1, sizeof(Client))))
+      if (!(c = (Client *)calloc(1, sizeof(Client))))
         die("fatal: could not malloc() %u bytes\n", sizeof(Client));
       if (!(c->win = cme->data.l[2])) {
         free(c);
@@ -128,9 +136,9 @@ void clientmessage(XEvent* e) {
       updatesizehints(c);
       updatesystrayicongeom(c, wa.width, wa.height);
       XAddToSaveSet(dpy, c->win);
-      XSelectInput(
-          dpy, c->win,
-          StructureNotifyMask | PropertyChangeMask | ResizeRedirectMask);
+      XSelectInput(dpy, c->win,
+                   StructureNotifyMask | PropertyChangeMask |
+                       ResizeRedirectMask);
       XClassHint ch = {"srwmsystray", "srwmsystray"};
       XSetClassHint(dpy, c->win, &ch);
       XReparentWindow(dpy, c->win, systray->win, 0, 0);
@@ -156,7 +164,8 @@ void clientmessage(XEvent* e) {
     }
     return;
   }
-  if (!c) return;
+  if (!c)
+    return;
   if (cme->message_type == netatom[NetWMState]) {
     if (cme->data.l[1] == netatom[NetWMFullscreen] ||
         cme->data.l[2] == netatom[NetWMFullscreen])
@@ -164,14 +173,15 @@ void clientmessage(XEvent* e) {
                         || (cme->data.l[0] == 2 /* _NET_WM_STATE_TOGGLE */ &&
                             !c->isfullscreen)));
   } else if (cme->message_type == netatom[NetActiveWindow]) {
-    if (c != selmon->sel && !c->isurgent) seturgent(c, 1);
+    if (c != selmon->sel && !c->isurgent)
+      seturgent(c, 1);
   }
 }
 
-void configurenotify(XEvent* e) {
-  Monitor* m;
-  Client* c;
-  XConfigureEvent* ev = &e->xconfigure;
+void configurenotify(XEvent *e) {
+  Monitor *m;
+  Client *c;
+  XConfigureEvent *ev = &e->xconfigure;
   int dirty;
 
   /* TODO: updategeom handling sucks, needs to be simplified */
@@ -184,7 +194,8 @@ void configurenotify(XEvent* e) {
       updatebars();
       for (m = mons; m; m = m->next) {
         for (c = m->clients; c; c = c->next)
-          if (c->isfullscreen) resizeclient(c, m->mx, m->my, m->mw, m->mh);
+          if (c->isfullscreen)
+            resizeclient(c, m->mx, m->my, m->mw, m->mh);
         resizebarwin(m);
       }
       focus(NULL);
@@ -193,10 +204,10 @@ void configurenotify(XEvent* e) {
   }
 }
 
-void configurerequest(XEvent* e) {
-  Client* c;
-  Monitor* m;
-  XConfigureRequestEvent* ev = &e->xconfigurerequest;
+void configurerequest(XEvent *e) {
+  Client *c;
+  Monitor *m;
+  XConfigureRequestEvent *ev = &e->xconfigurerequest;
   XWindowChanges wc;
 
   if ((c = wintoclient(ev->window))) {
@@ -227,7 +238,8 @@ void configurerequest(XEvent* e) {
       if ((ev->value_mask & (CWX | CWY)) &&
           !(ev->value_mask & (CWWidth | CWHeight)))
         configure(c);
-      if (ISVISIBLE(c)) XMoveResizeWindow(dpy, c->win, c->x, c->y, c->w, c->h);
+      if (ISVISIBLE(c))
+        XMoveResizeWindow(dpy, c->win, c->x, c->y, c->w, c->h);
     } else
       configure(c);
   } else {
@@ -243,9 +255,9 @@ void configurerequest(XEvent* e) {
   XSync(dpy, False);
 }
 
-void destroynotify(XEvent* e) {
-  Client* c;
-  XDestroyWindowEvent* ev = &e->xdestroywindow;
+void destroynotify(XEvent *e) {
+  Client *c;
+  XDestroyWindowEvent *ev = &e->xdestroywindow;
 
   if ((c = wintoclient(ev->window)))
     unmanage(c, 1);
@@ -256,10 +268,10 @@ void destroynotify(XEvent* e) {
   }
 }
 
-void enternotify(XEvent* e) {
-  Client* c;
-  Monitor* m;
-  XCrossingEvent* ev = &e->xcrossing;
+void enternotify(XEvent *e) {
+  Client *c;
+  Monitor *m;
+  XCrossingEvent *ev = &e->xcrossing;
 
   if ((ev->mode != NotifyNormal || ev->detail == NotifyInferior) &&
       ev->window != root)
@@ -274,48 +286,52 @@ void enternotify(XEvent* e) {
   focus(c);
 }
 
-void expose(XEvent* e) {
-  Monitor* m;
-  XExposeEvent* ev = &e->xexpose;
+void expose(XEvent *e) {
+  Monitor *m;
+  XExposeEvent *ev = &e->xexpose;
 
   if (ev->count == 0 && (m = wintomon(ev->window))) {
     drawbar(m);
     drawtab(m);
-    if (m == selmon) updatesystray();
+    if (m == selmon)
+      updatesystray();
   }
 }
 
 /* there are some broken focus acquiring clients needing extra handling */
-void focusin(XEvent* e) {
-  XFocusChangeEvent* ev = &e->xfocus;
+void focusin(XEvent *e) {
+  XFocusChangeEvent *ev = &e->xfocus;
 
-  if (selmon->sel && ev->window != selmon->sel->win) setfocus(selmon->sel);
+  if (selmon->sel && ev->window != selmon->sel->win)
+    setfocus(selmon->sel);
 }
 
-void keypress(XEvent* e) {
+void keypress(XEvent *e) {
   unsigned int i;
   KeySym keysym;
-  XKeyEvent* ev;
+  XKeyEvent *ev;
   ev = &e->xkey;
   keysym = XKeycodeToKeysym(dpy, (KeyCode)ev->keycode, 0);
 
   for (i = 0; i < dkeys_len; i++)
-    if (keysym == dkeys[i].keysym && CLEANMASK(dkeys[i].mod) == CLEANMASK(ev->state)) {
+    if (keysym == dkeys[i].keysym &&
+        CLEANMASK(dkeys[i].mod) == CLEANMASK(ev->state)) {
       srwm_handle_key(dkeys[i].id);
     }
 }
 
-void mappingnotify(XEvent* e) {
-  XMappingEvent* ev = &e->xmapping;
+void mappingnotify(XEvent *e) {
+  XMappingEvent *ev = &e->xmapping;
 
   XRefreshKeyboardMapping(ev);
-  if (ev->request == MappingKeyboard) grabkeys();
+  if (ev->request == MappingKeyboard)
+    grabkeys();
 }
 
-void maprequest(XEvent* e) {
+void maprequest(XEvent *e) {
   static XWindowAttributes wa;
-  XMapRequestEvent* ev = &e->xmaprequest;
-  Client* i;
+  XMapRequestEvent *ev = &e->xmaprequest;
+  Client *i;
   if ((i = wintosystrayicon(ev->window))) {
     sendevent(i->win, netatom[Xembed], StructureNotifyMask, CurrentTime,
               XEMBED_WINDOW_ACTIVATE, 0, systray->win, XEMBED_EMBEDDED_VERSION);
@@ -325,33 +341,35 @@ void maprequest(XEvent* e) {
 
   if (!XGetWindowAttributes(dpy, ev->window, &wa) || wa.override_redirect)
     return;
-  if (!wintoclient(ev->window)) manage(ev->window, &wa);
+  if (!wintoclient(ev->window))
+    manage(ev->window, &wa);
 }
 
-void motionnotify(XEvent* e) {
-    static Monitor* mon = NULL;
-    Monitor* m;
-    XMotionEvent* ev = &e->xmotion;
+void motionnotify(XEvent *e) {
+  static Monitor *mon = NULL;
+  Monitor *m;
+  XMotionEvent *ev = &e->xmotion;
 
-    // Edge auto-pan should work regardless of which window the cursor is over
-    if (selmon && selmon->canvas_mode &&
-        selmon->canvas[getcurrenttag(selmon)].zoom < 1.0f) {
-        canvas_edge_autopan(ev->x_root, ev->y_root, NULL, NULL, NULL);
-    }
+  // Edge auto-pan should work regardless of which window the cursor is over
+  if (selmon && selmon->canvas_mode &&
+      selmon->canvas[getcurrenttag(selmon)].zoom < 1.0f) {
+    canvas_edge_autopan(ev->x_root, ev->y_root, NULL, NULL, NULL);
+  }
 
-    if (ev->window != root) return;
-    if ((m = recttomon(ev->x_root, ev->y_root, 1, 1)) != mon && mon) {
-        unfocus(selmon->sel, 1);
-        selmon = m;
-        focus(NULL);
-    }
-    mon = m;
+  if (ev->window != root)
+    return;
+  if ((m = recttomon(ev->x_root, ev->y_root, 1, 1)) != mon && mon) {
+    unfocus(selmon->sel, 1);
+    selmon = m;
+    focus(NULL);
+  }
+  mon = m;
 }
 
-void propertynotify(XEvent* e) {
-  Client* c;
+void propertynotify(XEvent *e) {
+  Client *c;
   Window trans;
-  XPropertyEvent* ev = &e->xproperty;
+  XPropertyEvent *ev = &e->xproperty;
 
   if ((c = wintosystrayicon(ev->window))) {
     if (ev->atom == XA_WM_NORMAL_HINTS) {
@@ -368,40 +386,43 @@ void propertynotify(XEvent* e) {
     return; /* ignore */
   else if ((c = wintoclient(ev->window))) {
     switch (ev->atom) {
-      default:
-        break;
-      case XA_WM_TRANSIENT_FOR:
-        if (!c->isfloating && (XGetTransientForHint(dpy, c->win, &trans)) &&
-            (c->isfloating = (wintoclient(trans)) != NULL))
-          arrange(c->mon);
-        break;
-      case XA_WM_NORMAL_HINTS:
-        c->hintsvalid = 0;
-        break;
-      case XA_WM_HINTS:
-        updatewmhints(c);
-        drawbars();
-        drawtabs();
-        break;
+    default:
+      break;
+    case XA_WM_TRANSIENT_FOR:
+      if (!c->isfloating && (XGetTransientForHint(dpy, c->win, &trans)) &&
+          (c->isfloating = (wintoclient(trans)) != NULL))
+        arrange(c->mon);
+      break;
+    case XA_WM_NORMAL_HINTS:
+      c->hintsvalid = 0;
+      break;
+    case XA_WM_HINTS:
+      updatewmhints(c);
+      drawbars();
+      drawtabs();
+      break;
     }
     if (ev->atom == XA_WM_NAME || ev->atom == netatom[NetWMName]) {
       updatetitle(c);
-      if (c == c->mon->sel) drawbar(c->mon);
+      if (c == c->mon->sel)
+        drawbar(c->mon);
       drawtab(c->mon);
     }
 
     else if (ev->atom == netatom[NetWMIcon]) {
       updateicon(c);
-      if (c == c->mon->sel) drawbar(c->mon);
+      if (c == c->mon->sel)
+        drawbar(c->mon);
     }
 
-    if (ev->atom == netatom[NetWMWindowType]) updatewindowtype(c);
+    if (ev->atom == netatom[NetWMWindowType])
+      updatewindowtype(c);
   }
 }
 
-void resizerequest(XEvent* e) {
-  XResizeRequestEvent* ev = &e->xresizerequest;
-  Client* i;
+void resizerequest(XEvent *e) {
+  XResizeRequestEvent *ev = &e->xresizerequest;
+  Client *i;
 
   if ((i = wintosystrayicon(ev->window))) {
     updatesystrayicongeom(i, ev->width, ev->height);
@@ -410,9 +431,9 @@ void resizerequest(XEvent* e) {
   }
 }
 
-void unmapnotify(XEvent* e) {
-  Client* c;
-  XUnmapEvent* ev = &e->xunmap;
+void unmapnotify(XEvent *e) {
+  Client *c;
+  XUnmapEvent *ev = &e->xunmap;
 
   if ((c = wintoclient(ev->window))) {
     if (ev->send_event)

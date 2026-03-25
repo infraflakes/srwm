@@ -78,19 +78,7 @@ void movemouse(const Arg* arg) {
         nx = ocx + (ev.xmotion.x - x);
         ny = ocy + (ev.xmotion.y - y);
 
-        // Disable edge snapping when zoomed out in canvas mode
-        if (!(selmon->canvas_mode && selmon->canvas[getcurrenttag(selmon)].zoom < 1.0f)) {
-          if (abs(selmon->wx - nx) < px_till_snapping_to_screen_edge)
-            nx = selmon->wx;
-          else if (abs((selmon->wx + selmon->ww) - (nx + WIDTH(c))) < px_till_snapping_to_screen_edge)
-            nx = selmon->wx + selmon->ww - WIDTH(c);
-          if (abs(selmon->wy - ny) < px_till_snapping_to_screen_edge)
-            ny = selmon->wy;
-          else if (abs((selmon->wy + selmon->wh) - (ny + HEIGHT(c))) < px_till_snapping_to_screen_edge)
-            ny = selmon->wy + selmon->wh - HEIGHT(c);
-        }
-        if (!c->isfloating && (abs(nx - c->x) > px_till_snapping_to_screen_edge || abs(ny - c->y) > px_till_snapping_to_screen_edge))
-          togglefloating(NULL);
+        if (!c->isfloating && (abs(nx - c->x) > 1 || abs(ny - c->y) > 1)) togglefloating(NULL);
         if (c->isfloating) resize(c, nx, ny, c->w, c->h, 1);
         break;
       case ButtonRelease:
@@ -151,9 +139,7 @@ void placemouse(const Arg* arg) {
 
         nx = ocx + (ev.xmotion.x - x);
         ny = ocy + (ev.xmotion.y - y);
-
-        if (!freemove && (abs(nx - ocx) > px_till_snapping_to_screen_edge || abs(ny - ocy) > px_till_snapping_to_screen_edge))
-          freemove = 1;
+        if (!freemove && (abs(nx - ocx) > 1 || abs(ny - ocy) > 1)) freemove = 1;
 
         if (freemove) XMoveWindow(dpy, c->win, nx, ny);
 
@@ -299,9 +285,7 @@ void resizemouse(const Arg* arg) {
             c->mon->wx + nw <= selmon->wx + selmon->ww &&
             c->mon->wy + nh >= selmon->wy &&
             c->mon->wy + nh <= selmon->wy + selmon->wh) {
-          if (!c->isfloating &&
-              (abs(nw - c->w) > px_till_snapping_to_screen_edge || abs(nh - c->h) > px_till_snapping_to_screen_edge))
-            togglefloating(NULL);
+          if (!c->isfloating && (abs(nw - c->w) > 1 || abs(nh - c->h) > 1)) togglefloating(NULL);
         }
         if (c->isfloating) resize(c, c->x, c->y, nw, nh, 1);
         break;

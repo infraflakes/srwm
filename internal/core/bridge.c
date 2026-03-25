@@ -113,12 +113,19 @@ void srwm_clear_keybindings(void) {
 void srwm_grabkeys(void) {
   grabkeys();
 }
+extern void add_dynamic_button(unsigned int click, unsigned int mod, unsigned int button, int id);
+extern void clear_dynamic_buttons(void);
+
+void srwm_add_mousebinding(unsigned int click, unsigned int mod, unsigned int button, int id) {
+  add_dynamic_button(click, mod, button, id);
+}
+
+void srwm_clear_mousebindings(void) {
+  clear_dynamic_buttons();
+}
 
 unsigned int srwm_get_borderpx(void) { return borderpx; }
 void srwm_set_borderpx(unsigned int v) { borderpx = v; }
-
-unsigned int srwm_get_px_till_snapping_to_screen_edge(void) { return px_till_snapping_to_screen_edge; }
-void srwm_set_px_till_snapping_to_screen_edge(unsigned int v) { px_till_snapping_to_screen_edge = v; }
 
 unsigned int srwm_get_gaps(void) { return gaps; }
 void srwm_set_gaps(unsigned int v) { gaps = v; }

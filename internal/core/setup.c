@@ -18,6 +18,8 @@ Monitor *mons, *selmon;
 Window root, wmcheckwin;  
 DynamicKey dkeys[MAX_DYNAMIC_KEYS];  
 int dkeys_len = 0;
+DynamicButton dbuttons[MAX_DYNAMIC_BUTTONS];
+int dbuttons_len = 0;
 
 void checkotherwm(void) {
   xerrorxlib = XSetErrorHandler(xerrorstart);
@@ -479,6 +481,20 @@ void clear_dynamic_keys(void) {
   dkeys_len = 0;
 }
 
+void add_dynamic_button(unsigned int click, unsigned int mod, unsigned int button, int id) {
+  if (dbuttons_len < MAX_DYNAMIC_BUTTONS) {
+    dbuttons[dbuttons_len].click = click;
+    dbuttons[dbuttons_len].mod = mod;
+    dbuttons[dbuttons_len].button = button;
+    dbuttons[dbuttons_len].id = id;
+    dbuttons_len++;
+  }
+}
+
+void clear_dynamic_buttons(void) {
+  dbuttons_len = 0;
+}
+
 int isuniquegeom(XineramaScreenInfo* unique, size_t n,
                         XineramaScreenInfo* info) {
   while (n--)
@@ -490,7 +506,6 @@ int isuniquegeom(XineramaScreenInfo* unique, size_t n,
 
 /* Default configuration fallback values - can be overridden via Lua */
 unsigned int borderpx = 0;
-unsigned int px_till_snapping_to_screen_edge = 32;
 unsigned int gaps = 0;
 unsigned int systraypinning = 0;
 unsigned int systrayspacing = 2;
@@ -559,3 +574,4 @@ const Button buttons[] = {
     {ClkTabNext, 0, Button1, movestack, {.i = +1}},
     {ClkTabClose, 0, Button1, killclient, {0}},
 };
+const int buttons_len = sizeof(buttons) / sizeof(buttons[0]);

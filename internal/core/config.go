@@ -22,14 +22,6 @@ func SetBorderPx(v uint) {
 	C.srwm_set_borderpx(C.uint(v))
 }
 
-func GetPxTillSnappingToScreenEdge() uint {
-	return uint(C.srwm_get_px_till_snapping_to_screen_edge())
-}
-
-func SetPxTillSnappingToScreenEdge(v uint) {
-	C.srwm_set_px_till_snapping_to_screen_edge(C.uint(v))
-}
-
 func GetGaps() uint {
 	return uint(C.srwm_get_gaps())
 }

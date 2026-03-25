@@ -936,10 +936,16 @@ void grabbuttons(Client* c, int focused) {
     if (!focused)
       XGrabButton(dpy, AnyButton, AnyModifier, c->win, False, BUTTONMASK,
                   GrabModeSync, GrabModeSync, None, None);
-    for (i = 0; i < LENGTH(buttons); i++)
+    for (i = 0; i < buttons_len; i++)
       if (buttons[i].click == ClkClientWin)
         for (j = 0; j < LENGTH(modifiers); j++)
           XGrabButton(dpy, buttons[i].button, buttons[i].mask | modifiers[j],
+                      c->win, False, BUTTONMASK, GrabModeAsync, GrabModeSync,
+                      None, None);
+    for (i = 0; i < (unsigned int)dbuttons_len; i++)
+      if (dbuttons[i].click == ClkClientWin)
+        for (j = 0; j < LENGTH(modifiers); j++)
+          XGrabButton(dpy, dbuttons[i].button, dbuttons[i].mod | modifiers[j],
                       c->win, False, BUTTONMASK, GrabModeAsync, GrabModeSync,
                       None, None);
   }

@@ -36,14 +36,18 @@ void srwm_request_restart(void);
 void srwm_add_keybinding(unsigned int mod, KeySym keysym, int id);
 void srwm_clear_keybindings(void);
 void srwm_grabkeys(void);
+/* Dynamic mouse bindings (Go -> C) */
+void srwm_add_mousebinding(unsigned int click, unsigned int mod, unsigned int button, int id);
+void srwm_clear_mousebindings(void);
+
+/* Called from C -> Go when a dynamic mouse button is pressed */
+extern void srwm_handle_mouse(int id);
 
 /* Config getters and setters */
 int srwm_get_layout_mode(void);  
 void srwm_set_layout_mode(int);
 unsigned int srwm_get_borderpx(void);
 void srwm_set_borderpx(unsigned int);
-unsigned int srwm_get_px_till_snapping_to_screen_edge(void);
-void srwm_set_px_till_snapping_to_screen_edge(unsigned int);
 unsigned int srwm_get_gaps(void);
 void srwm_set_gaps(unsigned int);
 unsigned int srwm_get_systraypinning(void);
