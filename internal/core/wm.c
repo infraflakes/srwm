@@ -4,10 +4,6 @@ const char broken[] = "broken";
 
 /* function implementations */
 int applysizehints(Client* c, int* x, int* y, int* w, int* h, int interact) {
-  int baseismin;
-  Monitor* m = c->mon;
-
-  /* set minimum possible */
   *w = MAX(1, *w);
   *h = MAX(1, *h);
   if (interact) {
@@ -15,42 +11,9 @@ int applysizehints(Client* c, int* x, int* y, int* w, int* h, int interact) {
     if (*y > sh) *y = sh - HEIGHT(c);
     if (*x + *w + 2 * c->bw < 0) *x = 0;
     if (*y + *h + 2 * c->bw < 0) *y = 0;
-  } else {
-    if (*x >= m->wx + m->ww) *x = m->wx + m->ww - WIDTH(c);
-    if (*y >= m->wy + m->wh) *y = m->wy + m->wh - HEIGHT(c);
-    if (*x + *w + 2 * c->bw <= m->wx) *x = m->wx;
-    if (*y + *h + 2 * c->bw <= m->wy) *y = m->wy;
   }
   if (*h < bh) *h = bh;
   if (*w < bh) *w = bh;
-  if (c->isfloating) {
-    if (!c->hintsvalid) updatesizehints(c);
-    /* see last two sentences in ICCCM 4.1.2.3 */
-    baseismin = c->basew == c->minw && c->baseh == c->minh;
-    if (!baseismin) { /* temporarily remove base dimensions */
-      *w -= c->basew;
-      *h -= c->baseh;
-    }
-    /* adjust for aspect limits */
-    if (c->mina > 0 && c->maxa > 0) {
-      if (c->maxa < (float)*w / *h)
-        *w = *h * c->maxa + 0.5;
-      else if (c->mina < (float)*h / *w)
-        *h = *w * c->mina + 0.5;
-    }
-    if (baseismin) { /* increment calculation requires this */
-      *w -= c->basew;
-      *h -= c->baseh;
-    }
-    /* adjust for increment value */
-    if (c->incw) *w -= *w % c->incw;
-    if (c->inch) *h -= *h % c->inch;
-    /* restore base dimensions */
-    *w = MAX(*w + c->basew, c->minw);
-    *h = MAX(*h + c->baseh, c->minh);
-    if (c->maxw) *w = MIN(*w, c->maxw);
-    if (c->maxh) *h = MIN(*h, c->maxh);
-  }
   return *x != c->x || *y != c->y || *w != c->w || *h != c->h;
 }
 
@@ -133,8 +96,8 @@ void detach(Client* c) {
 
 
 void focus(Client* c) {
-  if (!c || !ISVISIBLE(c) || HIDDEN(c))
-    for (c = selmon->clients; c && (!ISVISIBLE(c) || HIDDEN(c)); c = c->next);
+  if (!c || !ISVISIBLE(c) || !c->ismapped)
+    for (c = selmon->clients; c && (!ISVISIBLE(c) || !c->ismapped); c = c->next);
   if (selmon->sel && selmon->sel != c) unfocus(selmon->sel, 0);
   if (c) {
     if (c->mon != selmon) selmon = c->mon;
@@ -176,15 +139,15 @@ void focusstack(const Arg* arg) {
 
   if (!selmon->sel) return;
   if (arg->i > 0) {
-    for (c = selmon->sel->next; c && (!ISVISIBLE(c) || HIDDEN(c)); c = c->next);
+    for (c = selmon->sel->next; c && (!ISVISIBLE(c) || !c->ismapped); c = c->next);
     if (!c)
-      for (c = selmon->clients; c && (!ISVISIBLE(c) || HIDDEN(c)); c = c->next);
+      for (c = selmon->clients; c && (!ISVISIBLE(c) || !c->ismapped); c = c->next);
   } else {
     for (i = selmon->clients; i != selmon->sel; i = i->next)
-      if (ISVISIBLE(i) && !HIDDEN(i)) c = i;
+      if (ISVISIBLE(i) && i->ismapped) c = i;
     if (!c)
       for (; i; i = i->next)
-        if (ISVISIBLE(i) && !HIDDEN(i)) c = i;
+        if (ISVISIBLE(i) && i->ismapped) c = i;
   }
   if (c) {
     focus(c);
@@ -193,11 +156,9 @@ void focusstack(const Arg* arg) {
 }
 
 void focuswin(const Arg* arg) {
-  int iwin = arg->i;
-  Client* c = NULL;
-  for (c = selmon->clients; c && (iwin || !ISVISIBLE(c)); c = c->next) {
-    if (ISVISIBLE(c)) --iwin;
-  };
+  int idx = arg->i;
+  if (idx < 0 || idx >= selmon->ntabs) return;
+  Client *c = selmon->tab_order[idx];
   if (c) {
     focus(c);
     centerwindowoncanvas(&(Arg){0});
@@ -302,7 +263,6 @@ void manage(Window w, XWindowAttributes* wa) {
 
   c = ecalloc(1, sizeof(Client));
   c->ismapped = 0;
-  c->ishidden = 0; //new windows are not hidden
   c->win = w;
   win_ht_insert(c->win, c);
   /* geometry */
@@ -335,7 +295,6 @@ void manage(Window w, XWindowAttributes* wa) {
   XSetWindowBorder(dpy, w, scheme[SchemeNorm][ColBorder].pixel);
   configure(c); /* propagates border_width, if size doesn't change */
   updatewindowtype(c);
-  updatesizehints(c);
   updatewmhints(c);
   {
     int format;
@@ -362,7 +321,6 @@ void manage(Window w, XWindowAttributes* wa) {
                EnterWindowMask | FocusChangeMask | PropertyChangeMask |
                    StructureNotifyMask);
   grabbuttons(c, 0);
-  c->isfloating = 1;
 
   /* Center new window on current viewport so it appears where the user is looking,
      not at the absolute origin which may be far off-screen after panning */
@@ -380,67 +338,35 @@ void manage(Window w, XWindowAttributes* wa) {
       c->x = cx - (c->w + 2 * c->bw) / 2;
       c->y = cy - (c->h + 2 * c->bw) / 2;
   }
-  if (c->isfloating) XRaiseWindow(dpy, c->win);
+  XRaiseWindow(dpy, c->win);
   attach(c);
+  if (ISVISIBLE(c) && c->mon->ntabs < MAXTABS)
+    c->mon->tab_order[c->mon->ntabs++] = c;
   XChangeProperty(dpy, root, netatom[NetClientList], XA_WINDOW, 32,
                   PropModeAppend, (unsigned char*)&(c->win), 1);
   XMoveResizeWindow(dpy, c->win, c->x + 2 * sw, c->y, c->w,
                     c->h); /* some windows require this */
-  if (!HIDDEN(c)) setclientstate(c, NormalState);
+  setclientstate(c, NormalState);
   if (c->mon == selmon) unfocus(selmon->sel, 0);
   c->mon->sel = c;
   arrange(c->mon);
-  if (!HIDDEN(c)) XMapWindow(dpy, c->win);
-  if (!HIDDEN(c)) c->ismapped = 1;
+  XMapWindow(dpy, c->win);
+  c->ismapped = 1;
   focus(NULL);
 }
 
 void movestack(const Arg *arg) {
-	Client *c = NULL, *p = NULL, *pc = NULL, *i;
-
-	if(arg->i > 0) {
-		/* find the client after selmon->sel */
-		for(c = selmon->sel->next; c && (!ISVISIBLE(c)); c = c->next);
-		if(!c)
-			for(c = selmon->clients; c && (!ISVISIBLE(c)); c = c->next);
-
-	}
-	else {
-		/* find the client before selmon->sel */
-		for(i = selmon->clients; i != selmon->sel; i = i->next)
-			if(ISVISIBLE(i))
-				c = i;
-		if(!c)
-			for(; i; i = i->next)
-				if(ISVISIBLE(i))
-					c = i;
-	}
-	/* find the client before selmon->sel and c */
-	for(i = selmon->clients; i && (!p || !pc); i = i->next) {
-		if(i->next == selmon->sel)
-			p = i;
-		if(i->next == c)
-			pc = i;
-	}
-
-	/* swap c and selmon->sel selmon->clients in the selmon->clients list */
-	if(c && c != selmon->sel) {
-		Client *temp = selmon->sel->next==c?selmon->sel:selmon->sel->next;
-		selmon->sel->next = c->next==selmon->sel?c:c->next;
-		c->next = temp;
-
-		if(p && p != c)
-			p->next = c;
-		if(pc && pc != selmon->sel)
-			pc->next = selmon->sel;
-
-		if(selmon->sel == selmon->clients)
-			selmon->clients = c;
-		else if(c == selmon->clients)
-			selmon->clients = selmon->sel;
-
-		arrange(selmon);
-	}
+  if (!selmon->sel || selmon->ntabs < 2) return;
+  int idx = -1;
+  for (int i = 0; i < selmon->ntabs; i++) {
+    if (selmon->tab_order[i] == selmon->sel) { idx = i; break; }
+  }
+  if (idx < 0) return;
+  int target = (idx + arg->i + selmon->ntabs) % selmon->ntabs;
+  Client *tmp = selmon->tab_order[idx];
+  selmon->tab_order[idx] = selmon->tab_order[target];
+  selmon->tab_order[target] = tmp;
+  drawtabs();	
 }
 
 Monitor* recttomon(int x, int y, int w, int h) {
@@ -471,8 +397,6 @@ void resizeclient(Client* c, int x, int y, int w, int h) {
   c->oldh = c->h;
   c->h = wc.height = h;
 
-  if (c->beingmoved) return;
-
   wc.border_width = c->bw;
   XConfigureWindow(dpy, c->win, CWX | CWY | CWWidth | CWHeight | CWBorderWidth,
                    &wc);
@@ -482,7 +406,6 @@ void resizeclient(Client* c, int x, int y, int w, int h) {
 
 void restack(Monitor* m) {
   XEvent ev;
-  XWindowChanges wc;
 
   drawbar(m);
   drawtab(m);
@@ -500,11 +423,23 @@ void restack(Monitor* m) {
 
 void sendmon(Client* c, Monitor* m) {
   if (c->mon == m) return;
+  Monitor *old = c->mon;
   unfocus(c, 1);
+  /* Remove from source tab_order */
+  for (int i = 0; i < old->ntabs; i++) {
+    if (old->tab_order[i] == c) {
+      memmove(&old->tab_order[i], &old->tab_order[i+1], (old->ntabs - i - 1) * sizeof(Client*));
+      old->ntabs--;
+      break;
+    }
+  }
   detach(c);
   c->mon = m;
   c->ws = m->current_ws;
   attach(c);
+  /* Add to dest tab_order */
+  if (ISVISIBLE(c) && m->ntabs < MAXTABS)
+    m->tab_order[m->ntabs++] = c;
   setclienttagprop(c);
   focus(NULL);
   arrange(NULL);
@@ -515,8 +450,6 @@ void setclientstate(Client* c, long state) {
 
   XChangeProperty(dpy, c->win, wmatom[WMState], wmatom[WMState], 32,
                   PropModeReplace, (unsigned char*)data, 2);
-
-  c->ishidden = (state == IconicState);
 }
 
 void setclienttagprop(Client* c) {
@@ -531,17 +464,14 @@ void setfullscreen(Client* c, int fullscreen) {
                     PropModeReplace, (unsigned char*)&netatom[NetWMFullscreen],
                     1);
     c->isfullscreen = 1;
-    c->oldstate = c->isfloating;
     c->oldbw = c->bw;
     c->bw = 0;
-    c->isfloating = 1;
     resizeclient(c, c->mon->mx, c->mon->my, c->mon->mw, c->mon->mh);
     XRaiseWindow(dpy, c->win);
   } 
   else if (!fullscreen && c->isfullscreen) {  
     XDeleteProperty(dpy, c->win, netatom[NetWMState]);
     c->isfullscreen = 0;
-    c->isfloating = c->oldstate;
     c->bw = c->oldbw;
     c->x = c->oldx;
     c->y = c->oldy;
@@ -589,12 +519,10 @@ void window_set_state(Window win, long state) {
 }  
   
 void window_map(Client *c, int deiconify) {  
-  Window win = c->win;  
   if (deiconify)  
-    window_set_state(win, NormalState);  
+    window_set_state(c->win, NormalState);
   XMoveResizeWindow(dpy, c->win, c->x, c->y, c->w, c->h);  
-  XSetInputFocus(dpy, win, RevertToPointerRoot, CurrentTime);
-  XMapWindow(dpy, win);
+  XMapWindow(dpy, c->win);
 }  
   
 void window_unmap(Window win, int iconify) {  
@@ -615,10 +543,19 @@ void unmanage(Client* c, int destroyed) {
   Monitor* m = c->mon;
   XWindowChanges wc;
 
+  /* Remove from tab_order */
+  for (int i = 0; i < m->ntabs; i++) {
+    if (m->tab_order[i] == c) {
+      memmove(&m->tab_order[i], &m->tab_order[i+1], (m->ntabs - i - 1) * sizeof(Client*));
+      m->ntabs--;
+      break;
+    }
+  }
+
   /* If this was the selected client, find next visible one */
   if (c == m->sel) {
     Client *t;
-    for (t = m->clients; t && (!ISVISIBLE(t) || HIDDEN(t) || t == c); t = t->next);
+    for (t = m->clients; t && (!ISVISIBLE(t) || !t->ismapped || t == c); t = t->next);
     m->sel = t;
   }
 
@@ -655,48 +592,6 @@ void updateclientlist(void) {
                       PropModeAppend, (unsigned char*)&(c->win), 1);
 }
 
-void updatesizehints(Client* c) {
-  long msize;
-  XSizeHints size;
-
-  if (!XGetWMNormalHints(dpy, c->win, &size, &msize))
-    /* size is uninitialized, ensure that size.flags aren't used */
-    size.flags = PSize;
-  if (size.flags & PBaseSize) {
-    c->basew = size.base_width;
-    c->baseh = size.base_height;
-  } else if (size.flags & PMinSize) {
-    c->basew = size.min_width;
-    c->baseh = size.min_height;
-  } else
-    c->basew = c->baseh = 0;
-  if (size.flags & PResizeInc) {
-    c->incw = size.width_inc;
-    c->inch = size.height_inc;
-  } else
-    c->incw = c->inch = 0;
-  if (size.flags & PMaxSize) {
-    c->maxw = size.max_width;
-    c->maxh = size.max_height;
-  } else
-    c->maxw = c->maxh = 0;
-  if (size.flags & PMinSize) {
-    c->minw = size.min_width;
-    c->minh = size.min_height;
-  } else if (size.flags & PBaseSize) {
-    c->minw = size.base_width;
-    c->minh = size.base_height;
-  } else
-    c->minw = c->minh = 0;
-  if (size.flags & PAspect) {
-    c->mina = (float)size.min_aspect.y / size.min_aspect.x;
-    c->maxa = (float)size.max_aspect.x / size.max_aspect.y;
-  } else
-    c->maxa = c->mina = 0.0;
-  c->isfixed = (c->maxw && c->maxh && c->maxw == c->minw && c->maxh == c->minh);
-  c->hintsvalid = 1;
-}
-
 void updatetitle(Client* c) {
   if (!gettextprop(c->win, netatom[NetWMName], c->name, sizeof c->name))
     gettextprop(c->win, XA_WM_NAME, c->name, sizeof c->name);
@@ -706,11 +601,14 @@ void updatetitle(Client* c) {
 
 void updatewindowtype(Client* c) {
   Atom state = getatomprop(c, netatom[NetWMState]);
-  Atom wtype = getatomprop(c, netatom[NetWMWindowType]);
-
   if (state == netatom[NetWMFullscreen]) setfullscreen(c, 1);
-  if (wtype == netatom[NetWMWindowTypeDialog]) {
-    c->isfloating = 1;
+}
+
+void rebuild_tab_order(Monitor *m) {
+  m->ntabs = 0;
+  for (Client *c = m->clients; c; c = c->next) {
+    if (ISVISIBLE(c) && m->ntabs < MAXTABS)
+      m->tab_order[m->ntabs++] = c;
   }
 }
 

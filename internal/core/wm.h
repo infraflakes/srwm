@@ -37,7 +37,7 @@
   (MAX(0, MIN((x) + (w), (z)->x + (z)->w) - MAX((x), (z)->x)) *                \
    MAX(0, MIN((y) + (h), (z)->y + (z)->h) - MAX((y), (z)->y)))
 #define ISVISIBLE(C) ((C)->ws == (C)->mon->current_ws)
-#define HIDDEN(C) ((C)->ishidden) // cache iconic state on Client
+#define HIDDEN(C) (!(C)->ismapped)
 #define LENGTH(X) (sizeof X / sizeof X[0])
 #define MOUSEMASK (BUTTONMASK | PointerMotionMask)
 #define WIDTH(X) ((X)->w + 2 * (X)->bw)
@@ -157,22 +157,19 @@ typedef struct {
 typedef struct Client Client;
 struct Client {
   char name[256];
-  float mina, maxa;
+  int x, y, w, h;
+  int oldx, oldy, oldw, oldh;
+  int bw, oldbw;
+  int ws;              /* workspace index (0-based) */
+  int isfullscreen;
+  int isurgent;
+  int neverfocus;
+  int ismapped;        /* tracks whether window is mapped in X11 */
   int saved_cx, saved_cy; /* saved canvas position */
   int saved_cw, saved_ch; /* saved canvas size */
   int was_on_canvas;      /* was this client on the canvas? */
-  int x, y, w, h;
-  int oldx, oldy, oldw, oldh;
-  int basew, baseh, incw, inch, maxw, maxh, minw, minh, hintsvalid;
-  int bw, oldbw;
-  int ishidden;
-  int ws;
-  int isfixed, isfloating, isurgent, neverfocus, oldstate,
-      isfullscreen;
   unsigned int icw, ich;
   Picture icon;
-  int beingmoved;
-  int ismapped; /* WINDOWMAP: tracks whether window is mapped in X11 */
   Client *next;
   Monitor *mon;
   Window win;
@@ -221,7 +218,6 @@ struct Monitor {
   int gap;            /* gap value */
   unsigned int borderpx;
   unsigned int colorfultag;
-  int canvas_mode;      /* 1 = infinite canvas active, 0 = normal tiling */
   CanvasOffset *canvas; /* per-tag canvas offsets, allocated in createmon() */
   float canvas_zoom;      /* global zoom level, shared across all tags */
   int showbar;
@@ -234,6 +230,7 @@ struct Monitor {
   Window barwin;
   Window tabwin;
   int ntabs;
+  Client *tab_order[MAXTABS];
   int tab_widths[MAXTABS];
   int tab_btn_w[3];
   int current_ws;
@@ -314,7 +311,6 @@ void showhide(Monitor *m);
 Monitor *systraytomon(Monitor *m);
 void tag(const Arg *arg);
 void togglebar(const Arg *arg);
-void togglefloating(const Arg *arg);
 void togglefullscr(const Arg *arg);
 void freeicon(Client *c);
 void unfocus(Client *c, int setfocus);
@@ -326,7 +322,7 @@ void updatebars(void);
 void updateclientlist(void);
 int updategeom(void);
 void updatenumlockmask(void);
-void updatesizehints(Client *c);
+void rebuild_tab_order(Monitor *m);
 void updatestatus(void);
 void updatesystray(void);
 void updatesystrayicongeom(Client *i, int w, int h);
