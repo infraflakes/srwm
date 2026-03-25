@@ -45,14 +45,14 @@ func ActionMoveTagToMonitor(dir int) {
 	C.srwm_action_move_tag_to_monitor(C.int(dir))
 }
 
-// ActionView views the tags matching the given bitmask.
-func ActionView(mask uint) {
-	C.srwm_action_view(C.uint(mask))
+// ActionView switches to the given workspace index (0-based).
+func ActionView(ws int) {
+	C.srwm_action_view(C.int(ws))
 }
 
-// ActionTag tags the currently focused client with the given bitmask.
-func ActionTag(mask uint) {
-	C.srwm_action_tag(C.uint(mask))
+// ActionTag moves the currently focused client to the given workspace index (0-based).
+func ActionTag(ws int) {
+	C.srwm_action_tag(C.int(ws))
 }
 
 // ActionMoveCanvas pans the canvas: 0=left, 1=right, 2=up, 3=down.

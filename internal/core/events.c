@@ -39,7 +39,7 @@ void buttonpress(XEvent *e) {
     while (ev->x >= x && ++i < TAGSLENGTH);
     if (i < TAGSLENGTH) {
       click = ClkTagBar;
-      arg.ui = 1 << i;
+      arg.i = i;
       goto execute_handler;
     }
 
@@ -131,8 +131,8 @@ void clientmessage(XEvent *e) {
       c->oldbw = wa.border_width;
       c->bw = 0;
       c->isfloating = True;
-      /* reuse tags field as mapped status */
-      c->tags = 1;
+      /* reuse ws field as mapped status */
+      c->ws = 0;
       updatesizehints(c);
       updatesystrayicongeom(c, wa.width, wa.height);
       XAddToSaveSet(dpy, c->win);

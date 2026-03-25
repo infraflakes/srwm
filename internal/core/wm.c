@@ -95,7 +95,6 @@ void attach(Client* c) {
         c->mon->clients = c;
     }
     c->mon->tail = c;
-    c->mon->occ |= c->tags;
 }
 
 void attachstack(Client* c) {
@@ -134,10 +133,6 @@ void detach(Client* c) {
       c->mon->tail = NULL;
     }
   }
-  // Recompute occ (can't just clear bits — other clients may share tags)
-  c->mon->occ = 0;
-  for (Client* t = c->mon->clients; t; t = t->next)
-  c->mon->occ |= t->tags;
 }
 
 void detachstack(Client* c) {
@@ -338,10 +333,10 @@ void manage(Window w, XWindowAttributes* wa) {
   updatetitle(c);
   if (XGetTransientForHint(dpy, w, &trans) && (t = wintoclient(trans))) {
     c->mon = t->mon;
-    c->tags = t->tags;
+    c->ws = t->ws;
   } else {
     c->mon = selmon;
-    c->tags = c->mon->tagset[c->mon->seltags];
+    c->ws = c->mon->current_ws;
   }
 
   if (c->x + WIDTH(c) > c->mon->wx + c->mon->ww)
@@ -368,7 +363,7 @@ void manage(Window w, XWindowAttributes* wa) {
                            XA_CARDINAL, &atom, &format, &n, &extra,
                            (unsigned char**)&data) == Success &&
         n == 2) {
-      c->tags = *data;
+      c->ws = (int)*data;
       for (m = mons; m; m = m->next) {
         if (m->num == *(data + 1)) {
           c->mon = m;
@@ -527,7 +522,7 @@ void sendmon(Client* c, Monitor* m) {
   detach(c);
   detachstack(c);
   c->mon = m;
-  c->tags = m->tagset[m->seltags]; /* assign tags of target monitor */
+  c->ws = m->current_ws;
   attach(c);
   attachstack(c);
   setclienttagprop(c);
@@ -545,7 +540,7 @@ void setclientstate(Client* c, long state) {
 }
 
 void setclienttagprop(Client* c) {
-  long data[] = {(long)c->tags, (long)c->mon->num};
+  long data[] = {(long)c->ws, (long)c->mon->num};
   XChangeProperty(dpy, c->win, netatom[NetClientInfo], XA_CARDINAL, 32,
                   PropModeReplace, (unsigned char*)data, 2);
 }
@@ -585,12 +580,6 @@ void seturgent(Client* c, int urg) {
   wmh->flags = urg ? (wmh->flags | XUrgencyHint) : (wmh->flags & ~XUrgencyHint);
   XSetWMHints(dpy, c->win, wmh);
   XFree(wmh);
-  if (urg) c->mon->urg |= c->tags;
-  else {
-    c->mon->urg = 0;
-    for (Client* t = c->mon->clients; t; t = t->next)
-    if (t->isurgent) c->mon->urg |= t->tags;
-  }
 }
 
 void showhide(Client* c) {  

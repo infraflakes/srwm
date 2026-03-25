@@ -36,7 +36,7 @@
 #define INTERSECTC(x, y, w, h, z)                                              \
   (MAX(0, MIN((x) + (w), (z)->x + (z)->w) - MAX((x), (z)->x)) *                \
    MAX(0, MIN((y) + (h), (z)->y + (z)->h) - MAX((y), (z)->y)))
-#define ISVISIBLE(C) ((C->tags & C->mon->tagset[C->mon->seltags]))
+#define ISVISIBLE(C) ((C)->ws == (C)->mon->current_ws)
 #define HIDDEN(C) ((C)->ishidden) // cache iconic state on Client
 #define LENGTH(X) (sizeof X / sizeof X[0])
 #define MOUSEMASK (BUTTONMASK | PointerMotionMask)
@@ -44,7 +44,6 @@
 #define HEIGHT(X) ((X)->h + 2 * (X)->bw)
 
 extern int tags_len;
-#define TAGMASK ((1 << tags_len) - 1)
 #define TAGSLENGTH (tags_len)
 #define TEXTW(X) (drw_fontset_getwidth(drw, (X)) + lrpad)
 #define MAXTABS 50
@@ -167,7 +166,7 @@ struct Client {
   int basew, baseh, incw, inch, maxw, maxh, minw, minh, hintsvalid;
   int bw, oldbw;
   int ishidden;
-  unsigned int tags;
+  int ws;
   int isfixed, isfloating, isurgent, neverfocus, oldstate,
       isfullscreen;
   unsigned int icw, ich;
@@ -222,10 +221,7 @@ struct Monitor {
   int wx, wy, ww, wh; /* window area  */
   int gap;            /* gap value */
   unsigned int borderpx;
-  unsigned int seltags;
-  unsigned int tagset[2];
   unsigned int colorfultag;
-  unsigned int occ, urg;
   int canvas_mode;      /* 1 = infinite canvas active, 0 = normal tiling */
   CanvasOffset *canvas; /* per-tag canvas offsets, allocated in createmon() */
   float canvas_zoom;      /* global zoom level, shared across all tags */
@@ -242,8 +238,9 @@ struct Monitor {
   int ntabs;
   int tab_widths[MAXTABS];
   int tab_btn_w[3];
-  unsigned int curtag, prevtag;
-  unsigned int showbar_mask; // bit i set = showbar enabled for tag i
+  int current_ws;
+  int previous_ws;
+  int showbar_per_ws[9];
 };
 
 int applysizehints(Client *c, int *x, int *y, int *w, int *h, int interact);
@@ -323,8 +320,6 @@ void tag(const Arg *arg);
 void togglebar(const Arg *arg);
 void togglefloating(const Arg *arg);
 void togglefullscr(const Arg *arg);
-void toggletag(const Arg *arg);
-void toggleview(const Arg *arg);
 void freeicon(Client *c);
 void unfocus(Client *c, int setfocus);
 void unmanage(Client *c, int destroyed);
@@ -355,7 +350,6 @@ void manuallymovecanvas(const Arg *arg);
 void centerwindowoncanvas(const Arg *arg);
 void homecanvas(const Arg *arg);
 void movecanvas(const Arg *arg);
-int getcurrenttag(Monitor *m);
 void zoomcanvas(const Arg *arg);
 int canvas_edge_autopan(int cursor_x, int cursor_y, Client *exclude, int *pan_dx_out, int *pan_dy_out);
 int compositor_running(void);

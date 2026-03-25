@@ -1,82 +1,38 @@
 #include "wm.h"
 
 void view(const Arg* arg) {
-  int i;
-  unsigned int tmptag;
-
-  if ((arg->ui & TAGMASK) == selmon->tagset[selmon->seltags]) return;
-  selmon->seltags ^= 1;
-  if (arg->ui & TAGMASK) {
-    selmon->prevtag = selmon->curtag;
-    selmon->tagset[selmon->seltags] = arg->ui & TAGMASK;
-
-    if (arg->ui == ~0)
-      selmon->curtag = 0;
-    else {
-      for (i = 0; !(arg->ui & 1 << i); i++);
-      selmon->curtag = i + 1;
-    }
+  int ws = arg->i;
+  if (ws == -1) {
+    /* swap current and previous workspace */
+    int tmp = selmon->current_ws;
+    selmon->current_ws = selmon->previous_ws;
+    selmon->previous_ws = tmp;
   } else {
-    tmptag = selmon->prevtag;
-    selmon->prevtag = selmon->curtag;
-    selmon->curtag = tmptag;
+    if (ws < 0 || ws >= TAGSLENGTH) return;
+    if (ws == selmon->current_ws) return;
+    selmon->previous_ws = selmon->current_ws;
+    selmon->current_ws = ws;
   }
-
-  if (selmon->showbar != (int)((selmon->showbar_mask >> selmon->curtag) & 1))
+  if (selmon->showbar != selmon->showbar_per_ws[selmon->current_ws])
     togglebar(NULL);
   focus(NULL);
   arrange(selmon);
-  publish_canvas_state(selmon);  // sync zoom/active state with compositor
-  updatecurrentdesktop();
-}
-
-void toggleview(const Arg* arg) {
-  unsigned int newtagset = selmon->tagset[selmon->seltags] ^ (arg->ui & TAGMASK);
-  int i;
-
-  if (newtagset) {
-    selmon->tagset[selmon->seltags] = newtagset;
-
-    if (newtagset == ~0) {
-      selmon->prevtag = selmon->curtag;
-      selmon->curtag = 0;
-    }
-
-    if (!(newtagset & 1 << (selmon->curtag - 1))) {
-      selmon->prevtag = selmon->curtag;
-      for (i = 0; !(newtagset & 1 << i); i++);
-      selmon->curtag = i + 1;
-    }
-
-    if (selmon->showbar != (int)((selmon->showbar_mask >> selmon->curtag) & 1)) togglebar(NULL);
-
-    focus(NULL);
-    arrange(selmon);
-    publish_canvas_state(selmon);
-  }
+  publish_canvas_state(selmon);
   updatecurrentdesktop();
 }
 
 void tag(const Arg* arg) {
-  Client* c;
-  if (selmon->sel && arg->ui & TAGMASK) {
-    c = selmon->sel;
-    selmon->sel->tags = arg->ui & TAGMASK;
-    selmon->occ = 0;
-    for (Client* t = selmon->clients; t; t = t->next)
-      selmon->occ |= t->tags;
-    setclienttagprop(c);
-    focus(NULL);
-    arrange(selmon);
-  }
+  int ws = arg->i;
+  if (!selmon->sel || ws < 0 || ws >= TAGSLENGTH) return;
+  selmon->sel->ws = ws;
+  setclienttagprop(selmon->sel);
+  focus(NULL);
+  arrange(selmon);
 }
 
 void togglebar(const Arg* arg) {
   selmon->showbar = !selmon->showbar;
-  if (selmon->showbar)
-    selmon->showbar_mask |=  (1u << selmon->curtag);
-  else
-    selmon->showbar_mask &= ~(1u << selmon->curtag);
+  selmon->showbar_per_ws[selmon->current_ws] = selmon->showbar;
   updatebarpos(selmon);
   resizebarwin(selmon);
   if (systray_enable) {
@@ -92,23 +48,6 @@ void togglebar(const Arg* arg) {
   arrange(selmon);
 }
 
-void toggletag(const Arg* arg) {
-  unsigned int newtags;
-
-  if (!selmon->sel) return;
-  newtags = selmon->sel->tags ^ (arg->ui & TAGMASK);
-  if (newtags) {
-    selmon->sel->tags = newtags;
-    selmon->occ = 0;
-    for (Client* t = selmon->clients; t; t = t->next)
-      selmon->occ |= t->tags;
-    setclienttagprop(selmon->sel);
-    focus(NULL);
-    arrange(selmon);
-  }
-  updatecurrentdesktop();
-}
-
 void togglefloating(const Arg* arg) {
   /* No-op in canvas mode — all windows are always floating */
   return;
@@ -119,17 +58,10 @@ void togglefullscr(const Arg* arg) {
 }
 
 void shiftview(const Arg *arg) {
-  Arg shifted;
- 
-  if(arg->i > 0) // left circular shift
-    shifted.ui = (selmon->tagset[selmon->seltags] << arg->i)
-      | (selmon->tagset[selmon->seltags] >> (TAGSLENGTH - arg->i));
- 
-  else // right circular shift
-    shifted.ui = selmon->tagset[selmon->seltags] >> (- arg->i)
-      | selmon->tagset[selmon->seltags] << (TAGSLENGTH + arg->i);
-  shifted.ui &= TAGMASK; //ensures bits beyond tags_len are zeroed out
-  view(&shifted);
+  int ws = selmon->current_ws + arg->i;
+  if (ws < 0) ws = TAGSLENGTH - 1;
+  else if (ws >= TAGSLENGTH) ws = 0;
+  view(&(Arg){.i = ws});
 }
 
 Monitor* get_neighbor_monitor(int dir) {
@@ -147,12 +79,7 @@ void move_tag_to_monitor(const Arg *arg) {
 }
 
 void updatecurrentdesktop(void) {
-  long rawdata[] = {selmon->tagset[selmon->seltags]};
-  int i = 0;
-  while (*rawdata >> (i + 1)) {
-    i++;
-  }
-  long data[] = {i};
+  long data[] = {selmon->current_ws};
   XChangeProperty(dpy, root, netatom[NetCurrentDesktop], XA_CARDINAL, 32,
                   PropModeReplace, (unsigned char*)data, 1);
 }

@@ -82,13 +82,13 @@ void updatesystrayiconstate(Client* i, XPropertyEvent* ev) {
       !(flags = getatomprop(i, xatom[XembedInfo])))
     return;
 
-  if (flags & XEMBED_MAPPED && !i->tags) {
-    i->tags = 1;
+  if (flags & XEMBED_MAPPED && !i->ws) {
+    i->ws = 1;
     code = XEMBED_WINDOW_ACTIVATE;
     XMapRaised(dpy, i->win);
     setclientstate(i, NormalState);
-  } else if (!(flags & XEMBED_MAPPED) && i->tags) {
-    i->tags = 0;
+  } else if (!(flags & XEMBED_MAPPED) && i->ws) {
+    i->ws = 0;
     code = XEMBED_WINDOW_DEACTIVATE;
     XUnmapWindow(dpy, i->win);
     setclientstate(i, WithdrawnState);
