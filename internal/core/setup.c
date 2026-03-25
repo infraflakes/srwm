@@ -31,13 +31,11 @@ void checkotherwm(void) {
 }
 
 void cleanup(void) {
-  Arg a = {.ui = ~0};
   Monitor* m;
   size_t i;
 
-  view(&a);
   for (m = mons; m; m = m->next)
-    while (m->stack) unmanage(m->stack, 0);
+    while (m->clients) unmanage(m->clients, 0);
   XUngrabKey(dpy, AnyKey, AnyModifier, root);
   while (mons) cleanupmon(mons);
   if (systray_enable) {
@@ -85,7 +83,6 @@ Monitor* createmon(void) {
   Monitor* m;
 
   m = ecalloc(1, sizeof(Monitor));
-  m->tagset[0] = m->tagset[1] = 1;
   m->showbar = showbar;
   m->topbar = topbar;
   m->toptab = toptab;
@@ -94,14 +91,12 @@ Monitor* createmon(void) {
   m->gap = gaps;
   m->borderpx = borderpx;
   m->prev = NULL;
-  m->curtag = m->prevtag = 1;
-  m->showbar_mask = showbar ? ~0u : 0u;
+  m->current_ws = 0;
+  m->previous_ws = 0;
+  for (int i = 0; i < 9; i++) m->showbar_per_ws[i] = showbar;
   m->canvas_mode = 1;
   m->canvas = ecalloc(9, sizeof(CanvasOffset)); /* one per tag, max 9 */
   m->canvas_zoom = 1.0f;
-  for (int i = 0; i < 9; i++) {
-    m->canvas_zoom = 1.0f;
-  }
 
   return m;
 }
@@ -560,9 +555,7 @@ const Button buttons[] = {
     {ClkClientWin, MODKEY, Button2, togglefloating, {0}},
     {ClkClientWin, MODKEY, Button3, resizemouse, {0}},
     {ClkTagBar, 0, Button1, view, {0}},
-    {ClkTagBar, 0, Button3, toggleview, {0}},
     {ClkTagBar, MODKEY, Button1, tag, {0}},
-    {ClkTagBar, MODKEY, Button3, toggletag, {0}},
     {ClkTabBar, 0, Button1, focuswin, {0}},
     {ClkTabPrev, 0, Button1, movestack, {.i = -1}},
     {ClkTabNext, 0, Button1, movestack, {.i = +1}},

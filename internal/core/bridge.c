@@ -223,10 +223,8 @@ void srwm_action_shiftview(int dir) { shiftview(&(Arg){.i = dir}); }
 void srwm_action_tagtoprev(void) { tagtoprev(&(Arg){0}); }
 void srwm_action_tagtonext(void) { tagtonext(&(Arg){0}); }
 void srwm_action_move_tag_to_monitor(int dir) { move_tag_to_monitor(&(Arg){.i = dir}); }
-void srwm_action_view(unsigned int mask) { view(&(Arg){.ui = mask}); }
-void srwm_action_toggleview(unsigned int mask) { toggleview(&(Arg){.ui = mask}); }
-void srwm_action_tag(unsigned int mask) { tag(&(Arg){.ui = mask}); }
-void srwm_action_toggletag(unsigned int mask) { toggletag(&(Arg){.ui = mask}); }
+void srwm_action_view(int ws) { view(&(Arg){.i = ws}); }
+void srwm_action_tag(int ws) { tag(&(Arg){.i = ws}); }
 void srwm_set_tag_colorful_occupied_only(int val) {tag_colorful_occupied_only = val;}
 
 void srwm_action_movecanvas(int dir) { movecanvas(&(Arg){.i = dir}); }  

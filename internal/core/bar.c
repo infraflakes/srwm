@@ -112,7 +112,8 @@ void drawbar(Monitor* m) {
   int bh_n = bh;
   int boxs = drw->fonts->h / 9;
   int boxw = drw->fonts->h / 6 + 2;
-  unsigned int i, occ = 0, urg = 0;
+  unsigned int i;
+  int occ[9] = {0}, urg[9] = {0};
 
   XSetForeground(drw->dpy, drw->gc, scheme[SchemeNorm][ColBg].pixel);
   XFillRectangle(drw->dpy, drw->drawable, drw->gc, 0, 0, m->ww - m->gap * 2, bh);
@@ -128,25 +129,20 @@ void drawbar(Monitor* m) {
   }
 
   resizebarwin(m);
-  occ = m->occ;
-  urg = m->urg;
+  for (Client *c = m->clients; c; c = c->next) {
+    occ[c->ws] = 1;
+    if (c->isurgent) urg[c->ws] = 1;
+  }
   x = 0;
   for (i = 0; i < TAGSLENGTH; i++) {
     w = TEXTW(tags[i]);
-    int use_colorful = m->colorfultag && (!tag_colorful_occupied_only || (occ & 1 << i));
+    int use_colorful = m->colorfultag && (!tag_colorful_occupied_only || occ[i]);
     drw_setscheme(
-        drw, scheme[use_colorful ? tagschemes[i] : (occ & 1 << i ? SchemeSel : SchemeTag)]);
-    drw_text(drw, x, y, w, bh_n, lrpad / 2, tags[i], urg & 1 << i);
-    if (tag_underline_for_all_tags ||
-        m->tagset[m->seltags] &
-            1 << i) /* if there are conflicts, just move these lines directly
-                       underneath both 'drw_setscheme' and 'drw_text' :) */
+        drw, scheme[use_colorful ? tagschemes[i] : (occ[i] ? SchemeSel : SchemeTag)]);
+    drw_text(drw, x, y, w, bh_n, lrpad / 2, tags[i], urg[i]);
+    if (tag_underline_for_all_tags || (int)i == m->current_ws)
       drw_rect(drw, x + tag_underline_padding, bh_n - tag_underline_size - tag_underline_offset_from_bar_bottom,
                w - (tag_underline_padding * 2), tag_underline_size, 1, 0);
-    /*if (occ & 1 << i)
-       drw_rect(drw, x + boxs, y + boxs, boxw, boxw,
-               m == selmon && selmon->sel && selmon->sel->tags & 1 << i,
-               urg & 1 << i); */
     x += w;
   }
 
@@ -429,33 +425,24 @@ Picture geticonprop(Window win, unsigned int* picw, unsigned int* pich) {
   return ret;
 }
 
-// Move window to next tag
 unsigned int nexttag(void) {
-  unsigned int seltag = selmon->tagset[selmon->seltags];
-  return seltag == (1 << (TAGSLENGTH - 1)) ? 1 : seltag << 1;
+  return (selmon->current_ws + 1) % TAGSLENGTH;
 }
 
 unsigned int prevtag(void) {
-  unsigned int seltag = selmon->tagset[selmon->seltags];
-  return seltag == 1 ? (1 << (TAGSLENGTH - 1)) : seltag >> 1;
+  return (selmon->current_ws - 1 + TAGSLENGTH) % TAGSLENGTH;
 }
 
 void tagtonext(const Arg* arg) {
-  unsigned int tmp;
-
-  if (selmon->sel == NULL) return;
-
-  tmp = nexttag();
-  tag(&(const Arg){.ui = tmp});
-  view(&(const Arg){.ui = tmp});
+  if (!selmon->sel) return;
+  int ws = nexttag();
+  tag(&(const Arg){.i = ws});
+  view(&(const Arg){.i = ws});
 }
 
 void tagtoprev(const Arg* arg) {
-  unsigned int tmp;
-
-  if (selmon->sel == NULL) return;
-
-  tmp = prevtag();
-  tag(&(const Arg){.ui = tmp});
-  view(&(const Arg){.ui = tmp});
+  if (!selmon->sel) return;
+  int ws = prevtag();
+  tag(&(const Arg){.i = ws});
+  view(&(const Arg){.i = ws});
 }

@@ -96,10 +96,8 @@ void srwm_action_shiftview(int dir);
 void srwm_action_tagtoprev(void);
 void srwm_action_tagtonext(void);
 void srwm_action_move_tag_to_monitor(int dir);
-void srwm_action_view(unsigned int mask);
-void srwm_action_toggleview(unsigned int mask);
-void srwm_action_tag(unsigned int mask);
-void srwm_action_toggletag(unsigned int mask);
+void srwm_action_view(int ws);
+void srwm_action_tag(int ws);
 
 /* Canvas mode actions */  
 void srwm_action_movecanvas(int dir);  

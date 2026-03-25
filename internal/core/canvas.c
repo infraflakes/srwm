@@ -31,14 +31,8 @@ void publish_canvas_state(Monitor *m) {
     XFlush(dpy);
 }
 
-int getcurrenttag(Monitor *m) {  
-    unsigned int i;  
-    for (i = 0; i < TAGSLENGTH && !(m->tagset[m->seltags] & (1 << i)); i++);  
-    return i < TAGSLENGTH ? i : 0;  
-}  
-  
 void movecanvas(const Arg *arg) {  
-    int tagidx = getcurrenttag(selmon);  
+    int tagidx = selmon->current_ws;  
     int dx = 0, dy = 0;  
     int step = 120; /* MOVE_CANVAS_STEP */  
   
@@ -64,7 +58,7 @@ void movecanvas(const Arg *arg) {
 }  
  
 void homecanvas(const Arg *arg) {  
-   int tagidx = getcurrenttag(selmon);
+   int tagidx = selmon->current_ws;
     int cx = selmon->canvas[tagidx].cx;  
     int cy = selmon->canvas[tagidx].cy;  
    
@@ -123,7 +117,7 @@ void centerwindowoncanvas(const Arg *arg) {
         return;  
   
     Monitor *m = c->mon;  
-    int tagidx = getcurrenttag(m);  
+    int tagidx = m->current_ws;  
   
     int screen_center_x = m->wx + (m->ww / 2);  
     int screen_center_y = m->wy + (m->wh / 2);  
@@ -155,7 +149,7 @@ void manuallymovecanvas(const Arg *arg) {
     Window dummy;  
     int di;  
     unsigned int dui;  
-    int tagidx = getcurrenttag(selmon);  
+    int tagidx = selmon->current_ws;  
     Time lasttime = 0;  
   
     if (selmon->sel && selmon->sel->isfullscreen)  
@@ -183,7 +177,7 @@ void manuallymovecanvas(const Arg *arg) {
   
             Client *c;  
             for (c = selmon->clients; c; c = c->next) {  
-                if (c->tags & (1 << tagidx)) {  
+                if (ISVISIBLE(c)) {  
                     c->x += nx;  
                     c->y += ny;  
                     XMoveWindow(dpy, c->win, c->x, c->y);  
@@ -203,7 +197,7 @@ void manuallymovecanvas(const Arg *arg) {
 }  
  
 void zoomcanvas(const Arg *arg) {  
-   int tagidx = getcurrenttag(selmon);
+   int tagidx = selmon->current_ws;
     float old_zoom = selmon->canvas_zoom;  
     float new_zoom;  
    
@@ -250,7 +244,7 @@ void zoomcanvas(const Arg *arg) {
 // `exclude` is an optional client to skip when moving windows (e.g., the window being dragged).  
 // `pan_dx_out` and `pan_dy_out` return the pan delta applied (for callers that need to adjust drag references).  
 int canvas_edge_autopan(int cursor_x, int cursor_y, Client *exclude, int *pan_dx_out, int *pan_dy_out) {  
-    int tagidx = getcurrenttag(selmon);  
+    int tagidx = selmon->current_ws;  
     float zoom = selmon->canvas_zoom;  
     if (zoom >= 1.0f)  
         return 0;  

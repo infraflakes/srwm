@@ -58,25 +58,15 @@ func RegisterActionsAPI(L *lua.LState, srwmMod *lua.LTable) {
 		return 0
 	}))
 
-	// For mask functions, Lua passes a 1-based index (1-9) which we convert to a bitmask.
-	indexToMask := func(L *lua.LState) uint {
-		idx := L.CheckInt(1)
-		if idx == 0 {
-			return 0
-		}
-		if idx < 1 || idx > 9 {
-			L.RaiseError("Tag index out of bounds: must be between 0 and 9")
-		}
-		return 1 << (idx - 1)
-	}
-
 	L.SetField(tagTable, "view", L.NewFunction(func(L *lua.LState) int {
-		core.ActionView(indexToMask(L))
+		idx := L.CheckInt(1)
+		core.ActionView(idx - 1) // Lua 1-based to C 0-based
 		return 0
 	}))
 
 	L.SetField(tagTable, "move_window_to", L.NewFunction(func(L *lua.LState) int {
-		core.ActionTag(indexToMask(L))
+		idx := L.CheckInt(1)
+		core.ActionTag(idx - 1) // Lua 1-based to C 0-based
 		return 0
 	}))
 
