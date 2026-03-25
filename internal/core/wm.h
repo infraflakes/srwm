@@ -174,7 +174,6 @@ struct Client {
   int beingmoved;
   int ismapped; /* WINDOWMAP: tracks whether window is mapped in X11 */
   Client *next;
-  Client *snext;
   Monitor *mon;
   Window win;
 };
@@ -230,7 +229,6 @@ struct Monitor {
   Client *clients;
   Client *tail; // last client in list, for O(1) append
   Client *sel;
-  Client *stack;
   Monitor *next;
   Monitor *prev;
   Window barwin;
@@ -247,7 +245,6 @@ int applysizehints(Client *c, int *x, int *y, int *w, int *h, int interact);
 void arrange(Monitor *m);
 void arrangemon(Monitor *m);
 void attach(Client *c);
-void attachstack(Client *c);
 void buttonpress(XEvent *e);
 void checkotherwm(void);
 void cleanup(void);
@@ -259,7 +256,6 @@ void configurerequest(XEvent *e);
 Monitor *createmon(void);
 void destroynotify(XEvent *e);
 void detach(Client *c);
-void detachstack(Client *c);
 Monitor *get_neighbor_monitor(int dir);
 void move_tag_to_monitor(const Arg *arg);
 void drawbar(Monitor *m);
@@ -314,7 +310,7 @@ void setnumdesktops(void);
 void setup(void);
 void setviewport(void);
 void seturgent(Client *c, int urg);
-void showhide(Client *c);
+void showhide(Monitor *m);
 Monitor *systraytomon(Monitor *m);
 void tag(const Arg *arg);
 void togglebar(const Arg *arg);

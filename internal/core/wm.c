@@ -56,9 +56,9 @@ int applysizehints(Client* c, int* x, int* y, int* w, int* h, int interact) {
 
 void arrange(Monitor* m) {
   if (m)
-    showhide(m->stack);
+    showhide(m);
   else
-    for (m = mons; m; m = m->next) showhide(m->stack);
+    for (m = mons; m; m = m->next) showhide(m);
   if (m) {
     arrangemon(m);
     restack(m);
@@ -97,10 +97,6 @@ void attach(Client* c) {
     c->mon->tail = c;
 }
 
-void attachstack(Client* c) {
-  c->snext = c->mon->stack;
-  c->mon->stack = c;
-}
 
 void configure(Client* c) {
   XConfigureEvent ce;
@@ -135,27 +131,14 @@ void detach(Client* c) {
   }
 }
 
-void detachstack(Client* c) {
-  Client **tc, *t;
-
-  for (tc = &c->mon->stack; *tc && *tc != c; tc = &(*tc)->snext);
-  *tc = c->snext;
-
-  if (c == c->mon->sel) {
-    for (t = c->mon->stack; t && !ISVISIBLE(t); t = t->snext);
-    c->mon->sel = t;
-  }
-}
 
 void focus(Client* c) {
-  if (!c || (!ISVISIBLE(c) || HIDDEN(c)))
-    for (c = selmon->stack; c && (!ISVISIBLE(c) || HIDDEN(c)); c = c->snext);
+  if (!c || !ISVISIBLE(c) || HIDDEN(c))
+    for (c = selmon->clients; c && (!ISVISIBLE(c) || HIDDEN(c)); c = c->next);
   if (selmon->sel && selmon->sel != c) unfocus(selmon->sel, 0);
   if (c) {
     if (c->mon != selmon) selmon = c->mon;
     if (c->isurgent) seturgent(c, 0);
-    detachstack(c);
-    attachstack(c);
     grabbuttons(c, 1);
     XSetWindowBorder(dpy, c->win, scheme[SchemeSel][ColBorder].pixel);
     setfocus(c);
@@ -399,7 +382,6 @@ void manage(Window w, XWindowAttributes* wa) {
   }
   if (c->isfloating) XRaiseWindow(dpy, c->win);
   attach(c);
-  attachstack(c);
   XChangeProperty(dpy, root, netatom[NetClientList], XA_WINDOW, 32,
                   PropModeAppend, (unsigned char*)&(c->win), 1);
   XMoveResizeWindow(dpy, c->win, c->x + 2 * sw, c->y, c->w,
@@ -505,7 +487,7 @@ void restack(Monitor* m) {
   drawbar(m);
   drawtab(m);
   if (!m->sel) return;
-  if (m->sel->isfloating) XRaiseWindow(dpy, m->sel->win);
+  XRaiseWindow(dpy, m->sel->win);
 
   /* Always raise bar and tab windows so they stay visible on top */
   XRaiseWindow(dpy, m->barwin);
@@ -520,11 +502,9 @@ void sendmon(Client* c, Monitor* m) {
   if (c->mon == m) return;
   unfocus(c, 1);
   detach(c);
-  detachstack(c);
   c->mon = m;
   c->ws = m->current_ws;
   attach(c);
-  attachstack(c);
   setclienttagprop(c);
   focus(NULL);
   arrange(NULL);
@@ -582,38 +562,23 @@ void seturgent(Client* c, int urg) {
   XFree(wmh);
 }
 
-void showhide(Client* c) {  
-  if (!c) return;  
-  
-  /* Grab server on first call to batch all map/unmap operations */  
-  static int grabbed = 0;  
-  if (!grabbed) {  
-    XGrabServer(dpy);  
-    grabbed = 1;  
-  }  
-  
-  if (ISVISIBLE(c)) {  
-    /* show clients top down */  
-    if (!c->ismapped) {  
-      window_map(c, 1);  
-      c->ismapped = 1;  
-    }  
-    showhide(c->snext);  
-  } else {  
-    /* hide clients bottom up */  
-    showhide(c->snext);  
-    if (c->ismapped) {  
-      window_unmap(c->win, 1);  
-      c->ismapped = 0;  
-    }  
-  }  
-  
-  /* Ungrab server after processing the last client in the stack */  
-  if (!c->snext && grabbed) {  
-    XUngrabServer(dpy);  
-    XSync(dpy, False);  
-    grabbed = 0;  
-  }  
+void showhide(Monitor *m) {
+  XGrabServer(dpy);
+  for (Client *c = m->clients; c; c = c->next) {
+    if (ISVISIBLE(c)) {
+      if (!c->ismapped) {
+        window_map(c, 1);
+        c->ismapped = 1;
+      }
+    } else {
+      if (c->ismapped) {
+        window_unmap(c->win, 1);
+        c->ismapped = 0;
+      }
+    }
+  }
+  XUngrabServer(dpy);
+  XSync(dpy, False);
 }
 
 /* WINDOWMAP helpers */  
@@ -628,9 +593,8 @@ void window_map(Client *c, int deiconify) {
   if (deiconify)  
     window_set_state(win, NormalState);  
   XMoveResizeWindow(dpy, c->win, c->x, c->y, c->w, c->h);  
-  XSetInputFocus(dpy, win, RevertToPointerRoot, CurrentTime);  
-  XMapWindow(dpy, win);  
-  focus(NULL);  
+  XSetInputFocus(dpy, win, RevertToPointerRoot, CurrentTime);
+  XMapWindow(dpy, win);
 }  
   
 void window_unmap(Window win, int iconify) {  
@@ -640,8 +604,7 @@ void window_unmap(Window win, int iconify) {
   /* Prevent UnmapNotify events from reaching our handler */  
   XSelectInput(dpy, root, ra.your_event_mask & ~SubstructureNotifyMask);  
   XSelectInput(dpy, win, ca.your_event_mask & ~StructureNotifyMask);  
-  XUnmapWindow(dpy, win);  
-  focus(NULL);  
+  XUnmapWindow(dpy, win);
   if (iconify)  
     window_set_state(win, IconicState);  
   XSelectInput(dpy, root, ra.your_event_mask);  
@@ -652,8 +615,14 @@ void unmanage(Client* c, int destroyed) {
   Monitor* m = c->mon;
   XWindowChanges wc;
 
+  /* If this was the selected client, find next visible one */
+  if (c == m->sel) {
+    Client *t;
+    for (t = m->clients; t && (!ISVISIBLE(t) || HIDDEN(t) || t == c); t = t->next);
+    m->sel = t;
+  }
+
   detach(c);
-  detachstack(c);
   freeicon(c);
 
   if (!destroyed) {

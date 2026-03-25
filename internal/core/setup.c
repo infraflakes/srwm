@@ -309,10 +309,8 @@ int updategeom(void) {
       while ((c = m->clients)) {
         dirty = 1;
         m->clients = c->next;
-        detachstack(c);
         c->mon = mons;
         attach(c);
-        attachstack(c);
       }
       if (m == selmon) selmon = mons;
       cleanupmon(m);
