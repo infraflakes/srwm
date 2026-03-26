@@ -24,7 +24,7 @@ srwm.bar.fonts("Terminess Nerd Font:size=16")
 srwm.bar.ws_underline_padding(5)
 srwm.bar.ws_underline_size(2)
 srwm.bar.ws_underline_offset(0)
-srwm.bar.ws_underline_all(false)
+srwm.bar.ws_underline_all_workspaces(false)
 
 -- Systray
 srwm.bar.systray(true)
