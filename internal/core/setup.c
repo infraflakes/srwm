@@ -526,8 +526,6 @@ int colorful_ws = 1;
 int ws_colorful_occupied_only = 1;
 const char* fonts[] = {"JetBrainsMonoNerdFont:size=13"};
 const char* colors[][3] = {
-    [SchemeNorm] = {gray3, black, black},      /* fg, bg, (unused) */
-    [SchemeSel] = {gray3, black, black},       /* fg, bg, (unused) - SchemeSel is now only used for occupied ws fallback */
     [SchemeTitle] = {white, black, black},
     [SchemeWs] = {gray2, black, black},
     [SchemeWs1] = {blue, black, black},

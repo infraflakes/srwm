@@ -160,7 +160,7 @@ void drawbar(Monitor* m) {
         drw_pic(drw, x + lrpad / 2, (bh - m->sel->ich) / 2, m->sel->icw,
                 m->sel->ich, m->sel->icon);
     } else {
-       XSetForeground(drw->dpy, drw->gc, bar_bg.pixel);
+       XSetForeground(drw->dpy, drw->gc, scheme[SchemeTitle][ColBg].pixel);
        XFillRectangle(drw->dpy, drw->drawable, drw->gc, x, y, w, bh_n);
     }
   }
