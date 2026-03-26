@@ -20,11 +20,11 @@ srwm.bar.tab_top(true)
 -- Set fonts
 srwm.bar.fonts("Terminess Nerd Font:size=16")
 
--- Tag underline
-srwm.bar.tag_underline_padding(5)
-srwm.bar.tag_underline_size(2)
-srwm.bar.tag_underline_offset(0)
-srwm.bar.tag_underline_all_tags(false)
+-- Workspace underline
+srwm.bar.ws_underline_padding(5)
+srwm.bar.ws_underline_size(2)
+srwm.bar.ws_underline_offset(0)
+srwm.bar.ws_underline_all(false)
 
 -- Systray
 srwm.bar.systray(true)

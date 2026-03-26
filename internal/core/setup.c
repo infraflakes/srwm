@@ -95,7 +95,7 @@ Monitor* createmon(void) {
   m->current_ws = 0;
   m->previous_ws = 0;
   for (int i = 0; i < 9; i++) m->showbar_per_ws[i] = showbar;
-  m->canvas = ecalloc(9, sizeof(CanvasOffset)); /* one per tag, max 9 */
+  m->canvas = ecalloc(9, sizeof(CanvasOffset)); /* one per ws, max 9 */
   m->canvas_zoom = 1.0f;
 
   return m;
@@ -510,14 +510,14 @@ int tab_height = 35;
 int tab_tile_vertical_padding = 5;
 int tab_tile_inner_padding_horizontal = 15;
 int tab_tile_outer_padding_horizontal = 15;
-unsigned int tag_underline_padding = 5;
-unsigned int tag_underline_size = 2;
-unsigned int tag_underline_offset_from_bar_bottom = 0;
-int tag_underline_for_all_tags = 0;
+unsigned int ws_underline_padding = 5;
+unsigned int ws_underline_size = 2;
+unsigned int ws_underline_offset_from_bar_bottom = 0;
+int ws_underline_for_all = 0;
 int toptab = 1;
 int topbar = 1;
 int colorful_ws = 1;
-int tag_colorful_occupied_only = 1;
+int ws_colorful_occupied_only = 1;
 const char* fonts[] = {"JetBrainsMonoNerdFont:size=13"};
 const char* colors[][3] = {
     [SchemeNorm] = {gray3, black, gray2},

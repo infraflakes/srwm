@@ -21,7 +21,7 @@ var buttonAliases = map[string]uint{
 var clickAliases = map[string]uint{
 	"root":       core.ClkRootWin,
 	"client":     core.ClkClientWin,
-	"tagbar":     core.ClkTagBar,
+	"wsbar":      core.ClkWsBar,
 	"tabbar":     core.ClkTabBar,
 	"statustext": core.ClkStatusText,
 	"wintitle":   core.ClkWinTitle,
@@ -53,7 +53,7 @@ func luaMouseBind(L *lua.LState) int {
 	tgtName := strings.ToLower(targetName)
 	click, ok := clickAliases[tgtName]
 	if !ok {
-		L.RaiseError("srwm.mouse.bind: invalid target %q (expected root, client, tagbar, tabbar, statustext, wintitle)", targetName)
+		L.RaiseError("srwm.mouse.bind: invalid target %q (expected root, client, wsbar, tabbar, statustext, wintitle)", targetName)
 		return 0
 	}
 

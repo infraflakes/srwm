@@ -11,7 +11,7 @@ import (
 )
 
 const (
-	ClkTagBar     = 0
+	ClkWsBar      = 0
 	ClkTabBar     = 1
 	ClkTabPrev    = 2
 	ClkTabNext    = 3

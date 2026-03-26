@@ -118,19 +118,19 @@ func RegisterBarAPI(L *lua.LState, srwmMod *lua.LTable, configDir string) func()
 		return uintProp(L, core.GetSystrayPinning, core.SetSystrayPinning)
 	}))
 
-	barTable.RawSetString("tag_underline_padding", L.NewFunction(func(L *lua.LState) int {
+	barTable.RawSetString("ws_underline_padding", L.NewFunction(func(L *lua.LState) int {
 		return uintProp(L, core.GetWorkspaceUnderlinePadding, core.SetWorkspaceUnderlinePadding)
 	}))
 
-	barTable.RawSetString("tag_underline_size", L.NewFunction(func(L *lua.LState) int {
+	barTable.RawSetString("ws_underline_size", L.NewFunction(func(L *lua.LState) int {
 		return uintProp(L, core.GetWorkspaceUnderlineSize, core.SetWorkspaceUnderlineSize)
 	}))
 
-	barTable.RawSetString("tag_underline_offset", L.NewFunction(func(L *lua.LState) int {
+	barTable.RawSetString("ws_underline_offset", L.NewFunction(func(L *lua.LState) int {
 		return uintProp(L, core.GetWorkspaceUnderlineOffsetFromBarBottom, core.SetWorkspaceUnderlineOffsetFromBarBottom)
 	}))
 
-	barTable.RawSetString("tag_underline_all_workspaces", L.NewFunction(func(L *lua.LState) int {
+	barTable.RawSetString("ws_underline_all_workspaces", L.NewFunction(func(L *lua.LState) int {
 		return boolProp(L, core.GetWorkspaceUnderlineForAllWorkspaces, core.SetWorkspaceUnderlineForAllWorkspaces)
 	}))
 
@@ -139,12 +139,12 @@ func RegisterBarAPI(L *lua.LState, srwmMod *lua.LTable, configDir string) func()
 	}))
 
 	// Nested workspaces table
-	tagTable := L.NewTable()
-	tagTable.RawSetString("highlight_occupied_only", L.NewFunction(func(L *lua.LState) int {
+	wsTable := L.NewTable()
+	wsTable.RawSetString("highlight_occupied_only", L.NewFunction(func(L *lua.LState) int {
 		core.SetWorkspaceColorfulOccupiedOnly(L.CheckBool(1))
 		return 0
 	}))
-	barTable.RawSetString("workspaces", tagTable)
+	barTable.RawSetString("workspaces", wsTable)
 
 	L.SetField(srwmMod, "bar", barTable)
 
@@ -203,21 +203,21 @@ func luaBarTheme(L *lua.LState, state *barState) int {
 
 	schemeMap := map[string]struct {
 		scheme core.Scheme
-		tagIdx int // -1 if not a tag scheme
+		wsIdx  int // -1 if not a ws scheme
 	}{
 		"normal":       {core.SchemeNorm, -1},
 		"selected":     {core.SchemeSel, -1},
 		"title":        {core.SchemeTitle, -1},
-		"inactive_tag": {core.SchemeWorkspace, -1},
-		"tag_1":        {core.SchemeWorkspace1, 0},
-		"tag_2":        {core.SchemeWorkspace2, 1},
-		"tag_3":        {core.SchemeWorkspace3, 2},
-		"tag_4":        {core.SchemeWorkspace4, 3},
-		"tag_5":        {core.SchemeWorkspace5, 4},
-		"tag_6":        {core.SchemeWorkspace6, 5},
-		"tag_7":        {core.SchemeWorkspace7, 6},
-		"tag_8":        {core.SchemeWorkspace8, 7},
-		"tag_9":        {core.SchemeWorkspace9, 8},
+		"inactive_ws":  {core.SchemeWorkspace, -1},
+		"ws_1":         {core.SchemeWorkspace1, 0},
+		"ws_2":         {core.SchemeWorkspace2, 1},
+		"ws_3":         {core.SchemeWorkspace3, 2},
+		"ws_4":         {core.SchemeWorkspace4, 3},
+		"ws_5":         {core.SchemeWorkspace5, 4},
+		"ws_6":         {core.SchemeWorkspace6, 5},
+		"ws_7":         {core.SchemeWorkspace7, 6},
+		"ws_8":         {core.SchemeWorkspace8, 7},
+		"ws_9":         {core.SchemeWorkspace9, 8},
 		"tab_selected": {core.TabSel, -1},
 		"tab_normal":   {core.TabNorm, -1},
 		"button_prev":  {core.SchemeBtnPrev, -1},
@@ -245,9 +245,9 @@ func luaBarTheme(L *lua.LState, state *barState) int {
 				core.SetColor(scheme, 2, border.String())
 			}
 
-			// If it's a tag scheme, automatically map the tag to it
-			if info.tagIdx >= 0 {
-				core.SetWorkspaceScheme(info.tagIdx, scheme)
+			// If it's a ws scheme, automatically map the ws to it
+			if info.wsIdx >= 0 {
+				core.SetWorkspaceScheme(info.wsIdx, scheme)
 			}
 			return
 		}

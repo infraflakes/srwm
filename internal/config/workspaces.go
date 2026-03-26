@@ -16,9 +16,9 @@ func RegisterWorkspacesAPI(L *lua.LState, srwmMod *lua.LTable) {
 
 		count := min(len(parts), 9)
 		for i := range count {
-			core.SetWsLabel(i, strings.TrimSpace(parts[i]))
+			core.SetWorkspace(i, strings.TrimSpace(parts[i]))
 		}
-		core.SetWsCount(count)
+		core.SetWorkspacesLen(count)
 		return 0
 	}))
 
