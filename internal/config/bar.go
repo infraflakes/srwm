@@ -78,6 +78,11 @@ func RegisterBarAPI(L *lua.LState, srwmMod *lua.LTable, configDir string) func()
 		return intProp(L, core.GetBarVerticalPadding, core.SetBarVerticalPadding)
 	}))
 
+	barTable.RawSetString("bg", L.NewFunction(func(L *lua.LState) int {
+		core.SetBarBg(L.CheckString(1))
+		return 0
+	}))
+
 	barTable.RawSetString("tab_height", L.NewFunction(func(L *lua.LState) int {
 		return intProp(L, core.GetTabHeight, core.SetTabHeight)
 	}))
@@ -201,12 +206,11 @@ func luaBarTheme(L *lua.LState, state *barState) int {
 	themeTable := L.CheckTable(1)
 	var replacements []string
 
-	schemeMap := map[string]struct {
+	// 2-color schemes: {fg, bg}
+	twoColorSchemes := map[string]struct {
 		scheme core.Scheme
-		wsIdx  int // -1 if not a ws scheme
+		wsIdx  int
 	}{
-		"normal":       {core.SchemeNorm, -1},
-		"selected":     {core.SchemeSel, -1},
 		"title":        {core.SchemeTitle, -1},
 		"inactive_ws":  {core.SchemeWorkspace, -1},
 		"ws_1":         {core.SchemeWorkspace1, 0},
@@ -220,42 +224,48 @@ func luaBarTheme(L *lua.LState, state *barState) int {
 		"ws_9":         {core.SchemeWorkspace9, 8},
 		"tab_selected": {core.TabSel, -1},
 		"tab_normal":   {core.TabNorm, -1},
-		"button_prev":  {core.SchemeBtnPrev, -1},
-		"button_next":  {core.SchemeBtnNext, -1},
-		"button_close": {core.SchemeBtnClose, -1},
+	}
+
+	// 1-color schemes: just fg
+	oneColorSchemes := map[string]core.Scheme{
+		"button_prev":  core.SchemeBtnPrev,
+		"button_next":  core.SchemeBtnNext,
+		"button_close": core.SchemeBtnClose,
 	}
 
 	themeTable.ForEach(func(k, v lua.LValue) {
 		key := k.String()
 
-		// Nested table → WM core color
+		// 2-color scheme: table {fg, bg}
 		if tbl, ok := v.(*lua.LTable); ok {
-			info, exists := schemeMap[key]
+			info, exists := twoColorSchemes[key]
 			if !exists {
 				return
 			}
-			scheme := info.scheme
-			if fg := tbl.RawGetString("fg"); fg.Type() == lua.LTString {
-				core.SetColor(scheme, 0, fg.String())
+			if fg := tbl.RawGetInt(1); fg.Type() == lua.LTString {
+				core.SetColor(info.scheme, 0, fg.String())
 			}
-			if bg := tbl.RawGetString("bg"); bg.Type() == lua.LTString {
-				core.SetColor(scheme, 1, bg.String())
+			if bg := tbl.RawGetInt(2); bg.Type() == lua.LTString {
+				core.SetColor(info.scheme, 1, bg.String())
 			}
-			if border := tbl.RawGetString("border"); border.Type() == lua.LTString {
-				core.SetColor(scheme, 2, border.String())
-			}
-
-			// If it's a ws scheme, automatically map the ws to it
 			if info.wsIdx >= 0 {
-				core.SetWorkspaceScheme(info.wsIdx, scheme)
+				core.SetWorkspaceScheme(info.wsIdx, info.scheme)
 			}
 			return
 		}
 
-		// Simple string → widget template replacement AND palette storage
-		color := v.String()
-		state.palette[key] = color
-		replacements = append(replacements, "{"+key+"}", color)
+		// String value
+		if str, ok := v.(lua.LString); ok {
+			hex := string(str)
+			// 1-color scheme (button)
+			if scheme, exists := oneColorSchemes[key]; exists {
+				core.SetColor(scheme, 0, hex)
+				return
+			}
+			// Widget palette variable
+			state.palette[key] = hex
+			replacements = append(replacements, "{"+key+"}", hex)
+		}
 	})
 
 	state.themeRepl = strings.NewReplacer(replacements...)

@@ -16,10 +16,10 @@ void updatesystray(void) {
     if (!(systray = (Systray*)calloc(1, sizeof(Systray))))
       die("fatal: could not malloc() %u bytes\n", sizeof(Systray));
     systray->win = XCreateSimpleWindow(dpy, root, x, m->by, w, bh, 0, 0,
-                                       scheme[SchemeSel][ColBg].pixel);
+                                       bar_bg.pixel);
     wa.event_mask = ButtonPressMask | ExposureMask;
     wa.override_redirect = True;
-    wa.background_pixel = scheme[SchemeNorm][ColBg].pixel;
+    wa.background_pixel = bar_bg.pixel;
     XSelectInput(dpy, systray->win, SubstructureNotifyMask);
     XChangeProperty(dpy, systray->win, netatom[NetSystemTrayOrientation],
                     XA_CARDINAL, 32, PropModeReplace,

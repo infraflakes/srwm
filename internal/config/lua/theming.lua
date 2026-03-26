@@ -1,29 +1,36 @@
---------------------------------------------------------------------------------
+-------------------------------------------------------------------------------
 -- Theming
---------------------------------------------------------------------------------
+-------------------------------------------------------------------------------
 
--- Theme: nested tables set WM core colors, simple strings set widget palette
+-- Window border colors
+srwm.window.border.active("#6e94b2")
+srwm.window.border.inactive("#606079")
+
+-- Bar background
+srwm.bar.bg("#252530")
+
+-- Theme
 srwm.bar.theme({
-	normal = { fg = "#cdcdcd", bg = "#252530", border = "#606079" }, -- should be moved to srwm.theme
-	selected = { fg = "#cdcdcd", bg = "#6e94b2", border = "#6e94b2" }, -- should be moved to srwm.theme
-	tab_selected = { fg = "#252530", bg = "#aeaed1", border = "#aeaed1" },
-	button_prev = { fg = "#7fa563", bg = "#252530", border = "#252530" },
-	button_next = { fg = "#f3be7c", bg = "#252530", border = "#252530" },
-	button_close = { fg = "#d8647e", bg = "#252530", border = "#252530" },
-	tab_normal = { fg = "#cdcdcd", bg = "#252530", border = "#252530" },
-	title = { fg = "#d7d7d7", bg = "#252530", border = "#252530" },
-	inactive_ws = { fg = "#606079", bg = "#252530", border = "#252530" },
-	ws_1 = { fg = "#6e94b2", bg = "#252530", border = "#252530" },
-	ws_2 = { fg = "#aeaed1", bg = "#252530", border = "#252530" },
-	ws_3 = { fg = "#bb9dbd", bg = "#252530", border = "#252530" },
-	ws_4 = { fg = "#aeaed1", bg = "#252530", border = "#252530" },
-	ws_5 = { fg = "#6e94b2", bg = "#252530", border = "#252530" },
-	ws_6 = { fg = "#bb9dbd", bg = "#252530", border = "#252530" },
-	ws_7 = { fg = "#6e94b2", bg = "#252530", border = "#252530" },
-	ws_8 = { fg = "#aeaed1", bg = "#252530", border = "#252530" },
-	ws_9 = { fg = "#bb9dbd", bg = "#252530", border = "#252530" },
+	title = { "#d7d7d7", "#252530" },
+	tab_selected = { "#252530", "#aeaed1" },
+	tab_normal = { "#cdcdcd", "#252530" },
+	inactive_ws = { "#606079", "#252530" },
+	ws_1 = { "#6e94b2", "#252530" },
+	ws_2 = { "#aeaed1", "#252530" },
+	ws_3 = { "#bb9dbd", "#252530" },
+	ws_4 = { "#aeaed1", "#252530" },
+	ws_5 = { "#6e94b2", "#252530" },
+	ws_6 = { "#bb9dbd", "#252530" },
+	ws_7 = { "#6e94b2", "#252530" },
+	ws_8 = { "#aeaed1", "#252530" },
+	ws_9 = { "#bb9dbd", "#252530" },
 
-	-- Widget palette (used as {name} in shell scripts)
+	-- Tab bar buttons
+	button_prev = "#7fa563",
+	button_next = "#f3be7c",
+	button_close = "#d8647e",
+
+	-- Widget palette
 	purple = "#bebeda",
 	darkpurple = "#aeaed1",
 	black = "#252530",
@@ -53,3 +60,4 @@ srwm.bar.widget("gap", "widgets/gap.sh")
 
 -- Define the layout left-to-right
 srwm.bar.layout("brightness", "gap", "volume", "gap", "wifi", "gap", "clock", "gap", "battery")
+

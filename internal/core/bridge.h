@@ -80,6 +80,11 @@ int srwm_get_topbar(void);
 void srwm_set_topbar(int);
 void srwm_set_font(const char* font);
 void srwm_set_color(int scheme, int slot, const char* hex);
+
+/* Dedicated color setters */
+void srwm_set_border_active(const char* hex);
+void srwm_set_border_inactive(const char* hex);
+void srwm_set_bar_bg(const char* hex);
 void srwm_set_ws_label(int idx, const char* name);
 void srwm_set_ws_count(int len);
 void srwm_set_ws_colorful_occupied_only(int val);

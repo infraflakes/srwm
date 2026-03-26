@@ -99,13 +99,13 @@ void focus(Client* c) {
   if (!c || !ISVISIBLE(c) || !c->ismapped)
     for (c = selmon->clients; c && (!ISVISIBLE(c) || !c->ismapped); c = c->next);
   if (selmon->sel && selmon->sel != c) unfocus(selmon->sel, 0);
-  if (c) {
-    if (c->mon != selmon) selmon = c->mon;
-    if (c->isurgent) seturgent(c, 0);
-    grabbuttons(c, 1);
-    XSetWindowBorder(dpy, c->win, scheme[SchemeSel][ColBorder].pixel);
-    setfocus(c);
-  } else {
+   if (c) {
+     if (c->mon != selmon) selmon = c->mon;
+     if (c->isurgent) seturgent(c, 0);
+     grabbuttons(c, 1);
+     XSetWindowBorder(dpy, c->win, border_active.pixel);
+     setfocus(c);
+   } else {
     XSetInputFocus(dpy, root, RevertToPointerRoot, CurrentTime);
     XDeleteProperty(dpy, root, netatom[NetActiveWindow]);
   }
@@ -117,7 +117,7 @@ void focus(Client* c) {
 void unfocus(Client* c, int setfocus) {
   if (!c) return;
   grabbuttons(c, 0);
-  XSetWindowBorder(dpy, c->win, scheme[SchemeNorm][ColBorder].pixel);
+  XSetWindowBorder(dpy, c->win, border_inactive.pixel);
   if (setfocus) {
     XSetInputFocus(dpy, root, RevertToPointerRoot, CurrentTime);
     XDeleteProperty(dpy, root, netatom[NetActiveWindow]);

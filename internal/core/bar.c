@@ -41,7 +41,7 @@ int drawstatusbar(Monitor* m, int bh, char* stext) {
 
   drw_setscheme(drw, scheme[LENGTH(colors)]);
   drw->scheme[ColFg] = scheme[SchemeNorm][ColFg];
-  drw->scheme[ColBg] = scheme[SchemeNorm][ColBg];
+  drw->scheme[ColBg] = bar_bg;
   drw_rect(drw, x, 0, w, bh, 1, 1);
   x += bar_horizontal_padding / 2;
 
@@ -71,10 +71,10 @@ int drawstatusbar(Monitor* m, int bh, char* stext) {
           buf[7] = '\0';
           drw_clr_create(drw, &drw->scheme[ColBg], buf);
           i += 7;
-        } else if (text[i] == 'd') {
-          drw->scheme[ColFg] = scheme[SchemeNorm][ColFg];
-          drw->scheme[ColBg] = scheme[SchemeNorm][ColBg];
-        } else if (text[i] == 'r') {
+         } else if (text[i] == 'd') {
+           drw->scheme[ColFg] = scheme[SchemeNorm][ColFg];
+           drw->scheme[ColBg] = bar_bg;
+         } else if (text[i] == 'r') {
           int rx = atoi(text + ++i);
           while (text[++i] != ',');
           int ry = atoi(text + ++i);
@@ -113,7 +113,7 @@ void drawbar(Monitor* m) {
   unsigned int i;
   int occ[9] = {0}, urg[9] = {0};
 
-  XSetForeground(drw->dpy, drw->gc, scheme[SchemeNorm][ColBg].pixel);
+  XSetForeground(drw->dpy, drw->gc, bar_bg.pixel);
   XFillRectangle(drw->dpy, drw->drawable, drw->gc, 0, 0, m->ww, bh);
 
   if (systray_enable && m == systraytomon(m)) stw = getsystraywidth();
@@ -160,8 +160,8 @@ void drawbar(Monitor* m) {
         drw_pic(drw, x + lrpad / 2, (bh - m->sel->ich) / 2, m->sel->icw,
                 m->sel->ich, m->sel->icon);
     } else {
-      drw_setscheme(drw, scheme[SchemeNorm]);
-      drw_rect(drw, x, y, w, bh_n, 1, 1);
+       XSetForeground(drw->dpy, drw->gc, bar_bg.pixel);
+       XFillRectangle(drw->dpy, drw->drawable, drw->gc, x, y, w, bh_n);
     }
   }
   drw_map(drw, m->barwin, 0, 0, m->ww - stw, bh);
@@ -246,21 +246,24 @@ void drawtab(Monitor* m) {
 
   w = mw - buttons_w - x;
   x += w;
-  drw_setscheme(drw, scheme[SchemeBtnPrev]);
-  w = TEXTW(btn_prev) - lrpad + tab_tile_inner_padding_horizontal;
-  m->tab_btn_w[0] = w;
-  drw_text(drw, x + tab_tile_inner_padding_horizontal / 2, tab_tile_vertical_padding / 2, w, th - tab_tile_vertical_padding, 0, btn_prev, 0);
-  x += w;
-  drw_setscheme(drw, scheme[SchemeBtnNext]);
-  w = TEXTW(btn_next) - lrpad + tab_tile_inner_padding_horizontal;
-  m->tab_btn_w[1] = w;
-  drw_text(drw, x + tab_tile_inner_padding_horizontal / 2, tab_tile_vertical_padding / 2, w, th - tab_tile_vertical_padding, 0, btn_next, 0);
-  x += w;
-  drw_setscheme(drw, scheme[SchemeBtnClose]);
-  w = TEXTW(btn_close) - lrpad + tab_tile_outer_padding_horizontal;
-  m->tab_btn_w[2] = w;
-  drw_text(drw, x + tab_tile_inner_padding_horizontal / 2, tab_tile_vertical_padding / 2, w, th - tab_tile_vertical_padding, 0, btn_close, 0);
-  x += w;
+   drw_setscheme(drw, scheme[SchemeBtnPrev]);
+   drw->scheme[ColBg] = scheme[TabNorm][ColBg];
+   w = TEXTW(btn_prev) - lrpad + tab_tile_inner_padding_horizontal;
+   m->tab_btn_w[0] = w;
+   drw_text(drw, x + tab_tile_inner_padding_horizontal / 2, tab_tile_vertical_padding / 2, w, th - tab_tile_vertical_padding, 0, btn_prev, 0);
+   x += w;
+   drw_setscheme(drw, scheme[SchemeBtnNext]);
+   drw->scheme[ColBg] = scheme[TabNorm][ColBg];
+   w = TEXTW(btn_next) - lrpad + tab_tile_inner_padding_horizontal;
+   m->tab_btn_w[1] = w;
+   drw_text(drw, x + tab_tile_inner_padding_horizontal / 2, tab_tile_vertical_padding / 2, w, th - tab_tile_vertical_padding, 0, btn_next, 0);
+   x += w;
+   drw_setscheme(drw, scheme[SchemeBtnClose]);
+   drw->scheme[ColBg] = scheme[TabNorm][ColBg];
+   w = TEXTW(btn_close) - lrpad + tab_tile_outer_padding_horizontal;
+   m->tab_btn_w[2] = w;
+   drw_text(drw, x + tab_tile_inner_padding_horizontal / 2, tab_tile_vertical_padding / 2, w, th - tab_tile_vertical_padding, 0, btn_close, 0);
+   x += w;
   drw_map(drw, m->tabwin, 0, 0, m->ww, th);
 }
 

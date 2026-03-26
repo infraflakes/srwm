@@ -393,6 +393,11 @@ extern Drw *drw;
 extern Monitor *mons, *selmon;
 extern Window root, wmcheckwin;
 
+/* Dedicated color globals */
+extern Clr border_active;    /* active window border color */
+extern Clr border_inactive;  /* inactive window border color */
+extern Clr bar_bg;           /* bar background color */
+
 /* Config globals */
 extern unsigned int borderpx;
 extern unsigned int systraypinning;

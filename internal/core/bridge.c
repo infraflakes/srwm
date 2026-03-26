@@ -175,19 +175,30 @@ void srwm_set_toptab(int v) { toptab = v; }
 int srwm_get_topbar(void) { return topbar; }
 void srwm_set_topbar(int v) { topbar = v; }
 
+/* Dedicated color getters and setters */
+void srwm_set_border_active(const char* hex) {
+    drw_clr_create(drw, &border_active, hex);
+}
+void srwm_set_border_inactive(const char* hex) {
+    drw_clr_create(drw, &border_inactive, hex);
+}
+void srwm_set_bar_bg(const char* hex) {
+    drw_clr_create(drw, &bar_bg, hex);
+}
 
+/* Font and colors */
 extern const char* fonts[];
 void srwm_set_font(const char* font) { fonts[0] = font; }
 
 extern const char* colors[][3];
-static int colors_owned[18][3] = {0}; /* tracks which slots were strdup'd */  
-  
-void srwm_set_color(int scheme, int slot, const char* hex) {  
-  if (slot < 0 || slot >= 3) return;  
-  if (colors_owned[scheme][slot])  
-    free((void*)colors[scheme][slot]);  
-  colors[scheme][slot] = strdup(hex);  
-  colors_owned[scheme][slot] = 1;  
+static int colors_owned[18][3] = {0}; /* tracks which slots were strdup'd */
+
+void srwm_set_color(int scheme, int slot, const char* hex) {
+   if (slot < 0 || slot >= 3) return;
+   if (colors_owned[scheme][slot])
+     free((void*)colors[scheme][slot]);
+   colors[scheme][slot] = strdup(hex);
+   colors_owned[scheme][slot] = 1;
 }
 
 extern char* ws_labels[];

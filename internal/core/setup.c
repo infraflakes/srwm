@@ -21,6 +21,11 @@ int dkeys_len = 0;
 DynamicButton dbuttons[MAX_DYNAMIC_BUTTONS];
 int dbuttons_len = 0;
 
+/* Dedicated color globals */
+Clr border_active;
+Clr border_inactive;
+Clr bar_bg;
+
 void checkotherwm(void) {
   xerrorxlib = XSetErrorHandler(xerrorstart);
   /* this causes an error if some other window manager is running */
@@ -162,11 +167,14 @@ void setup(void) {
   cursor[CurNormal] = drw_cur_create(drw, XC_left_ptr);
   cursor[CurResize] = drw_cur_create(drw, XC_sizing);
   cursor[CurMove] = drw_cur_create(drw, XC_fleur);
-  /* init appearance */
-  scheme = ecalloc(LENGTH(colors) + 1, sizeof(Clr*));
-  scheme[LENGTH(colors)] = drw_scm_create(drw, colors[0], 3);
-  for (i = 0; i < LENGTH(colors); i++)
-    scheme[i] = drw_scm_create(drw, colors[i], 3);
+   /* init appearance */
+   drw_clr_create(drw, &border_active, blue);    /* default: blue */
+   drw_clr_create(drw, &border_inactive, gray2); /* default: gray */
+   drw_clr_create(drw, &bar_bg, black);          /* default: black */
+   scheme = ecalloc(LENGTH(colors) + 1, sizeof(Clr*));
+   scheme[LENGTH(colors)] = drw_scm_create(drw, colors[0], 3);
+   for (i = 0; i < LENGTH(colors); i++)
+     scheme[i] = drw_scm_create(drw, colors[i], 3);
   /* init system tray */
   updatesystray();
   /* init bars */
@@ -518,8 +526,8 @@ int colorful_ws = 1;
 int ws_colorful_occupied_only = 1;
 const char* fonts[] = {"JetBrainsMonoNerdFont:size=13"};
 const char* colors[][3] = {
-    [SchemeNorm] = {gray3, black, gray2},
-    [SchemeSel] = {gray3, blue, blue},
+    [SchemeNorm] = {gray3, black, black},      /* fg, bg, (unused) */
+    [SchemeSel] = {gray3, black, black},       /* fg, bg, (unused) - SchemeSel is now only used for occupied ws fallback */
     [SchemeTitle] = {white, black, black},
     [SchemeWs] = {gray2, black, black},
     [SchemeWs1] = {blue, black, black},

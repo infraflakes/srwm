@@ -26,6 +26,18 @@ func RegisterActionsAPI(L *lua.LState, srwmMod *lua.LTable) {
 		return 0
 	}))
 
+	// srwm.window.border namespace
+	borderTable := L.NewTable()
+	L.SetField(borderTable, "active", L.NewFunction(func(L *lua.LState) int {
+		core.SetBorderActive(L.CheckString(1))
+		return 0
+	}))
+	L.SetField(borderTable, "inactive", L.NewFunction(func(L *lua.LState) int {
+		core.SetBorderInactive(L.CheckString(1))
+		return 0
+	}))
+	L.SetField(windowTable, "border", borderTable)
+
 	L.SetField(srwmMod, "window", windowTable)
 
 	// srwm.workspace namespace

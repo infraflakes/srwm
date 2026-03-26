@@ -35,6 +35,24 @@ func SetColor(scheme Scheme, slot int, hex string) {
 	C.srwm_set_color(C.int(scheme), C.int(slot), cs)
 }
 
+func SetBorderActive(hex string) {
+	cs := C.CString(hex)
+	// intentionally not freed — C core holds the pointer
+	C.srwm_set_border_active(cs)
+}
+
+func SetBorderInactive(hex string) {
+	cs := C.CString(hex)
+	// intentionally not freed — C core holds the pointer
+	C.srwm_set_border_inactive(cs)
+}
+
+func SetBarBg(hex string) {
+	cs := C.CString(hex)
+	// intentionally not freed — C core holds the pointer
+	C.srwm_set_bar_bg(cs)
+}
+
 func SetWorkspace(idx int, name string) {
 	cs := C.CString(name)
 	// intentionally not freed — C core holds the pointer
