@@ -12,9 +12,5 @@ func RegisterConfigAPI(L *lua.LState, srwmMod *lua.LTable) {
 		return uintProp(L, core.GetBorderPx, core.SetBorderPx)
 	}))
 
-	L.SetField(cfgTable, "gaps", L.NewFunction(func(L *lua.LState) int {
-		return uintProp(L, core.GetGaps, core.SetGaps)
-	}))
-
 	L.SetField(srwmMod, "cfg", cfgTable)
 }

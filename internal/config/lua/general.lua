@@ -7,4 +7,3 @@ srwm.workspaces.set_label("1,2,3")
 
 -- Appearance
 srwm.cfg.borderpx(0)
-srwm.cfg.gaps(0)

@@ -215,7 +215,6 @@ struct Monitor {
   int ty;             /* tab bar geometry */
   int mx, my, mw, mh; /* screen size */
   int wx, wy, ww, wh; /* window area  */
-  int gap;            /* gap value */
   unsigned int borderpx;
   unsigned int colorful_ws;
   CanvasOffset *canvas; /* per-ws canvas offsets, allocated in createmon() */
@@ -396,7 +395,6 @@ extern Window root, wmcheckwin;
 
 /* Config globals */
 extern unsigned int borderpx;
-extern unsigned int gaps;
 extern unsigned int systraypinning;
 extern unsigned int systrayspacing;
 extern int systray_enable;

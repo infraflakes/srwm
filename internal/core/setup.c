@@ -88,7 +88,6 @@ Monitor* createmon(void) {
   m->toptab = toptab;
   m->ntabs = 0;
   memset(m->tab_order, 0, sizeof(m->tab_order));
-  m->gap = gaps;
   m->borderpx = borderpx;
   m->colorful_ws = colorful_ws ? colorful_ws : 0;
   m->prev = NULL;
@@ -499,7 +498,6 @@ int isuniquegeom(XineramaScreenInfo* unique, size_t n,
 
 /* Default configuration fallback values - can be overridden via Lua */
 unsigned int borderpx = 0;
-unsigned int gaps = 0;
 unsigned int systraypinning = 0;
 unsigned int systrayspacing = 2;
 int systray_enable = 1;

@@ -63,7 +63,7 @@ void buttonpress(XEvent *e) {
       click = ClkTabBar;
       arg.i = i;
     } else {
-      x = selmon->ww - 2 * m->gap;
+        x = selmon->ww;
       for (loop = 2; loop >= 0; loop--) {
         x -= selmon->tab_btn_w[loop];
         if (ev->x > x)

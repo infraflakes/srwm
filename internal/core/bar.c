@@ -36,8 +36,8 @@ int drawstatusbar(Monitor* m, int bh, char* stext) {
   text = p;
 
   w += bar_horizontal_padding;
-  ret = x = m->ww - m->gap * 2 - w;
-  x = m->ww - m->gap * 2 - w - getsystraywidth();
+  ret = x = m->ww - w;
+  x = m->ww - w - getsystraywidth();
 
   drw_setscheme(drw, scheme[LENGTH(colors)]);
   drw->scheme[ColFg] = scheme[SchemeNorm][ColFg];
@@ -114,7 +114,7 @@ void drawbar(Monitor* m) {
   int occ[9] = {0}, urg[9] = {0};
 
   XSetForeground(drw->dpy, drw->gc, scheme[SchemeNorm][ColBg].pixel);
-  XFillRectangle(drw->dpy, drw->drawable, drw->gc, 0, 0, m->ww - m->gap * 2, bh);
+  XFillRectangle(drw->dpy, drw->drawable, drw->gc, 0, 0, m->ww, bh);
 
   if (systray_enable && m == systraytomon(m)) stw = getsystraywidth();
 
@@ -148,7 +148,7 @@ void drawbar(Monitor* m) {
   if (sbar_x > 0)
     w = sbar_x - stw - x;
   else
-    w = m->ww - x - stw - 2 * m->gap;
+    w = m->ww - x - stw;
   if (w < 0) w = 0;
   if (w > bh_n) {
     if (m->sel) {
@@ -161,7 +161,7 @@ void drawbar(Monitor* m) {
                 m->sel->ich, m->sel->icon);
     } else {
       drw_setscheme(drw, scheme[SchemeNorm]);
-      drw_rect(drw, x, y, w - m->gap * 2, bh_n, 1, 1);
+      drw_rect(drw, x, y, w, bh_n, 1, 1);
     }
   }
   drw_map(drw, m->barwin, 0, 0, m->ww - stw, bh);
@@ -204,7 +204,7 @@ void drawtab(Monitor* m) {
   int maxsize = bh;
   int x = 0;
   int w = 0;
-  int mw = m->ww - 2 * m->gap;
+  int mw = m->ww;
   buttons_w += TEXTW(btn_prev) - lrpad + tab_tile_inner_padding_horizontal;
   buttons_w += TEXTW(btn_next) - lrpad + tab_tile_inner_padding_horizontal;
   buttons_w += TEXTW(btn_close) - lrpad + tab_tile_inner_padding_horizontal;
@@ -291,7 +291,7 @@ void updatebars(void) {
     w = m->ww;
     if (systray_enable && m == systraytomon(m)) w -= getsystraywidth();
     m->barwin = XCreateWindow(
-        dpy, root, m->wx + m->gap, m->by, w - 2 * m->gap, bh, 0,
+        dpy, root, m->wx, m->by, w, bh, 0,
         DefaultDepth(dpy, screen), CopyFromParent, DefaultVisual(dpy, screen),
         CWOverrideRedirect | CWBackPixmap | CWEventMask, &wa);
     XDefineCursor(dpy, m->barwin, cursor[CurNormal]->cursor);
@@ -301,7 +301,7 @@ void updatebars(void) {
                 PropModeReplace, (unsigned char*)&netatom[NetWMWindowTypeDock], 1);
     if (th > 0) {
     m->tabwin = XCreateWindow(
-        dpy, root, m->wx + m->gap, m->ty, m->ww - 2 * m->gap, th, 0,
+        dpy, root, m->wx, m->ty, m->ww, th, 0,
         DefaultDepth(dpy, screen), CopyFromParent, DefaultVisual(dpy, screen),
         CWOverrideRedirect | CWBackPixmap | CWEventMask, &wa);
     XDefineCursor(dpy, m->tabwin, cursor[CurNormal]->cursor);
@@ -315,9 +315,9 @@ void updatebars(void) {
 }
 
 void resizebarwin(Monitor* m) {
-  unsigned int w = m->ww - 2 * m->gap;
+  unsigned int w = m->ww;
   if (systray_enable && m == systraytomon(m)) w -= getsystraywidth();
-  XMoveResizeWindow(dpy, m->barwin, m->wx + m->gap, m->by, w, bh);
+  XMoveResizeWindow(dpy, m->barwin, m->wx, m->by, w, bh);
 }
 
 void updatestatus(void) {

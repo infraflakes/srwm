@@ -14,14 +14,6 @@ func SetBorderPx(v uint) {
 	C.srwm_set_borderpx(C.uint(v))
 }
 
-func GetGaps() uint {
-	return uint(C.srwm_get_gaps())
-}
-
-func SetGaps(v uint) {
-	C.srwm_set_gaps(C.uint(v))
-}
-
 func GetSystrayPinning() uint {
 	return uint(C.srwm_get_systraypinning())
 }

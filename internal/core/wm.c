@@ -38,15 +38,15 @@ void arrangemon(Monitor* m) {
   if (m->toptab) {
     /* Tab at top of window area */
     m->ty = m->wy;
-    m->wy = m->wy + th + m->gap;
-    m->wh = m->wh - th - m->gap;
+    m->wy = m->wy + th;
+    m->wh = m->wh - th;
   } else {
     /* Tab at bottom of window area */
-    m->wh = m->wh - th - m->gap;
-    m->ty = m->wy + m->wh + m->gap;
+    m->wh = m->wh - th;
+    m->ty = m->wy + m->wh;
   }
-  XMoveResizeWindow(dpy, m->tabwin, m->wx + m->gap, m->ty,
-                    m->ww - 2 * m->gap, th);
+  XMoveResizeWindow(dpy, m->tabwin, m->wx, m->ty,
+                    m->ww, th);
   }
 }
 

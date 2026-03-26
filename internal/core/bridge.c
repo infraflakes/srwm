@@ -127,9 +127,6 @@ void srwm_clear_mousebindings(void) {
 unsigned int srwm_get_borderpx(void) { return borderpx; }
 void srwm_set_borderpx(unsigned int v) { borderpx = v; }
 
-unsigned int srwm_get_gaps(void) { return gaps; }
-void srwm_set_gaps(unsigned int v) { gaps = v; }
-
 unsigned int srwm_get_systraypinning(void) { return systraypinning; }
 void srwm_set_systraypinning(unsigned int v) { systraypinning = v; }
 

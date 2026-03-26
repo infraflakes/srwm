@@ -42,8 +42,8 @@ void togglebar(const Arg* arg) {
     if (!selmon->showbar)
       wc.y = -bh;
     else if (selmon->showbar) {
-      wc.y = selmon->gap;
-      if (!selmon->topbar) wc.y = selmon->mh - bh + selmon->gap;
+      wc.y = 0;
+      if (!selmon->topbar) wc.y = selmon->mh - bh;
     }
     XConfigureWindow(dpy, systray->win, CWY, &wc);
   }

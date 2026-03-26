@@ -7,7 +7,7 @@ void updatesystray(void) {
   XWindowChanges wc;
   Client* i;
   Monitor* m = systraytomon(NULL);
-  unsigned int x = m->mx + m->mw - m->gap;
+  unsigned int x = m->mx + m->mw;
   unsigned int w = 1;
 
   if (!systray_enable) return;

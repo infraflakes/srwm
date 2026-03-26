@@ -46,8 +46,6 @@ extern void srwm_handle_mouse(int id);
 /* Config getters and setters */
 unsigned int srwm_get_borderpx(void);
 void srwm_set_borderpx(unsigned int);
-unsigned int srwm_get_gaps(void);
-void srwm_set_gaps(unsigned int);
 unsigned int srwm_get_systraypinning(void);
 void srwm_set_systraypinning(unsigned int);
 unsigned int srwm_get_systrayspacing(void);
