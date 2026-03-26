@@ -90,7 +90,7 @@ Monitor* createmon(void) {
   memset(m->tab_order, 0, sizeof(m->tab_order));
   m->gap = gaps;
   m->borderpx = borderpx;
-  m->colorful_ws = colorfultag ? colorfultag : 0;
+  m->colorful_ws = colorful_ws ? colorful_ws : 0;
   m->prev = NULL;
   m->current_ws = 0;
   m->previous_ws = 0;
@@ -364,7 +364,7 @@ void setdesktopnames(void) {
 }
 
 void setnumdesktops(void) {
-  long data[] = {TAGSLENGTH};
+  long data[] = {ws_count};
   XChangeProperty(dpy, root, netatom[NetNumberOfDesktops], XA_CARDINAL, 32,
                   PropModeReplace, (unsigned char*)data, 1);
 }
@@ -516,25 +516,25 @@ unsigned int tag_underline_offset_from_bar_bottom = 0;
 int tag_underline_for_all_tags = 0;
 int toptab = 1;
 int topbar = 1;
-int colorfultag = 1;
+int colorful_ws = 1;
 int tag_colorful_occupied_only = 1;
 const char* fonts[] = {"JetBrainsMonoNerdFont:size=13"};
 const char* colors[][3] = {
     [SchemeNorm] = {gray3, black, gray2},
     [SchemeSel] = {gray3, blue, blue},
     [SchemeTitle] = {white, black, black},
+    [SchemeWs] = {gray2, black, black},
+    [SchemeWs1] = {blue, black, black},
+    [SchemeWs2] = {purple, black, black},
+    [SchemeWs3] = {pink, black, black},
+    [SchemeWs4] = {blue, black, black},
+    [SchemeWs5] = {purple, black, black},
+    [SchemeWs6] = {pink, black, black},
+    [SchemeWs7] = {blue, black, black},
+    [SchemeWs8] = {purple, black, black},
+    [SchemeWs9] = {pink, black, black},
     [TabSel] = {black, purple, black},
     [TabNorm] = {gray3, black, black},
-    [SchemeTag] = {gray2, black, black},
-    [SchemeTag1] = {blue, black, black},
-    [SchemeTag2] = {purple, black, black},
-    [SchemeTag3] = {pink, black, black},
-    [SchemeTag4] = {blue, black, black},
-    [SchemeTag5] = {purple, black, black},
-    [SchemeTag6] = {pink, black, black},
-    [SchemeTag7] = {blue, black, black},
-    [SchemeTag8] = {purple, black, black},
-    [SchemeTag9] = {pink, black, black},
     [SchemeBtnPrev] = {green, black, black},
     [SchemeBtnNext] = {yellow, black, black},
     [SchemeBtnClose] = {red, black, black},

@@ -119,19 +119,19 @@ func RegisterBarAPI(L *lua.LState, srwmMod *lua.LTable, configDir string) func()
 	}))
 
 	barTable.RawSetString("tag_underline_padding", L.NewFunction(func(L *lua.LState) int {
-		return uintProp(L, core.GetTagUnderlinePadding, core.SetTagUnderlinePadding)
+		return uintProp(L, core.GetWorkspaceUnderlinePadding, core.SetWorkspaceUnderlinePadding)
 	}))
 
 	barTable.RawSetString("tag_underline_size", L.NewFunction(func(L *lua.LState) int {
-		return uintProp(L, core.GetTagUnderlineSize, core.SetTagUnderlineSize)
+		return uintProp(L, core.GetWorkspaceUnderlineSize, core.SetWorkspaceUnderlineSize)
 	}))
 
 	barTable.RawSetString("tag_underline_offset", L.NewFunction(func(L *lua.LState) int {
-		return uintProp(L, core.GetTagUnderlineOffsetFromBarBottom, core.SetTagUnderlineOffsetFromBarBottom)
+		return uintProp(L, core.GetWorkspaceUnderlineOffsetFromBarBottom, core.SetWorkspaceUnderlineOffsetFromBarBottom)
 	}))
 
 	barTable.RawSetString("tag_underline_all_workspaces", L.NewFunction(func(L *lua.LState) int {
-		return boolProp(L, core.GetTagUnderlineForAllworkspaces, core.SetTagUnderlineForAllworkspaces)
+		return boolProp(L, core.GetWorkspaceUnderlineForAllWorkspaces, core.SetWorkspaceUnderlineForAllWorkspaces)
 	}))
 
 	barTable.RawSetString("theme", L.NewFunction(func(L *lua.LState) int {
@@ -141,7 +141,7 @@ func RegisterBarAPI(L *lua.LState, srwmMod *lua.LTable, configDir string) func()
 	// Nested workspaces table
 	tagTable := L.NewTable()
 	tagTable.RawSetString("highlight_occupied_only", L.NewFunction(func(L *lua.LState) int {
-		core.SetTagColorfulOccupiedOnly(L.CheckBool(1))
+		core.SetWorkspaceColorfulOccupiedOnly(L.CheckBool(1))
 		return 0
 	}))
 	barTable.RawSetString("workspaces", tagTable)
@@ -208,16 +208,16 @@ func luaBarTheme(L *lua.LState, state *barState) int {
 		"normal":       {core.SchemeNorm, -1},
 		"selected":     {core.SchemeSel, -1},
 		"title":        {core.SchemeTitle, -1},
-		"inactive_tag": {core.SchemeTag, -1},
-		"tag_1":        {core.SchemeTag1, 0},
-		"tag_2":        {core.SchemeTag2, 1},
-		"tag_3":        {core.SchemeTag3, 2},
-		"tag_4":        {core.SchemeTag4, 3},
-		"tag_5":        {core.SchemeTag5, 4},
-		"tag_6":        {core.SchemeTag6, 5},
-		"tag_7":        {core.SchemeTag7, 6},
-		"tag_8":        {core.SchemeTag8, 7},
-		"tag_9":        {core.SchemeTag9, 8},
+		"inactive_tag": {core.SchemeWorkspace, -1},
+		"tag_1":        {core.SchemeWorkspace1, 0},
+		"tag_2":        {core.SchemeWorkspace2, 1},
+		"tag_3":        {core.SchemeWorkspace3, 2},
+		"tag_4":        {core.SchemeWorkspace4, 3},
+		"tag_5":        {core.SchemeWorkspace5, 4},
+		"tag_6":        {core.SchemeWorkspace6, 5},
+		"tag_7":        {core.SchemeWorkspace7, 6},
+		"tag_8":        {core.SchemeWorkspace8, 7},
+		"tag_9":        {core.SchemeWorkspace9, 8},
 		"tab_selected": {core.TabSel, -1},
 		"tab_normal":   {core.TabNorm, -1},
 		"button_prev":  {core.SchemeBtnPrev, -1},
@@ -247,7 +247,7 @@ func luaBarTheme(L *lua.LState, state *barState) int {
 
 			// If it's a tag scheme, automatically map the tag to it
 			if info.tagIdx >= 0 {
-				core.Setworkspacescheme(info.tagIdx, scheme)
+				core.SetWorkspaceScheme(info.tagIdx, scheme)
 			}
 			return
 		}

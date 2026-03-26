@@ -107,7 +107,7 @@ func GetWorkspaceUnderlinePadding() uint {
 }
 
 func SetWorkspaceUnderlinePadding(v uint) {
-	C.srwm_set_workspace_underline_padding(C.uint(v))
+	C.srwm_set_ws_underline_padding(C.uint(v))
 }
 
 func GetWorkspaceUnderlineSize() uint {
@@ -115,7 +115,7 @@ func GetWorkspaceUnderlineSize() uint {
 }
 
 func SetWorkspaceUnderlineSize(v uint) {
-	C.srwm_set_workspace_underline_size(C.uint(v))
+	C.srwm_set_ws_underline_size(C.uint(v))
 }
 
 func GetWorkspaceUnderlineOffsetFromBarBottom() uint {
@@ -123,15 +123,15 @@ func GetWorkspaceUnderlineOffsetFromBarBottom() uint {
 }
 
 func SetWorkspaceUnderlineOffsetFromBarBottom(v uint) {
-	C.srwm_set_workspace_underline_offset_from_bar_bottom(C.uint(v))
+	C.srwm_set_ws_underline_offset_from_bar_bottom(C.uint(v))
 }
 
 func GetWorkspaceUnderlineForAllWorkspaces() bool {
-	return C.srwm_get_ws_underline_for_all_tags() != 0
+	return C.srwm_get_ws_underline_for_all() != 0
 }
 
 func SetWorkspaceUnderlineForAllWorkspaces(v bool) {
-	C.srwm_set_workspace_underline_for_all_tags(C.int(b2i(v)))
+	C.srwm_set_ws_underline_for_all(C.int(b2i(v)))
 }
 
 func GetTopTab() bool {

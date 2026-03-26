@@ -38,11 +38,11 @@ func SetColor(scheme Scheme, slot int, hex string) {
 func SetWorkspace(idx int, name string) {
 	cs := C.CString(name)
 	// intentionally not freed — C core holds the pointer
-	C.srwm_set_tag(C.int(idx), cs)
+	C.srwm_set_ws_label(C.int(idx), cs)
 }
 
 func SetWorkspacesLen(len int) {
-	C.srwm_set_tags_len(C.int(len))
+	C.srwm_set_ws_count(C.int(len))
 }
 
 func SetWorkspaceColorfulOccupiedOnly(val bool) {
@@ -50,9 +50,9 @@ func SetWorkspaceColorfulOccupiedOnly(val bool) {
 	if val {
 		ival = 1
 	}
-	C.srwm_set_tag_colorful_occupied_only(C.int(ival))
+	C.srwm_set_ws_colorful_occupied_only(C.int(ival))
 }
 
 func SetWorkspaceScheme(idx int, scheme Scheme) {
-	C.srwm_set_tagscheme(C.int(idx), C.int(scheme))
+	C.srwm_set_ws_scheme(C.int(idx), C.int(scheme))
 }

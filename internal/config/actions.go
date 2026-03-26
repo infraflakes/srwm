@@ -15,11 +15,6 @@ func RegisterActionsAPI(L *lua.LState, srwmMod *lua.LTable) {
 		return 0
 	}))
 
-	L.SetField(windowTable, "toggle_floating", L.NewFunction(func(L *lua.LState) int {
-		core.ActionToggleFloating()
-		return 0
-	}))
-
 	L.SetField(windowTable, "toggle_fullscreen", L.NewFunction(func(L *lua.LState) int {
 		core.ActionToggleFullscreen()
 		return 0
