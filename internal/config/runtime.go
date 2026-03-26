@@ -61,7 +61,7 @@ func runLuaConfig(ctx context.Context) {
 			fullPath = filepath.Join(srwmDir, path)
 		}
 		if err := L.DoFile(fullPath); err != nil {
-			L.RaiseError("%s", "include "+path+": "+err.Error())
+			log.Printf("lua: include %s: %v", path, err)
 		}
 		return 0
 	}))
