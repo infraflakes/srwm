@@ -120,7 +120,7 @@ void drawbar(Monitor* m) {
 
   if (!m->showbar) return;
 
-  /* draw status first so it can be overdrawn by tags later */
+  /* draw status first so it can be overdrawn by workspaces later */
   int sbar_x = 0;
   if (m == selmon) {
     sbar_x = drawstatusbar(m, bh_n, stext);
@@ -132,15 +132,15 @@ void drawbar(Monitor* m) {
     if (c->isurgent) urg[c->ws] = 1;
   }
   x = 0;
-  for (i = 0; i < TAGSLENGTH; i++) {
-    w = TEXTW(tags[i]);
-    int use_colorful = m->colorfultag && (!tag_colorful_occupied_only || occ[i]);
+  for (i = 0; i < WS_COUNT; i++) {
+    w = TEXTW(ws_labels[i]);
+    int use_colorful = m->colorful_ws && (!ws_colorful_occupied_only || occ[i]);
     drw_setscheme(
-        drw, scheme[use_colorful ? tagschemes[i] : (occ[i] ? SchemeSel : SchemeTag)]);
-    drw_text(drw, x, y, w, bh_n, lrpad / 2, tags[i], urg[i]);
-    if (tag_underline_for_all_tags || (int)i == m->current_ws)
-      drw_rect(drw, x + tag_underline_padding, bh_n - tag_underline_size - tag_underline_offset_from_bar_bottom,
-               w - (tag_underline_padding * 2), tag_underline_size, 1, 0);
+        drw, scheme[use_colorful ? ws_schemes[i] : (occ[i] ? SchemeSel : SchemeWs)]);
+    drw_text(drw, x, y, w, bh_n, lrpad / 2, ws_labels[i], urg[i]);
+    if (ws_underline_for_all || (int)i == m->current_ws)
+      drw_rect(drw, x + ws_underline_padding, bh_n - ws_underline_size - ws_underline_offset_from_bar_bottom,
+               w - (ws_underline_padding * 2), ws_underline_size, 1, 0);
     x += w;
   }
 
@@ -411,24 +411,24 @@ Picture geticonprop(Window win, unsigned int* picw, unsigned int* pich) {
   return ret;
 }
 
-int nexttag(void) {
-  return (selmon->current_ws + 1) % TAGSLENGTH;
+int next_ws(void) {
+  return (selmon->current_ws + 1) % WS_COUNT;
 }
 
-int prevtag(void) {
-  return (selmon->current_ws - 1 + TAGSLENGTH) % TAGSLENGTH;
+int prev_ws(void) {
+  return (selmon->current_ws - 1 + WS_COUNT) % WS_COUNT;
 }
 
-void tagtonext(const Arg* arg) {
+void ws_to_next(const Arg* arg) {
   if (!selmon->sel) return;
-  int ws = nexttag();
-  tag(&(const Arg){.i = ws});
+  int ws = next_ws();
+  move_to_ws(&(const Arg){.i = ws});
   view(&(const Arg){.i = ws});
 }
 
-void tagtoprev(const Arg* arg) {
+void ws_to_prev(const Arg* arg) {
   if (!selmon->sel) return;
-  int ws = prevtag();
-  tag(&(const Arg){.i = ws});
+  int ws = prev_ws();
+  move_to_ws(&(const Arg){.i = ws});
   view(&(const Arg){.i = ws});
 }

@@ -10,11 +10,6 @@ func ActionKillClient() {
 	C.srwm_action_killclient()
 }
 
-// ActionToggleFloating toggles the floating state of the currently focused client.
-func ActionToggleFloating() {
-	C.srwm_action_togglefloating()
-}
-
 // ActionToggleFullscreen toggles the fullscreen state of the currently focused client.
 func ActionToggleFullscreen() {
 	C.srwm_action_togglefullscr()
@@ -25,24 +20,54 @@ func ActionFocus(dir int) {
 	C.srwm_action_focusstack(C.int(dir))
 }
 
+// ActionShiftWs shifts the view to the next (+1) or previous (-1) active workspace.
+func ActionShiftWs(dir int) {
+	C.srwm_action_shiftview(C.int(dir))
+}
+
+// ActionMoveToWs moves the currently focused client to the given workspace index (0-based).
+func ActionMoveToWs(ws int) {
+	C.srwm_action_move_to_ws(C.int(ws))
+}
+
+// ActionWsToNext moves the currently focused client to the next workspace.
+func ActionWsToNext() {
+	C.srwm_action_ws_to_next()
+}
+
+// ActionWsToPrev moves the currently focused client to the previous workspace.
+func ActionWsToPrev() {
+	C.srwm_action_ws_to_prev()
+}
+
+// ActionMoveWindowToMonitor moves the currently focused client to the next (+1) or previous (-1) monitor.
+func ActionMoveWindowToMonitor(dir int) {
+	C.srwm_action_move_window_to_monitor(C.int(dir))
+}
+
 // ActionShiftView shifts the view to the next (+1) or previous (-1) active tag.
 func ActionShiftView(dir int) {
 	C.srwm_action_shiftview(C.int(dir))
 }
 
-// ActionTagToPrev moves the currently focused client to the previous tag.
-func ActionTagToPrev() {
-	C.srwm_action_tagtoprev()
+// ActionMoveToWs moves the currently focused client to the given workspace index (0-based).
+func ActionMoveToWs(ws int) {
+	C.srwm_action_move_to_ws(C.int(ws))
 }
 
-// ActionTagToNext moves the currently focused client to the next tag.
-func ActionTagToNext() {
-	C.srwm_action_tagtonext()
+// ActionWsToNext moves the currently focused client to the next workspace.
+func ActionWsToNext() {
+	C.srwm_action_ws_to_next()
 }
 
-// ActionMoveTagToMonitor moves the currently focused client to the next (+1) or previous (-1) monitor.
-func ActionMoveTagToMonitor(dir int) {
-	C.srwm_action_move_tag_to_monitor(C.int(dir))
+// ActionWsToPrev moves the currently focused client to the previous workspace.
+func ActionWsToPrev() {
+	C.srwm_action_ws_to_prev()
+}
+
+// ActionMoveWindowToMonitor moves the currently focused client to the next (+1) or previous (-1) monitor.
+func ActionMoveWindowToMonitor(dir int) {
+	C.srwm_action_move_window_to_monitor(C.int(dir))
 }
 
 // ActionView switches to the given workspace index (0-based).

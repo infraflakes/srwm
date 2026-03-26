@@ -12,16 +12,16 @@ srwm.bar.theme({
 	button_close = { fg = "#d8647e", bg = "#252530", border = "#252530" },
 	tab_normal = { fg = "#cdcdcd", bg = "#252530", border = "#252530" },
 	title = { fg = "#d7d7d7", bg = "#252530", border = "#252530" },
-	inactive_tag = { fg = "#606079", bg = "#252530", border = "#252530" },
-	tag_1 = { fg = "#6e94b2", bg = "#252530", border = "#252530" },
-	tag_2 = { fg = "#aeaed1", bg = "#252530", border = "#252530" },
-	tag_3 = { fg = "#bb9dbd", bg = "#252530", border = "#252530" },
-	tag_4 = { fg = "#aeaed1", bg = "#252530", border = "#252530" },
-	tag_5 = { fg = "#6e94b2", bg = "#252530", border = "#252530" },
-	tag_6 = { fg = "#bb9dbd", bg = "#252530", border = "#252530" },
-	tag_7 = { fg = "#6e94b2", bg = "#252530", border = "#252530" },
-	tag_8 = { fg = "#aeaed1", bg = "#252530", border = "#252530" },
-	tag_9 = { fg = "#bb9dbd", bg = "#252530", border = "#252530" },
+	highlight_occupied_only = { fg = "#606079", bg = "#252530", border = "#252530" },
+	ws_1 = { fg = "#6e94b2", bg = "#252530", border = "#252530" },
+	ws_2 = { fg = "#aeaed1", bg = "#252530", border = "#252530" },
+	ws_3 = { fg = "#bb9dbd", bg = "#252530", border = "#252530" },
+	ws_4 = { fg = "#aeaed1", bg = "#252530", border = "#252530" },
+	ws_5 = { fg = "#6e94b2", bg = "#252530", border = "#252530" },
+	ws_6 = { fg = "#bb9dbd", bg = "#252530", border = "#252530" },
+	ws_7 = { fg = "#6e94b2", bg = "#252530", border = "#252530" },
+	ws_8 = { fg = "#aeaed1", bg = "#252530", border = "#252530" },
+	ws_9 = { fg = "#bb9dbd", bg = "#252530", border = "#252530" },
 
 	-- Widget palette (used as {name} in shell scripts)
 	purple = "#bebeda",
@@ -40,8 +40,8 @@ srwm.bar.theme({
 	pink = "#bb9dbd",
 })
 
--- Tag Preview behavior
-srwm.bar.tags.highlight_occupied_only(true)
+-- Workspace Preview behavior
+srwm.bar.workspaces.highlight_occupied_only(true)
 
 -- Register widget shell scripts (paths are relative to ~/.config/srwm/)
 srwm.bar.widget("brightness", "widgets/brightness.sh")

@@ -102,36 +102,36 @@ func SetTabTileInnerPaddingHorizontal(v int) {
 	C.srwm_set_tab_tile_inner_padding_horizontal(C.int(v))
 }
 
-func GetTagUnderlinePadding() uint {
-	return uint(C.srwm_get_tag_underline_padding())
+func GetWorkspaceUnderlinePadding() uint {
+	return uint(C.srwm_get_ws_underline_padding())
 }
 
-func SetTagUnderlinePadding(v uint) {
-	C.srwm_set_tag_underline_padding(C.uint(v))
+func SetWorkspaceUnderlinePadding(v uint) {
+	C.srwm_set_workspace_underline_padding(C.uint(v))
 }
 
-func GetTagUnderlineSize() uint {
-	return uint(C.srwm_get_tag_underline_size())
+func GetWorkspaceUnderlineSize() uint {
+	return uint(C.srwm_get_ws_underline_size())
 }
 
-func SetTagUnderlineSize(v uint) {
-	C.srwm_set_tag_underline_size(C.uint(v))
+func SetWorkspaceUnderlineSize(v uint) {
+	C.srwm_set_workspace_underline_size(C.uint(v))
 }
 
-func GetTagUnderlineOffsetFromBarBottom() uint {
-	return uint(C.srwm_get_tag_underline_offset_from_bar_bottom())
+func GetWorkspaceUnderlineOffsetFromBarBottom() uint {
+	return uint(C.srwm_get_ws_underline_offset_from_bar_bottom())
 }
 
-func SetTagUnderlineOffsetFromBarBottom(v uint) {
-	C.srwm_set_tag_underline_offset_from_bar_bottom(C.uint(v))
+func SetWorkspaceUnderlineOffsetFromBarBottom(v uint) {
+	C.srwm_set_workspace_underline_offset_from_bar_bottom(C.uint(v))
 }
 
-func GetTagUnderlineForAllTags() bool {
-	return C.srwm_get_tag_underline_for_all_tags() != 0
+func GetWorkspaceUnderlineForAllWorkspaces() bool {
+	return C.srwm_get_ws_underline_for_all_tags() != 0
 }
 
-func SetTagUnderlineForAllTags(v bool) {
-	C.srwm_set_tag_underline_for_all_tags(C.int(b2i(v)))
+func SetWorkspaceUnderlineForAllWorkspaces(v bool) {
+	C.srwm_set_workspace_underline_for_all_tags(C.int(b2i(v)))
 }
 
 func GetTopTab() bool {

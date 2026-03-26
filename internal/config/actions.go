@@ -5,7 +5,7 @@ import (
 	lua "github.com/yuin/gopher-lua"
 )
 
-// RegisterActionsAPI sets up the srwm.window and srwm.tag namespaces.
+// RegisterActionsAPI sets up the srwm.window and srwm.workspace namespaces.
 func RegisterActionsAPI(L *lua.LState, srwmMod *lua.LTable) {
 	// srwm.window namespace
 	windowTable := L.NewTable()
@@ -33,44 +33,44 @@ func RegisterActionsAPI(L *lua.LState, srwmMod *lua.LTable) {
 
 	L.SetField(srwmMod, "window", windowTable)
 
-	// srwm.tag namespace
-	tagTable := L.NewTable()
+	// srwm.workspace namespace
+	wsTable := L.NewTable()
 
-	L.SetField(tagTable, "view_prev", L.NewFunction(func(L *lua.LState) int {
-		core.ActionTagToPrev()
+	L.SetField(wsTable, "view_prev", L.NewFunction(func(L *lua.LState) int {
+		core.ActionWsToPrev()
 		return 0
 	}))
 
-	L.SetField(tagTable, "view_next", L.NewFunction(func(L *lua.LState) int {
-		core.ActionTagToNext()
+	L.SetField(wsTable, "view_next", L.NewFunction(func(L *lua.LState) int {
+		core.ActionWsToNext()
 		return 0
 	}))
 
-	L.SetField(tagTable, "shift_view", L.NewFunction(func(L *lua.LState) int {
+	L.SetField(wsTable, "shift_view", L.NewFunction(func(L *lua.LState) int {
 		dir := L.CheckInt(1)
-		core.ActionShiftView(dir)
+		core.ActionShiftWs(dir)
 		return 0
 	}))
 
-	L.SetField(tagTable, "move_to_monitor", L.NewFunction(func(L *lua.LState) int {
+	L.SetField(wsTable, "move_to_monitor", L.NewFunction(func(L *lua.LState) int {
 		dir := L.CheckInt(1)
-		core.ActionMoveTagToMonitor(dir)
+		core.ActionMoveWindowToMonitor(dir)
 		return 0
 	}))
 
-	L.SetField(tagTable, "view", L.NewFunction(func(L *lua.LState) int {
+	L.SetField(wsTable, "view", L.NewFunction(func(L *lua.LState) int {
 		idx := L.CheckInt(1)
 		core.ActionView(idx - 1) // Lua 1-based to C 0-based
 		return 0
 	}))
 
-	L.SetField(tagTable, "move_window_to", L.NewFunction(func(L *lua.LState) int {
+	L.SetField(wsTable, "move_window_to", L.NewFunction(func(L *lua.LState) int {
 		idx := L.CheckInt(1)
-		core.ActionTag(idx - 1) // Lua 1-based to C 0-based
+		core.ActionMoveToWs(idx - 1) // Lua 1-based to C 0-based
 		return 0
 	}))
 
-	L.SetField(srwmMod, "tag", tagTable)
+	L.SetField(srwmMod, "workspace", wsTable)
 	// srwm.canvas namespace
 	canvasTable := L.NewTable()
 

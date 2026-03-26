@@ -26,42 +26,41 @@ srwm.key.bind("Mod4+Alt", "Up", function()
 end)
 
 --------------------------------------------------------------------------------
--- Tag Management
---------------------------------------------------------------------------------
-
+-- Workspace Management
+-- change workspaces
 srwm.key.bind("Mod4+Alt", "Left", function()
-	srwm.tag.shift_view(-1)
+	srwm.workspace.shift_view(-1)
 end)
 srwm.key.bind("Mod4+Alt", "Right", function()
-	srwm.tag.shift_view(1)
+	srwm.workspace.shift_view(1)
 end)
 srwm.key.bind("Mod4+Ctrl", "Left", function()
-	srwm.tag.view_prev()
+	srwm.workspace.view_prev()
 end)
 srwm.key.bind("Mod4+Ctrl", "Right", function()
-	srwm.tag.view_next()
+	srwm.workspace.view_next()
 end)
 srwm.key.bind("Mod4+Shift", "comma", function()
-	srwm.tag.move_to_monitor(-1)
+	srwm.workspace.move_to_monitor(-1)
 end)
 srwm.key.bind("Mod4+Shift", "period", function()
-	srwm.tag.move_to_monitor(1)
+	srwm.workspace.move_to_monitor(1)
 end)
 
--- View previous tag
+-- View previous workspace
 srwm.key.bind("Mod4", "Tab", function()
-	srwm.tag.view(0)
+	srwm.workspace.view(0)
 end)
 
 -- Workspaces 1-9
 for i = 1, 9 do
 	local key = tostring(i)
 	srwm.key.bind("Mod4", key, function()
-		srwm.tag.view(i)
-	end) -- SUPER + <numbers> to change tags
+		srwm.workspace.view(i)
+	end) -- SUPER + <numbers> to change workspaces
 	srwm.key.bind("Mod4+Shift", key, function()
-		srwm.tag.move_window_to(i)
-	end) -- SUPER + SHIFT + <numbers> to move windows to specified tags
+		srwm.workspace.move_window_to(i)
+	end) -- SUPER + SHIFT + <numbers> to move windows to specified workspaces
 end
 
 --------------------------------------------------------------------------------

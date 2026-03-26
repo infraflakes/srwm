@@ -76,7 +76,7 @@ func runLuaConfig(ctx context.Context) {
 	RegisterActionsAPI(L, srwmMod)
 	control.RegisterAPI(L, srwmMod)
 
-	RegisterTagsAPI(L, srwmMod)
+	RegisterWorkspacesAPI(L, srwmMod)
 
 	log.Printf("lua: executing %s", rcPath)
 	if err := L.DoFile(rcPath); err != nil {

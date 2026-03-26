@@ -313,9 +313,10 @@ void manage(Window w, XWindowAttributes* wa) {
         }
       }
     }
-    if (n > 0) XFree(data);
+  if (n > 0) XFree(data);
   }
-  setclienttagprop(c);
+  
+  setclientwsprop(c);
 
   XSelectInput(dpy, w,
                EnterWindowMask | FocusChangeMask | PropertyChangeMask |
@@ -440,7 +441,7 @@ void sendmon(Client* c, Monitor* m) {
   /* Add to dest tab_order */
   if (ISVISIBLE(c) && m->ntabs < MAXTABS)
     m->tab_order[m->ntabs++] = c;
-  setclienttagprop(c);
+  setclientwsprop(c);
   focus(NULL);
   arrange(NULL);
 }
@@ -452,7 +453,7 @@ void setclientstate(Client* c, long state) {
                   PropModeReplace, (unsigned char*)data, 2);
 }
 
-void setclienttagprop(Client* c) {
+void setclientwsprop(Client* c) {
   long data[] = {(long)c->ws, (long)c->mon->num};
   XChangeProperty(dpy, c->win, netatom[NetClientInfo], XA_CARDINAL, 32,
                   PropModeReplace, (unsigned char*)data, 2);

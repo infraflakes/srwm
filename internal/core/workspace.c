@@ -8,24 +8,26 @@ void view(const Arg* arg) {
     selmon->current_ws = selmon->previous_ws;
     selmon->previous_ws = tmp;
   } else {
-    if (ws < 0 || ws >= TAGSLENGTH) return;
+    if (ws < 0 || ws >= WS_COUNT) return;
     if (ws == selmon->current_ws) return;
     selmon->previous_ws = selmon->current_ws;
     selmon->current_ws = ws;
   }
   if (selmon->showbar != selmon->showbar_per_ws[selmon->current_ws])
     togglebar(NULL);
+  rebuild_tab_order(selmon);
   focus(NULL);
   arrange(selmon);
   publish_canvas_state(selmon);
   updatecurrentdesktop();
 }
 
-void tag(const Arg* arg) {
+void move_to_ws(const Arg* arg) {
   int ws = arg->i;
-  if (!selmon->sel || ws < 0 || ws >= TAGSLENGTH) return;
+  if (!selmon->sel || ws < 0 || ws >= WS_COUNT) return;
   selmon->sel->ws = ws;
-  setclienttagprop(selmon->sel);
+  setclientwsprop(selmon->sel);
+  rebuild_tab_order(selmon);
   focus(NULL);
   arrange(selmon);
 }
@@ -48,19 +50,14 @@ void togglebar(const Arg* arg) {
   arrange(selmon);
 }
 
-void togglefloating(const Arg* arg) {
-  /* No-op in canvas mode — all windows are always floating */
-  return;
-}
-
 void togglefullscr(const Arg* arg) {
   if (selmon->sel) setfullscreen(selmon->sel, !selmon->sel->isfullscreen);
 }
 
 void shiftview(const Arg *arg) {
   int ws = selmon->current_ws + arg->i;
-  if (ws < 0) ws = TAGSLENGTH - 1;
-  else if (ws >= TAGSLENGTH) ws = 0;
+  if (ws < 0) ws = WS_COUNT - 1;
+  else if (ws >= WS_COUNT) ws = 0;
   view(&(Arg){.i = ws});
 }
 
@@ -72,7 +69,7 @@ Monitor* get_neighbor_monitor(int dir) {
   }
 }
 
-void move_tag_to_monitor(const Arg *arg) {
+void move_window_to_monitor(const Arg *arg) {
 	if (!selmon->sel || !mons->next)
 		return;
 	sendmon(selmon->sel, get_neighbor_monitor(arg->i));

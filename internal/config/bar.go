@@ -130,21 +130,21 @@ func RegisterBarAPI(L *lua.LState, srwmMod *lua.LTable, configDir string) func()
 		return uintProp(L, core.GetTagUnderlineOffsetFromBarBottom, core.SetTagUnderlineOffsetFromBarBottom)
 	}))
 
-	barTable.RawSetString("tag_underline_all_tags", L.NewFunction(func(L *lua.LState) int {
-		return boolProp(L, core.GetTagUnderlineForAllTags, core.SetTagUnderlineForAllTags)
+	barTable.RawSetString("tag_underline_all_workspaces", L.NewFunction(func(L *lua.LState) int {
+		return boolProp(L, core.GetTagUnderlineForAllworkspaces, core.SetTagUnderlineForAllworkspaces)
 	}))
 
 	barTable.RawSetString("theme", L.NewFunction(func(L *lua.LState) int {
 		return luaBarTheme(L, state)
 	}))
 
-	// Nested tags table
+	// Nested workspaces table
 	tagTable := L.NewTable()
 	tagTable.RawSetString("highlight_occupied_only", L.NewFunction(func(L *lua.LState) int {
 		core.SetTagColorfulOccupiedOnly(L.CheckBool(1))
 		return 0
 	}))
-	barTable.RawSetString("tags", tagTable)
+	barTable.RawSetString("workspaces", tagTable)
 
 	L.SetField(srwmMod, "bar", barTable)
 
@@ -247,7 +247,7 @@ func luaBarTheme(L *lua.LState, state *barState) int {
 
 			// If it's a tag scheme, automatically map the tag to it
 			if info.tagIdx >= 0 {
-				core.SetTagScheme(info.tagIdx, scheme)
+				core.Setworkspacescheme(info.tagIdx, scheme)
 			}
 			return
 		}

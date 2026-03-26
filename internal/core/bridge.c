@@ -160,17 +160,17 @@ void srwm_set_tab_tile_inner_padding_horizontal(int v) { tab_tile_inner_padding_
 int srwm_get_tab_tile_outer_padding_horizontal(void) { return tab_tile_outer_padding_horizontal; }
 void srwm_set_tab_tile_outer_padding_horizontal(int v) { tab_tile_outer_padding_horizontal = v; }
 
-unsigned int srwm_get_tag_underline_padding(void) { return tag_underline_padding; }
-void srwm_set_tag_underline_padding(unsigned int v) { tag_underline_padding = v; }
+unsigned int srwm_get_ws_underline_padding(void) { return ws_underline_padding; }
+void srwm_set_ws_underline_padding(unsigned int v) { ws_underline_padding = v; }
 
-unsigned int srwm_get_tag_underline_size(void) { return tag_underline_size; }
-void srwm_set_tag_underline_size(unsigned int v) { tag_underline_size = v; }
+unsigned int srwm_get_ws_underline_size(void) { return ws_underline_size; }
+void srwm_set_ws_underline_size(unsigned int v) { ws_underline_size = v; }
 
-unsigned int srwm_get_tag_underline_offset_from_bar_bottom(void) { return tag_underline_offset_from_bar_bottom; }
-void srwm_set_tag_underline_offset_from_bar_bottom(unsigned int v) { tag_underline_offset_from_bar_bottom = v; }
+unsigned int srwm_get_ws_underline_offset_from_bar_bottom(void) { return ws_underline_offset_from_bar_bottom; }
+void srwm_set_ws_underline_offset_from_bar_bottom(unsigned int v) { ws_underline_offset_from_bar_bottom = v; }
 
-int srwm_get_tag_underline_for_all_tags(void) { return tag_underline_for_all_tags; }
-void srwm_set_tag_underline_for_all_tags(int v) { tag_underline_for_all_tags = v; }
+int srwm_get_ws_underline_for_all(void) { return ws_underline_for_all; }
+void srwm_set_ws_underline_for_all(int v) { ws_underline_for_all = v; }
 
 int srwm_get_toptab(void) { return toptab; }
 void srwm_set_toptab(int v) { toptab = v; }
@@ -193,39 +193,38 @@ void srwm_set_color(int scheme, int slot, const char* hex) {
   colors_owned[scheme][slot] = 1;  
 }
 
-extern char* tags[];
-extern int tags_len;
-static int tags_owned[9] = {0};  
-  
-void srwm_set_tag(int idx, const char* name) {  
-  if (idx < 0 || idx >= 9) return;  
-  if (tags_owned[idx])  
-    free(tags[idx]);  
-  tags[idx] = strdup(name);  
-  tags_owned[idx] = 1;  
+extern char* ws_labels[];
+extern int ws_count;
+static int ws_labels_owned[9] = {0};
+
+void srwm_set_ws_label(int idx, const char* name) {
+  if (idx < 0 || idx >= 9) return;
+  if (ws_labels_owned[idx])
+    free(ws_labels[idx]);
+  ws_labels[idx] = strdup(name);
+  ws_labels_owned[idx] = 1;
 }
 
-void srwm_set_tags_len(int len) {
-  if (len >= 0 && len <= 9) tags_len = len;
+void srwm_set_ws_count(int len) {
+  if (len >= 0 && len <= 9) ws_count = len;
 }
 
-extern int tagschemes[];
-void srwm_set_tagscheme(int idx, int scheme_idx) {
-  if (idx >= 0 && idx < 9) tagschemes[idx] = scheme_idx;
+extern int ws_schemes[];
+void srwm_set_ws_scheme(int idx, int scheme_idx) {
+  if (idx >= 0 && idx < 9) ws_schemes[idx] = scheme_idx;
 }
 
 /* srwm_action bindings mapping primitives to internal Arg structs */
 void srwm_action_killclient(void) { killclient(&(Arg){0}); }
-void srwm_action_togglefloating(void) { togglefloating(&(Arg){0}); }
 void srwm_action_togglefullscr(void) { togglefullscr(&(Arg){0}); }
 void srwm_action_focusstack(int dir) { focusstack(&(Arg){.i = dir}); centerwindowoncanvas(&(Arg){0}); }
 void srwm_action_shiftview(int dir) { shiftview(&(Arg){.i = dir}); }
-void srwm_action_tagtoprev(void) { tagtoprev(&(Arg){0}); }
-void srwm_action_tagtonext(void) { tagtonext(&(Arg){0}); }
-void srwm_action_move_tag_to_monitor(int dir) { move_tag_to_monitor(&(Arg){.i = dir}); }
+void srwm_action_ws_to_prev(void) { ws_to_prev(&(Arg){0}); }
+void srwm_action_ws_to_next(void) { ws_to_next(&(Arg){0}); }
+void srwm_action_move_window_to_monitor(int dir) { move_window_to_monitor(&(Arg){.i = dir}); }
 void srwm_action_view(int ws) { view(&(Arg){.i = ws}); }
-void srwm_action_tag(int ws) { tag(&(Arg){.i = ws}); }
-void srwm_set_tag_colorful_occupied_only(int val) {tag_colorful_occupied_only = val;}
+void srwm_action_move_to_ws(int ws) { move_to_ws(&(Arg){.i = ws}); }
+void srwm_set_ws_colorful_occupied_only(int val) {ws_colorful_occupied_only = val;}
 
 void srwm_action_movecanvas(int dir) { movecanvas(&(Arg){.i = dir}); }  
 void srwm_action_homecanvas(void) { homecanvas(&(Arg){0}); }  

@@ -35,10 +35,10 @@ void buttonpress(XEvent *e) {
   if (ev->window == selmon->barwin) {
     i = x = 0;
     do
-      x += TEXTW(tags[i]);
-    while (ev->x >= x && ++i < TAGSLENGTH);
-    if (i < TAGSLENGTH) {
-      click = ClkTagBar;
+      x += TEXTW(ws_labels[i]);
+    while (ev->x >= x && ++i < WS_COUNT);
+    if (i < WS_COUNT) {
+      click = ClkWsBar;
       arg.i = i;
       goto execute_handler;
     }
@@ -86,7 +86,7 @@ execute_handler:
         buttons[i].button == ev->button &&
         CLEANMASK(buttons[i].mask) == CLEANMASK(ev->state))
       buttons[i].func(
-          ((click == ClkTagBar || click == ClkTabBar) && buttons[i].arg.i == 0)
+           ((click == ClkWsBar || click == ClkTabBar) && buttons[i].arg.i == 0)
               ? &arg
               : &buttons[i].arg);
 

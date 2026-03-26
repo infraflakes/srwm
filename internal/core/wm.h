@@ -43,8 +43,8 @@
 #define WIDTH(X) ((X)->w + 2 * (X)->bw)
 #define HEIGHT(X) ((X)->h + 2 * (X)->bw)
 
-extern int tags_len;
-#define TAGSLENGTH (tags_len)
+extern int ws_count;
+#define WS_COUNT (ws_count)
 #define TEXTW(X) (drw_fontset_getwidth(drw, (X)) + lrpad)
 #define MAXTABS 50
 
@@ -70,16 +70,16 @@ enum {
   SchemeNorm,
   SchemeSel,
   SchemeTitle,
-  SchemeTag,
-  SchemeTag1,
-  SchemeTag2,
-  SchemeTag3,
-  SchemeTag4,
-  SchemeTag5,
-  SchemeTag6,
-  SchemeTag7,
-  SchemeTag8,
-  SchemeTag9,
+  SchemeWs,
+  SchemeWs1,
+  SchemeWs2,
+  SchemeWs3,
+  SchemeWs4,
+  SchemeWs5,
+  SchemeWs6,
+  SchemeWs7,
+  SchemeWs8,
+  SchemeWs9,
   TabSel,
   TabNorm,
   SchemeBtnPrev,
@@ -122,7 +122,7 @@ enum {
   WMLast
 }; /* default atoms */
 enum {
-  ClkTagBar,
+  ClkWsBar,
   ClkTabBar,
   ClkTabPrev,
   ClkTabNext,
@@ -217,9 +217,9 @@ struct Monitor {
   int wx, wy, ww, wh; /* window area  */
   int gap;            /* gap value */
   unsigned int borderpx;
-  unsigned int colorfultag;
-  CanvasOffset *canvas; /* per-tag canvas offsets, allocated in createmon() */
-  float canvas_zoom;      /* global zoom level, shared across all tags */
+  unsigned int colorful_ws;
+  CanvasOffset *canvas; /* per-ws canvas offsets, allocated in createmon() */
+  float canvas_zoom;      /* global zoom level, shared across all workspaces */
   int showbar;
   int topbar, toptab;
   Client *clients;
@@ -254,7 +254,7 @@ Monitor *createmon(void);
 void destroynotify(XEvent *e);
 void detach(Client *c);
 Monitor *get_neighbor_monitor(int dir);
-void move_tag_to_monitor(const Arg *arg);
+void move_window_to_monitor(const Arg *arg);
 void drawbar(Monitor *m);
 void drawbars(void);
 int drawstatusbar(Monitor *m, int bh, char *text);
@@ -298,7 +298,7 @@ int sendevent(Window w, Atom proto, int m, long d0, long d1, long d2, long d3,
               long d4);
 void sendmon(Client *c, Monitor *m);
 void setclientstate(Client *c, long state);
-void setclienttagprop(Client *c);
+void setclientwsprop(Client *c);
 void setcurrentdesktop(void);
 void setdesktopnames(void);
 void setfocus(Client *c);
@@ -309,9 +309,8 @@ void setviewport(void);
 void seturgent(Client *c, int urg);
 void showhide(Monitor *m);
 Monitor *systraytomon(Monitor *m);
-void tag(const Arg *arg);
+void move_to_ws(const Arg *arg);
 void togglebar(const Arg *arg);
-void togglefloating(const Arg *arg);
 void togglefullscr(const Arg *arg);
 void freeicon(Client *c);
 void unfocus(Client *c, int setfocus);
@@ -359,10 +358,10 @@ void win_ht_insert(Window w, Client *c);
 void win_ht_remove(Window w);
 
 /* From bar.c */
-void tagtonext(const Arg *arg);
-void tagtoprev(const Arg *arg);
-int nexttag(void);
-int prevtag(void);
+void ws_to_next(const Arg *arg);
+void ws_to_prev(const Arg *arg);
+int next_ws(void);
+int prev_ws(void);
 
 /* From setup.c */
 int isuniquegeom(XineramaScreenInfo *unique, size_t n,
@@ -408,16 +407,16 @@ extern int tab_height;
 extern int tab_tile_vertical_padding;
 extern int tab_tile_inner_padding_horizontal;
 extern int tab_tile_outer_padding_horizontal;
-extern unsigned int tag_underline_padding;
-extern unsigned int tag_underline_size;
-extern unsigned int tag_underline_offset_from_bar_bottom;
-extern int tag_underline_for_all_tags;
+extern unsigned int ws_underline_padding;
+extern unsigned int ws_underline_size;
+extern unsigned int ws_underline_offset_from_bar_bottom;
+extern int ws_underline_for_all;
 extern int toptab;
 extern int topbar;
-extern int colorfultag;
-extern int tag_colorful_occupied_only;
-extern char *tags[];
-extern int tagschemes[];
+extern int colorful_ws;
+extern int ws_colorful_occupied_only;
+extern char *ws_labels[];
+extern int ws_schemes[];
 extern const char *colors[18][3]; // 18 = SchemeBtnClose + 1
 extern const char *fonts[1];
 extern const Button buttons[];

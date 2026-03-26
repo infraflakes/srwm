@@ -88,9 +88,9 @@ Monitor* createmon(void) {
   m->toptab = toptab;
   m->ntabs = 0;
   memset(m->tab_order, 0, sizeof(m->tab_order));
-  m->colorfultag = colorfultag ? colorfultag : 0;
   m->gap = gaps;
   m->borderpx = borderpx;
+  m->colorful_ws = colorfultag ? colorfultag : 0;
   m->prev = NULL;
   m->current_ws = 0;
   m->previous_ws = 0;
@@ -354,9 +354,9 @@ void setcurrentdesktop(void) {
 }
 void setdesktopnames(void) {
   XTextProperty text;
-  if (Xutf8TextListToTextProperty(dpy, tags, TAGSLENGTH, XUTF8StringStyle, &text) != Success) {
+  if (Xutf8TextListToTextProperty(dpy, ws_labels, WS_COUNT, XUTF8StringStyle, &text) != Success) {
     /* Fallback for static musl builds where locale/Xutf8 support is unavailable */
-    if (!XStringListToTextProperty(tags, TAGSLENGTH, &text))
+    if (!XStringListToTextProperty(ws_labels, WS_COUNT, &text))
       return;
   }
   XSetTextProperty(dpy, root, &text, netatom[NetDesktopNames]);
@@ -539,19 +539,19 @@ const char* colors[][3] = {
     [SchemeBtnNext] = {yellow, black, black},
     [SchemeBtnClose] = {red, black, black},
 };
-char* tags[9] = {"1", "2", "3", "4", "5", "6", "7", "8", "9"};
-int tags_len = 5;
-int tagschemes[9] = {SchemeTag1, SchemeTag2, SchemeTag3,
-                     SchemeTag4, SchemeTag5, SchemeTag6,
-                     SchemeTag7, SchemeTag8, SchemeTag9};
+char* ws_labels[9] = {"1", "2", "3", "4", "5", "6", "7", "8", "9"};
+int ws_count = 5;
+int ws_schemes[9] = {SchemeWs1, SchemeWs2, SchemeWs3,
+                     SchemeWs4, SchemeWs5, SchemeWs6,
+                     SchemeWs7, SchemeWs8, SchemeWs9};
 
 /* button definitions */
 const Button buttons[] = {
     {ClkRootWin, MODKEY, Button1, manuallymovecanvas, {0}},  // drag canvas on blank desktop
     {ClkClientWin, MODKEY, Button1, movemouse, {.i = 0}},
     {ClkClientWin, MODKEY, Button3, resizemouse, {0}},
-    {ClkTagBar, 0, Button1, view, {0}},
-    {ClkTagBar, MODKEY, Button1, tag, {0}},
+    {ClkWsBar, 0, Button1, view, {0}},
+    {ClkWsBar, MODKEY, Button1, move_to_ws, {0}},
     {ClkTabBar, 0, Button1, focuswin, {0}},
     {ClkTabPrev, 0, Button1, movestack, {.i = -1}},
     {ClkTabNext, 0, Button1, movestack, {.i = +1}},
