@@ -87,6 +87,7 @@ Monitor* createmon(void) {
   m->topbar = topbar;
   m->toptab = toptab;
   m->ntabs = 0;
+  memset(m->tab_order, 0, sizeof(m->tab_order));
   m->colorfultag = colorfultag ? colorfultag : 0;
   m->gap = gaps;
   m->borderpx = borderpx;
@@ -94,7 +95,6 @@ Monitor* createmon(void) {
   m->current_ws = 0;
   m->previous_ws = 0;
   for (int i = 0; i < 9; i++) m->showbar_per_ws[i] = showbar;
-  m->canvas_mode = 1;
   m->canvas = ecalloc(9, sizeof(CanvasOffset)); /* one per tag, max 9 */
   m->canvas_zoom = 1.0f;
 
@@ -209,8 +209,7 @@ void run(void) {
   XSync(dpy, False);
   while (running) {
     // Check if we need continuous auto-pan
-    int need_autopan = selmon && selmon->canvas_mode &&
-                       selmon->canvas_zoom < 1.0f;
+    int need_autopan = selmon && selmon->canvas_zoom < 1.0f;
 
     if (need_autopan && !XPending(dpy)) {
       fd_set fds;
@@ -550,7 +549,6 @@ int tagschemes[9] = {SchemeTag1, SchemeTag2, SchemeTag3,
 const Button buttons[] = {
     {ClkRootWin, MODKEY, Button1, manuallymovecanvas, {0}},  // drag canvas on blank desktop
     {ClkClientWin, MODKEY, Button1, movemouse, {.i = 0}},
-    {ClkClientWin, MODKEY, Button2, togglefloating, {0}},
     {ClkClientWin, MODKEY, Button3, resizemouse, {0}},
     {ClkTagBar, 0, Button1, view, {0}},
     {ClkTagBar, MODKEY, Button1, tag, {0}},

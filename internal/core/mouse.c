@@ -70,7 +70,7 @@ void movemouse(const Arg* arg) {
         nx = ocx + (ev.xmotion.x - x);
         ny = ocy + (ev.xmotion.y - y);
 
-        if (c->isfloating) resize(c, nx, ny, c->w, c->h, 1);
+        resize(c, nx, ny, c->w, c->h, 1);
         break;
       case ButtonRelease:
         got_release = 1;
@@ -147,7 +147,7 @@ void resizemouse(const Arg* arg) {
         nw = MAX(ev.xmotion.x - ocx - 2 * c->bw + 1, 1);
         nh = MAX(ev.xmotion.y - ocy - 2 * c->bw + 1, 1);
 
-        if (c->isfloating) resize(c, c->x, c->y, nw, nh, 1);
+        resize(c, c->x, c->y, nw, nh, 1);
         break;
       case ButtonRelease:
         got_release = 1;

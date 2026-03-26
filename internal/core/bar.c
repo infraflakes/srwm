@@ -110,8 +110,6 @@ int drawstatusbar(Monitor* m, int bh, char* stext) {
 void drawbar(Monitor* m) {
   int x, y = 0, w, stw = 0;
   int bh_n = bh;
-  int boxs = drw->fonts->h / 9;
-  int boxw = drw->fonts->h / 6 + 2;
   unsigned int i;
   int occ[9] = {0}, urg[9] = {0};
 
@@ -161,8 +159,6 @@ void drawbar(Monitor* m) {
       if (m->sel->icon)
         drw_pic(drw, x + lrpad / 2, (bh - m->sel->ich) / 2, m->sel->icw,
                 m->sel->ich, m->sel->icon);
-      if (m->sel->isfloating)
-        drw_rect(drw, x + boxs, boxs, boxw, boxw, m->sel->isfixed, 0);
     } else {
       drw_setscheme(drw, scheme[SchemeNorm]);
       drw_rect(drw, x, y, w - m->gap * 2, bh_n, 1, 1);
@@ -191,12 +187,9 @@ void drawtab(Monitor* m) {
   if (th <= 0) return;
   Client* c;
   int i;
-  int nvis = 0;
-  for (c = m->clients; c; c = c->next)
-    if (ISVISIBLE(c)) ++nvis;
 
   /* Hide tab bar when no windows, show when there are windows */
-  if (nvis == 0) {
+  if (m->ntabs == 0) {
     XUnmapWindow(dpy, m->tabwin);
     return;
   }
@@ -217,15 +210,12 @@ void drawtab(Monitor* m) {
   buttons_w += TEXTW(btn_close) - lrpad + tab_tile_inner_padding_horizontal;
   tot_width = buttons_w;
 
-  /* Calculates number of labels and their width */
-  m->ntabs = 0;
-  for (c = m->clients; c; c = c->next) {
-    if (!ISVISIBLE(c)) continue;
-    m->tab_widths[m->ntabs] =
+  /* Calculate widths - ntabs is maintained by rebuild_tab_order/manage/unmanage */
+  for (i = 0; i < m->ntabs; i++) {
+    c = m->tab_order[i];
+    m->tab_widths[i] =
         MIN(TEXTW(c->name) - lrpad + tab_tile_outer_padding_horizontal + tab_tile_inner_padding_horizontal, 250);
-    tot_width += m->tab_widths[m->ntabs];
-    ++m->ntabs;
-    if (m->ntabs >= MAXTABS) break;
+    tot_width += m->tab_widths[i];
   }
 
   if (tot_width > mw) {  // not enough space to display the labels, they need to be truncated
@@ -241,21 +231,17 @@ void drawtab(Monitor* m) {
   } else {
     maxsize = mw;
   }
-  i = 0;
-
   /* cleans window */
   drw_setscheme(drw, scheme[TabNorm]);
   drw_rect(drw, 0, 0, mw, th, 1, 1);
 
-  for (c = m->clients; c; c = c->next) {
-    if (!ISVISIBLE(c)) continue;
-    if (i >= m->ntabs) break;
+  for (i = 0; i < m->ntabs; i++) {
+    c = m->tab_order[i];
     if (m->tab_widths[i] > maxsize) m->tab_widths[i] = maxsize;
     w = m->tab_widths[i];
     drw_setscheme(drw, scheme[(c == m->sel) ? TabSel : TabNorm]);
     drw_text(drw, x + tab_tile_inner_padding_horizontal / 2, tab_tile_vertical_padding / 2, w - tab_tile_outer_padding_horizontal, th - tab_tile_vertical_padding, tab_tile_outer_padding_horizontal / 2, c->name, 0);
     x += w;
-    ++i;
   }
 
   w = mw - buttons_w - x;
@@ -425,11 +411,11 @@ Picture geticonprop(Window win, unsigned int* picw, unsigned int* pich) {
   return ret;
 }
 
-unsigned int nexttag(void) {
+int nexttag(void) {
   return (selmon->current_ws + 1) % TAGSLENGTH;
 }
 
-unsigned int prevtag(void) {
+int prevtag(void) {
   return (selmon->current_ws - 1 + TAGSLENGTH) % TAGSLENGTH;
 }
 

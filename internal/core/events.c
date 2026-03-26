@@ -52,20 +52,16 @@ void buttonpress(XEvent *e) {
   if (ev->window == selmon->tabwin) {
     i = 0;
     x = 0;
-    for (c = selmon->clients; c; c = c->next) {
-      if (!ISVISIBLE(c))
-        continue;
-      x += selmon->tab_widths[i];
+    for (int j = 0; j < selmon->ntabs; j++) {
+      x += selmon->tab_widths[j];
       if (ev->x > x)
         ++i;
       else
         break;
-      if (i >= m->ntabs)
-        break;
     }
-    if (c && ev->x <= x) {
+    if (i < selmon->ntabs) {
       click = ClkTabBar;
-      arg.ui = i;
+      arg.i = i;
     } else {
       x = selmon->ww - 2 * m->gap;
       for (loop = 2; loop >= 0; loop--) {
@@ -130,10 +126,7 @@ void clientmessage(XEvent *e) {
       c->h = c->oldh = wa.height;
       c->oldbw = wa.border_width;
       c->bw = 0;
-      c->isfloating = True;
-      /* reuse ws field as mapped status */
       c->ws = 0;
-      updatesizehints(c);
       updatesystrayicongeom(c, wa.width, wa.height);
       XAddToSaveSet(dpy, c->win);
       XSelectInput(dpy, c->win,
@@ -213,35 +206,32 @@ void configurerequest(XEvent *e) {
   if ((c = wintoclient(ev->window))) {
     if (ev->value_mask & CWBorderWidth)
       c->bw = ev->border_width;
-    else if (c->isfloating) {
-      m = c->mon;
-      if (ev->value_mask & CWX) {
-        c->oldx = c->x;
-        c->x = m->mx + ev->x;
-      }
-      if (ev->value_mask & CWY) {
-        c->oldy = c->y;
-        c->y = m->my + ev->y;
-      }
-      if (ev->value_mask & CWWidth) {
-        c->oldw = c->w;
-        c->w = ev->width;
-      }
-      if (ev->value_mask & CWHeight) {
-        c->oldh = c->h;
-        c->h = ev->height;
-      }
-      if ((c->x + c->w) > m->mx + m->mw && c->isfloating)
-        c->x = m->mx + (m->mw / 2 - WIDTH(c) / 2); /* center in x direction */
-      if ((c->y + c->h) > m->my + m->mh && c->isfloating)
-        c->y = m->my + (m->mh / 2 - HEIGHT(c) / 2); /* center in y direction */
-      if ((ev->value_mask & (CWX | CWY)) &&
-          !(ev->value_mask & (CWWidth | CWHeight)))
-        configure(c);
-      if (ISVISIBLE(c))
-        XMoveResizeWindow(dpy, c->win, c->x, c->y, c->w, c->h);
-    } else
+    m = c->mon;
+    if (ev->value_mask & CWX) {
+      c->oldx = c->x;
+      c->x = m->mx + ev->x;
+    }
+    if (ev->value_mask & CWY) {
+      c->oldy = c->y;
+      c->y = m->my + ev->y;
+    }
+    if (ev->value_mask & CWWidth) {
+      c->oldw = c->w;
+      c->w = ev->width;
+    }
+    if (ev->value_mask & CWHeight) {
+      c->oldh = c->h;
+      c->h = ev->height;
+    }
+    if ((c->x + c->w) > m->mx + m->mw)
+      c->x = m->mx + (m->mw / 2 - WIDTH(c) / 2); /* center in x direction */
+    if ((c->y + c->h) > m->my + m->mh)
+      c->y = m->my + (m->mh / 2 - HEIGHT(c) / 2); /* center in y direction */
+    if ((ev->value_mask & (CWX | CWY)) &&
+        !(ev->value_mask & (CWWidth | CWHeight)))
       configure(c);
+    if (ISVISIBLE(c))
+      XMoveResizeWindow(dpy, c->win, c->x, c->y, c->w, c->h);
   } else {
     wc.x = ev->x;
     wc.y = ev->y;
@@ -367,12 +357,10 @@ void motionnotify(XEvent *e) {
 
 void propertynotify(XEvent *e) {
   Client *c;
-  Window trans;
   XPropertyEvent *ev = &e->xproperty;
 
   if ((c = wintosystrayicon(ev->window))) {
     if (ev->atom == XA_WM_NORMAL_HINTS) {
-      updatesizehints(c);
       updatesystrayicongeom(c, c->w, c->h);
     } else
       updatesystrayiconstate(c, ev);
@@ -386,14 +374,6 @@ void propertynotify(XEvent *e) {
   else if ((c = wintoclient(ev->window))) {
     switch (ev->atom) {
     default:
-      break;
-    case XA_WM_TRANSIENT_FOR:
-      if (!c->isfloating && (XGetTransientForHint(dpy, c->win, &trans)) &&
-          (c->isfloating = (wintoclient(trans)) != NULL))
-        arrange(c->mon);
-      break;
-    case XA_WM_NORMAL_HINTS:
-      c->hintsvalid = 0;
       break;
     case XA_WM_HINTS:
       updatewmhints(c);

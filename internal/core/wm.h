@@ -311,6 +311,7 @@ void showhide(Monitor *m);
 Monitor *systraytomon(Monitor *m);
 void tag(const Arg *arg);
 void togglebar(const Arg *arg);
+void togglefloating(const Arg *arg);
 void togglefullscr(const Arg *arg);
 void freeicon(Client *c);
 void unfocus(Client *c, int setfocus);
@@ -360,8 +361,8 @@ void win_ht_remove(Window w);
 /* From bar.c */
 void tagtonext(const Arg *arg);
 void tagtoprev(const Arg *arg);
-unsigned int nexttag(void);
-unsigned int prevtag(void);
+int nexttag(void);
+int prevtag(void);
 
 /* From setup.c */
 int isuniquegeom(XineramaScreenInfo *unique, size_t n,
