@@ -135,20 +135,16 @@ void setfocus(Client* c) {
 }
 
 void focusstack(const Arg* arg) {
-  Client *c = NULL, *i;
+  if (!selmon->sel || selmon->ntabs < 2) return;
 
-  if (!selmon->sel) return;
-  if (arg->i > 0) {
-    for (c = selmon->sel->next; c && (!ISVISIBLE(c) || !c->ismapped); c = c->next);
-    if (!c)
-      for (c = selmon->clients; c && (!ISVISIBLE(c) || !c->ismapped); c = c->next);
-  } else {
-    for (i = selmon->clients; i != selmon->sel; i = i->next)
-      if (ISVISIBLE(i) && i->ismapped) c = i;
-    if (!c)
-      for (; i; i = i->next)
-        if (ISVISIBLE(i) && i->ismapped) c = i;
+  int idx = -1;
+  for (int i = 0; i < selmon->ntabs; i++) {
+    if (selmon->tab_order[i] == selmon->sel) { idx = i; break; }
   }
+  if (idx < 0) return;
+
+  int target = (idx + arg->i + selmon->ntabs) % selmon->ntabs;
+  Client *c = selmon->tab_order[target];
   if (c) {
     focus(c);
     restack(selmon);

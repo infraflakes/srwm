@@ -12,7 +12,7 @@ srwm.bar.theme({
 	button_close = { fg = "#d8647e", bg = "#252530", border = "#252530" },
 	tab_normal = { fg = "#cdcdcd", bg = "#252530", border = "#252530" },
 	title = { fg = "#d7d7d7", bg = "#252530", border = "#252530" },
-	highlight_occupied_only = { fg = "#606079", bg = "#252530", border = "#252530" },
+	inactive_ws = { fg = "#606079", bg = "#252530", border = "#252530" },
 	ws_1 = { fg = "#6e94b2", bg = "#252530", border = "#252530" },
 	ws_2 = { fg = "#aeaed1", bg = "#252530", border = "#252530" },
 	ws_3 = { fg = "#bb9dbd", bg = "#252530", border = "#252530" },
