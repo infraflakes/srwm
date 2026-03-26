@@ -349,7 +349,7 @@ void manage(Window w, XWindowAttributes* wa) {
   arrange(c->mon);
   XMapWindow(dpy, c->win);
   c->ismapped = 1;
-  focus(NULL);
+  focus(c);
 }
 
 void movestack(const Arg *arg) {
