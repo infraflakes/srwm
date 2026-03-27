@@ -64,8 +64,6 @@ void buttonpress(XEvent *e) {
     click = ClkClientWin;
   }
 
-execute_handler:
-
   for (i = 0; i < buttons_len; i++)
     if (click == buttons[i].click && buttons[i].func &&
         buttons[i].button == ev->button &&
@@ -82,6 +80,7 @@ execute_handler:
 }
 
 void clientmessage(XEvent *e) {
+  XClientMessageEvent *cme = &e->xclient;
   Client *c = wintoclient(cme->window);
 
   if (!c)
@@ -236,6 +235,8 @@ void mappingnotify(XEvent *e) {
 }
 
 void maprequest(XEvent *e) {
+  static XWindowAttributes wa;
+  XMapRequestEvent *ev = &e->xmaprequest;
   if (!XGetWindowAttributes(dpy, ev->window, &wa) || wa.override_redirect)
     return;
   if (!wintoclient(ev->window))
@@ -266,9 +267,7 @@ void propertynotify(XEvent *e) {
   Client *c;
   XPropertyEvent *ev = &e->xproperty;
 
-  if ((ev->window == root) && (ev->atom == XA_WM_NAME))
-    updatestatus();
-  else if (ev->state == PropertyDelete)
+  if (ev->state == PropertyDelete)
     return; /* ignore */
   else if ((c = wintoclient(ev->window))) {
     switch (ev->atom) {

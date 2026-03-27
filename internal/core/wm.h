@@ -213,6 +213,7 @@ Monitor *get_neighbor_monitor(int dir);
 void move_window_to_monitor(const Arg *arg);
 void drawtab(Monitor *m);
 void drawtabs(void);
+void updatebars(void);
 void enternotify(XEvent *e);
 void expose(XEvent *e);
 void focus(Client *c);
@@ -301,6 +302,9 @@ void win_ht_remove(Window w);
 /* From bar.c */
 void ws_to_next(const Arg *arg);
 void ws_to_prev(const Arg *arg);
+void togglefullscr(const Arg *arg);
+void shiftview(const Arg *arg);
+void focusstack(const Arg *arg);
 int next_ws(void);
 int prev_ws(void);
 

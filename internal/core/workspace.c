@@ -13,8 +13,6 @@ void view(const Arg* arg) {
     selmon->previous_ws = selmon->current_ws;
     selmon->current_ws = ws;
   }
-  if (selmon->showbar != selmon->showbar_per_ws[selmon->current_ws])
-    togglebar(NULL);
   rebuild_tab_order(selmon);
   focus(NULL);
   arrange(selmon);
@@ -29,24 +27,6 @@ void move_to_ws(const Arg* arg) {
   setclientwsprop(selmon->sel);
   rebuild_tab_order(selmon);
   focus(NULL);
-  arrange(selmon);
-}
-
-void togglebar(const Arg* arg) {
-  selmon->showbar = !selmon->showbar;
-  selmon->showbar_per_ws[selmon->current_ws] = selmon->showbar;
-  updatebarpos(selmon);
-  resizebarwin(selmon);
-  if (systray_enable) {
-    XWindowChanges wc;
-    if (!selmon->showbar)
-      wc.y = -bh;
-    else if (selmon->showbar) {
-      wc.y = 0;
-      if (!selmon->topbar) wc.y = selmon->mh - bh;
-    }
-    XConfigureWindow(dpy, systray->win, CWY, &wc);
-  }
   arrange(selmon);
 }
 

@@ -3,12 +3,9 @@
 
 int screen;  
 int sw, sh;  
-int bh;  
-int th = 0;  
-int lrpad;  
 int (*xerrorxlib)(Display*, XErrorEvent*);  
 unsigned int numlockmask = 0;  
-Atom wmatom[WMLast], netatom[NetLast], xatom[XLast];  
+Atom wmatom[WMLast], netatom[NetLast];  
 int running = 1;  
 Cur* cursor[CurLast];  
 Clr **scheme;
@@ -24,7 +21,6 @@ int dbuttons_len = 0;
 /* Dedicated color globals */
 Clr border_active;
 Clr border_inactive;
-Clr bar_bg;
 
 void checkotherwm(void) {
   xerrorxlib = XSetErrorHandler(xerrorstart);
@@ -43,12 +39,6 @@ void cleanup(void) {
     while (m->clients) unmanage(m->clients, 0);
   XUngrabKey(dpy, AnyKey, AnyModifier, root);
   while (mons) cleanupmon(mons);
-  if (systray_enable) {
-    XUnmapWindow(dpy, systray->win);
-    XDestroyWindow(dpy, systray->win);
-    free(systray);
-    systray = NULL;
-  }
   for (i = 0; i < CurLast; i++) drw_cur_free(drw, cursor[i]);
   for (i = 0; i < LENGTH(colors) + 1; i++) free(scheme[i]);
   free(scheme);
@@ -74,11 +64,9 @@ void cleanupmon(Monitor* mon) {
     m->next = mon->next;
     if (m->next) m->next->prev = m;
   }
-  XUnmapWindow(dpy, mon->barwin);
-  XDestroyWindow(dpy, mon->barwin);
   if (mon->tabwin) {
-  XUnmapWindow(dpy, mon->tabwin);
-  XDestroyWindow(dpy, mon->tabwin);
+    XUnmapWindow(dpy, mon->tabwin);
+    XDestroyWindow(dpy, mon->tabwin);
   }
   free(mon->canvas);
   free(mon);
@@ -88,17 +76,13 @@ Monitor* createmon(void) {
   Monitor* m;
 
   m = ecalloc(1, sizeof(Monitor));
-  m->showbar = showbar;
-  m->topbar = topbar;
   m->toptab = toptab;
   m->ntabs = 0;
   memset(m->tab_order, 0, sizeof(m->tab_order));
   m->borderpx = borderpx;
-  m->colorful_ws = colorful_ws ? colorful_ws : 0;
   m->prev = NULL;
   m->current_ws = 0;
   m->previous_ws = 0;
-  for (int i = 0; i < 9; i++) m->showbar_per_ws[i] = showbar;
   m->canvas = ecalloc(9, sizeof(CanvasOffset)); /* one per ws, max 9 */
   m->canvas_zoom = 1.0f;
 
@@ -119,9 +103,7 @@ void setup(void) {
   if (!drw_fontset_create(drw, fonts, LENGTH(fonts)))
     die("no fonts could be loaded.");
   lrpad = drw->fonts->h;
-  bh = drw->fonts->h + 2 + bar_vertical_padding;
   th = tab_height;
-  // bh_n = tab_height;
   updategeom();
   /* init atoms */
   utf8string = XInternAtom(dpy, "UTF8_STRING", False);
@@ -131,12 +113,6 @@ void setup(void) {
   wmatom[WMTakeFocus] = XInternAtom(dpy, "WM_TAKE_FOCUS", False);
   netatom[NetActiveWindow] = XInternAtom(dpy, "_NET_ACTIVE_WINDOW", False);
   netatom[NetSupported] = XInternAtom(dpy, "_NET_SUPPORTED", False);
-  netatom[NetSystemTray] = XInternAtom(dpy, "_NET_SYSTEM_TRAY_S0", False);
-  netatom[NetSystemTrayOP] = XInternAtom(dpy, "_NET_SYSTEM_TRAY_OPCODE", False);
-  netatom[NetSystemTrayOrientation] =
-      XInternAtom(dpy, "_NET_SYSTEM_TRAY_ORIENTATION", False);
-  netatom[NetSystemTrayOrientationHorz] =
-      XInternAtom(dpy, "_NET_SYSTEM_TRAY_ORIENTATION_HORZ", False);
   netatom[NetWMName] = XInternAtom(dpy, "_NET_WM_NAME", False);
   netatom[NetWMIcon] = XInternAtom(dpy, "_NET_WM_ICON", False);
   netatom[NetWMState] = XInternAtom(dpy, "_NET_WM_STATE", False);
@@ -147,11 +123,14 @@ void setup(void) {
   netatom[NetWMWindowTypeDialog] =
       XInternAtom(dpy, "_NET_WM_WINDOW_TYPE_DIALOG", False);
   netatom[NetWMWindowTypeDock] =
-    XInternAtom(dpy, "_NET_WM_WINDOW_TYPE_DOCK", False);
+      XInternAtom(dpy, "_NET_WM_WINDOW_TYPE_DOCK", False);
   netatom[NetClientList] = XInternAtom(dpy, "_NET_CLIENT_LIST", False);
-  xatom[Manager] = XInternAtom(dpy, "MANAGER", False);
-  xatom[Xembed] = XInternAtom(dpy, "_XEMBED", False);
-  xatom[XembedInfo] = XInternAtom(dpy, "_XEMBED_INFO", False);
+  netatom[NetDesktopNames] = XInternAtom(dpy, "_NET_DESKTOP_NAMES", False);
+  netatom[NetClientInfo] = XInternAtom(dpy, "_NET_CLIENT_INFO", False);
+  netatom[SrwmCanvasZoom] = XInternAtom(dpy, "_SRWM_CANVAS_ZOOM", False);
+  netatom[SrwmCanvasCenterX] = XInternAtom(dpy, "_SRWM_CANVAS_CENTER_X", False);
+  netatom[SrwmCanvasCenterY] = XInternAtom(dpy, "_SRWM_CANVAS_CENTER_Y", False);
+  netatom[SrwmCanvasActive] = XInternAtom(dpy, "_SRWM_CANVAS_ACTIVE", False);
   netatom[NetDesktopViewport] =
       XInternAtom(dpy, "_NET_DESKTOP_VIEWPORT", False);
   netatom[NetNumberOfDesktops] =
@@ -167,20 +146,15 @@ void setup(void) {
   cursor[CurNormal] = drw_cur_create(drw, XC_left_ptr);
   cursor[CurResize] = drw_cur_create(drw, XC_sizing);
   cursor[CurMove] = drw_cur_create(drw, XC_fleur);
-   /* init appearance */
-   drw_clr_create(drw, &border_active, blue);    /* default: blue */
-   drw_clr_create(drw, &border_inactive, gray2); /* default: gray */
-   drw_clr_create(drw, &bar_bg, black);          /* default: black */
+    /* init appearance */
+    drw_clr_create(drw, &border_active, blue);    /* default: blue */
+    drw_clr_create(drw, &border_inactive, gray2); /* default: gray */
    scheme = ecalloc(LENGTH(colors) + 1, sizeof(Clr*));
    scheme[LENGTH(colors)] = drw_scm_create(drw, colors[0], 3);
    for (i = 0; i < LENGTH(colors); i++)
      scheme[i] = drw_scm_create(drw, colors[i], 3);
-  /* init system tray */
-  updatesystray();
   /* init bars */
   updatebars();
-  updatestatus();
-  updatebarpos(selmon);
   /* supporting window for NetWMCheck */
   wmcheckwin = XCreateSimpleWindow(dpy, root, 0, 0, 1, 1, 0, 0, 0);
   XChangeProperty(dpy, wmcheckwin, netatom[NetWMCheck], XA_WINDOW, 32,
@@ -298,17 +272,16 @@ int updategeom(void) {
         mons = createmon();
       }
     }
-    for (i = 0, m = mons; i < nn && m; m = m->next, i++)
-      if (i >= n || unique[i].x_org != m->mx || unique[i].y_org != m->my ||
-          unique[i].width != m->mw || unique[i].height != m->mh) {
-        dirty = 1;
-        m->num = i;
-        m->mx = m->wx = unique[i].x_org;
-        m->my = m->wy = unique[i].y_org;
-        m->mw = m->ww = unique[i].width;
-        m->mh = m->wh = unique[i].height;
-        updatebarpos(m);
-      }
+     for (i = 0, m = mons; i < nn && m; m = m->next, i++)
+       if (i >= n || unique[i].x_org != m->mx || unique[i].y_org != m->my ||
+           unique[i].width != m->mw || unique[i].height != m->mh) {
+         dirty = 1;
+         m->num = i;
+         m->mx = m->wx = unique[i].x_org;
+         m->my = m->wy = unique[i].y_org;
+         m->mw = m->ww = unique[i].width;
+         m->mh = m->wh = unique[i].height;
+       }
     /* removed monitors if n > nn */
     for (i = nn; i < n; i++) {
       for (m = mons; m && m->next; m = m->next);
@@ -330,7 +303,7 @@ int updategeom(void) {
       dirty = 1;
       mons->mw = mons->ww = sw;
       mons->mh = mons->wh = sh;
-      updatebarpos(mons);
+
     }
   }
   if (dirty) {
@@ -509,6 +482,10 @@ unsigned int borderpx = 0;
 int th = 0;
 int lrpad;
 int toptab = 1;
+int tab_height = 30;
+int tab_tile_vertical_padding = 4;
+int tab_tile_inner_padding_horizontal = 4;
+int tab_tile_outer_padding_horizontal = 4;
 const char* fonts[] = {"JetBrainsMonoNerdFont:size=13"};
 const char* colors[][3] = {
     [TabSel] = {black, purple, black},
@@ -519,14 +496,13 @@ const char* colors[][3] = {
 };
 char* ws_labels[9] = {"1", "2", "3", "4", "5", "6", "7", "8", "9"};
 int ws_count = 5;
+int ws_schemes[9] = {0};
 
 /* button definitions */
 const Button buttons[] = {
     {ClkRootWin, MODKEY, Button1, manuallymovecanvas, {0}},  // drag canvas on blank desktop
     {ClkClientWin, MODKEY, Button1, movemouse, {.i = 0}},
     {ClkClientWin, MODKEY, Button3, resizemouse, {0}},
-    {ClkWsBar, 0, Button1, view, {0}},
-    {ClkWsBar, MODKEY, Button1, move_to_ws, {0}},
     {ClkTabBar, 0, Button1, focuswin, {0}},
     {ClkTabPrev, 0, Button1, movestack, {.i = -1}},
     {ClkTabNext, 0, Button1, movestack, {.i = +1}},

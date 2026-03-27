@@ -54,7 +54,7 @@ void movecanvas(const Arg *arg) {
             XMoveWindow(dpy, c->win, c->x, c->y);  
         }  
     }  
-    drawbar(selmon);  
+    drawtabs();  
 }  
  
 void homecanvas(const Arg *arg) {  
@@ -107,7 +107,7 @@ void homecanvas(const Arg *arg) {
             selmon->canvas_zoom = 1.0f;  
         }
     }
-    drawbar(selmon);  
+    drawtabs();  
     XFlush(dpy);  
 }
   
@@ -141,7 +141,7 @@ void centerwindowoncanvas(const Arg *arg) {
   
     m->canvas[wsidx].cx += dx;  
     m->canvas[wsidx].cy += dy;  
-    drawbar(m);  
+    drawtabs();  
 }  
  
 void manuallymovecanvas(const Arg *arg) {  
@@ -186,7 +186,7 @@ void manuallymovecanvas(const Arg *arg) {
   
             selmon->canvas[wsidx].cx += nx;
             selmon->canvas[wsidx].cy += ny;
-            drawbar(selmon);
+            drawtabs();
             start_x = ev.xmotion.x;
             start_y = ev.xmotion.y;
         }   break;
@@ -237,7 +237,7 @@ void zoomcanvas(const Arg *arg) {
         selmon->canvas_zoom = new_zoom;  
     }
    
-    drawbar(selmon);  
+    drawtabs();  
 }
 
 // Returns 1 if panning occurred, 0 otherwise.  

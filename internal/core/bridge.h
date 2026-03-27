@@ -46,18 +46,6 @@ extern void srwm_handle_mouse(int id);
 /* Config getters and setters */
 unsigned int srwm_get_borderpx(void);
 void srwm_set_borderpx(unsigned int);
-unsigned int srwm_get_systraypinning(void);
-void srwm_set_systraypinning(unsigned int);
-unsigned int srwm_get_systrayspacing(void);
-void srwm_set_systrayspacing(unsigned int);
-int srwm_get_systray_enable(void);
-void srwm_set_systray_enable(int);
-int srwm_get_showbar(void);
-void srwm_set_showbar(int);
-int srwm_get_bar_horizontal_padding(void);
-void srwm_set_bar_horizontal_padding(int);
-int srwm_get_bar_vertical_padding(void);
-void srwm_set_bar_vertical_padding(int);
 int srwm_get_tab_height(void);
 void srwm_set_tab_height(int);
 int srwm_get_tab_tile_vertical_padding(void);  
@@ -66,28 +54,16 @@ int srwm_get_tab_tile_inner_padding_horizontal(void);
 void srwm_set_tab_tile_inner_padding_horizontal(int);
 int srwm_get_tab_tile_outer_padding_horizontal(void);
 void srwm_set_tab_tile_outer_padding_horizontal(int);
-unsigned int srwm_get_ws_underline_padding(void);
-void srwm_set_ws_underline_padding(unsigned int);
-unsigned int srwm_get_ws_underline_size(void);
-void srwm_set_ws_underline_size(unsigned int);
-unsigned int srwm_get_ws_underline_offset_from_bar_bottom(void);
-void srwm_set_ws_underline_offset_from_bar_bottom(unsigned int);
-int srwm_get_ws_underline_for_all(void);
-void srwm_set_ws_underline_for_all(int);
 int srwm_get_toptab(void);
 void srwm_set_toptab(int);
-int srwm_get_topbar(void);
-void srwm_set_topbar(int);
 void srwm_set_font(const char* font);
 void srwm_set_color(int scheme, int slot, const char* hex);
 
 /* Dedicated color setters */
 void srwm_set_border_active(const char* hex);
 void srwm_set_border_inactive(const char* hex);
-void srwm_set_bar_bg(const char* hex);
 void srwm_set_ws_label(int idx, const char* name);
 void srwm_set_ws_count(int len);
-void srwm_set_ws_colorful_occupied_only(int val);
 void srwm_set_ws_scheme(int idx, int scheme_idx);
 
 /* Actions (Go -> C wrappers for internal static functions) */

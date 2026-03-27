@@ -127,24 +127,6 @@ void srwm_clear_mousebindings(void) {
 unsigned int srwm_get_borderpx(void) { return borderpx; }
 void srwm_set_borderpx(unsigned int v) { borderpx = v; }
 
-unsigned int srwm_get_systraypinning(void) { return systraypinning; }
-void srwm_set_systraypinning(unsigned int v) { systraypinning = v; }
-
-unsigned int srwm_get_systrayspacing(void) { return systrayspacing; }
-void srwm_set_systrayspacing(unsigned int v) { systrayspacing = v; }
-
-int srwm_get_systray_enable(void) { return systray_enable; }
-void srwm_set_systray_enable(int v) { systray_enable = v; }
-
-int srwm_get_showbar(void) { return showbar; }
-void srwm_set_showbar(int v) { showbar = v; }
-
-int srwm_get_bar_horizontal_padding(void) { return bar_horizontal_padding; }
-void srwm_set_bar_horizontal_padding(int v) { bar_horizontal_padding = v; }
-
-int srwm_get_bar_vertical_padding(void) { return bar_vertical_padding; }
-void srwm_set_bar_vertical_padding(int v) { bar_vertical_padding = v; }
-
 int srwm_get_tab_height(void) { return tab_height; }
 void srwm_set_tab_height(int v) { tab_height = v; }
 
@@ -157,23 +139,8 @@ void srwm_set_tab_tile_inner_padding_horizontal(int v) { tab_tile_inner_padding_
 int srwm_get_tab_tile_outer_padding_horizontal(void) { return tab_tile_outer_padding_horizontal; }
 void srwm_set_tab_tile_outer_padding_horizontal(int v) { tab_tile_outer_padding_horizontal = v; }
 
-unsigned int srwm_get_ws_underline_padding(void) { return ws_underline_padding; }
-void srwm_set_ws_underline_padding(unsigned int v) { ws_underline_padding = v; }
-
-unsigned int srwm_get_ws_underline_size(void) { return ws_underline_size; }
-void srwm_set_ws_underline_size(unsigned int v) { ws_underline_size = v; }
-
-unsigned int srwm_get_ws_underline_offset_from_bar_bottom(void) { return ws_underline_offset_from_bar_bottom; }
-void srwm_set_ws_underline_offset_from_bar_bottom(unsigned int v) { ws_underline_offset_from_bar_bottom = v; }
-
-int srwm_get_ws_underline_for_all(void) { return ws_underline_for_all; }
-void srwm_set_ws_underline_for_all(int v) { ws_underline_for_all = v; }
-
 int srwm_get_toptab(void) { return toptab; }
 void srwm_set_toptab(int v) { toptab = v; }
-
-int srwm_get_topbar(void) { return topbar; }
-void srwm_set_topbar(int v) { topbar = v; }
 
 /* Dedicated color getters and setters */
 void srwm_set_border_active(const char* hex) {
@@ -182,16 +149,13 @@ void srwm_set_border_active(const char* hex) {
 void srwm_set_border_inactive(const char* hex) {
     drw_clr_create(drw, &border_inactive, hex);
 }
-void srwm_set_bar_bg(const char* hex) {
-    drw_clr_create(drw, &bar_bg, hex);
-}
 
 /* Font and colors */
 extern const char* fonts[];
 void srwm_set_font(const char* font) { fonts[0] = font; }
 
 extern const char* colors[][3];
-static int colors_owned[18][3] = {0}; /* tracks which slots were strdup'd */
+static int colors_owned[5][3] = {0}; /* tracks which slots were strdup'd */
 
 void srwm_set_color(int scheme, int slot, const char* hex) {
    if (slot < 0 || slot >= 3) return;
@@ -232,7 +196,6 @@ void srwm_action_ws_to_next(void) { ws_to_next(&(Arg){0}); }
 void srwm_action_move_window_to_monitor(int dir) { move_window_to_monitor(&(Arg){.i = dir}); }
 void srwm_action_view(int ws) { view(&(Arg){.i = ws}); }
 void srwm_action_move_to_ws(int ws) { move_to_ws(&(Arg){.i = ws}); }
-void srwm_set_ws_colorful_occupied_only(int val) {ws_colorful_occupied_only = val;}
 
 void srwm_action_movecanvas(int dir) { movecanvas(&(Arg){.i = dir}); }  
 void srwm_action_homecanvas(void) { homecanvas(&(Arg){0}); }  

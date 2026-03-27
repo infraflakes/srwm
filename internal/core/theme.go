@@ -9,24 +9,11 @@ import "C"
 type Scheme int
 
 const (
-	SchemeNorm       Scheme = 0
-	SchemeSel        Scheme = 1
-	SchemeTitle      Scheme = 2
-	SchemeWorkspace  Scheme = 3
-	SchemeWorkspace1 Scheme = 4
-	SchemeWorkspace2 Scheme = 5
-	SchemeWorkspace3 Scheme = 6
-	SchemeWorkspace4 Scheme = 7
-	SchemeWorkspace5 Scheme = 8
-	SchemeWorkspace6 Scheme = 9
-	SchemeWorkspace7 Scheme = 10
-	SchemeWorkspace8 Scheme = 11
-	SchemeWorkspace9 Scheme = 12
-	TabSel           Scheme = 13
-	TabNorm          Scheme = 14
-	SchemeBtnPrev    Scheme = 15
-	SchemeBtnNext    Scheme = 16
-	SchemeBtnClose   Scheme = 17
+	TabSel         Scheme = 0
+	TabNorm        Scheme = 1
+	SchemeBtnPrev  Scheme = 2
+	SchemeBtnNext  Scheme = 3
+	SchemeBtnClose Scheme = 4
 )
 
 func SetColor(scheme Scheme, slot int, hex string) {
@@ -47,12 +34,6 @@ func SetBorderInactive(hex string) {
 	C.srwm_set_border_inactive(cs)
 }
 
-func SetBarBg(hex string) {
-	cs := C.CString(hex)
-	// intentionally not freed — C core holds the pointer
-	C.srwm_set_bar_bg(cs)
-}
-
 func SetWorkspace(idx int, name string) {
 	cs := C.CString(name)
 	// intentionally not freed — C core holds the pointer
@@ -61,14 +42,6 @@ func SetWorkspace(idx int, name string) {
 
 func SetWorkspacesLen(len int) {
 	C.srwm_set_ws_count(C.int(len))
-}
-
-func SetWorkspaceColorfulOccupiedOnly(val bool) {
-	ival := 0
-	if val {
-		ival = 1
-	}
-	C.srwm_set_ws_colorful_occupied_only(C.int(ival))
 }
 
 func SetWorkspaceScheme(idx int, scheme Scheme) {
