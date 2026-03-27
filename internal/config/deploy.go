@@ -52,34 +52,6 @@ var defaultLuaModules = map[string][]byte{
 	"env.lua":         defaultEnvScript,
 }
 
-//go:embed widgets/battery.sh
-var widgetBattery []byte
-
-//go:embed widgets/brightness.sh
-var widgetBrightness []byte
-
-//go:embed widgets/clock.sh
-var widgetClock []byte
-
-//go:embed widgets/gap.sh
-var widgetGap []byte
-
-//go:embed widgets/volume.sh
-var widgetVolume []byte
-
-//go:embed widgets/wifi.sh
-var widgetWifi []byte
-
-// defaultWidgets maps filenames to their embedded contents.
-var defaultWidgets = map[string][]byte{
-	"battery.sh":    widgetBattery,
-	"brightness.sh": widgetBrightness,
-	"clock.sh":      widgetClock,
-	"gap.sh":        widgetGap,
-	"volume.sh":     widgetVolume,
-	"wifi.sh":       widgetWifi,
-}
-
 // ResolveConfigDir returns the srwm config directory path
 // (~/.config/srwm), respecting XDG_CONFIG_HOME.
 func ResolveConfigDir() string {
@@ -105,14 +77,13 @@ func DeployKickstart() error {
 	}
 
 	rcPath := filepath.Join(srwmDir, "srwmrc.lua")
-	widgetsDir := filepath.Join(srwmDir, "widgets")
 
 	if _, err := os.Stat(rcPath); err == nil {
 		return fmt.Errorf("config already exists at %s", rcPath)
 	}
 
-	if err := os.MkdirAll(widgetsDir, 0755); err != nil {
-		return fmt.Errorf("failed to create config/widgets dir: %w", err)
+	if err := os.MkdirAll(srwmDir, 0755); err != nil {
+		return fmt.Errorf("failed to create config dir: %w", err)
 	}
 
 	if err := os.WriteFile(rcPath, defaultSrwmrcScript, 0644); err != nil {
@@ -123,14 +94,6 @@ func DeployKickstart() error {
 	for name, content := range defaultLuaModules {
 		path := filepath.Join(srwmDir, name)
 		if err := os.WriteFile(path, content, 0644); err != nil {
-			return fmt.Errorf("failed to deploy %s: %w", name, err)
-		}
-		fmt.Printf("deployed: %s\n", path)
-	}
-
-	for name, content := range defaultWidgets {
-		path := filepath.Join(widgetsDir, name)
-		if err := os.WriteFile(path, content, 0755); err != nil {
 			return fmt.Errorf("failed to deploy %s: %w", name, err)
 		}
 		fmt.Printf("deployed: %s\n", path)

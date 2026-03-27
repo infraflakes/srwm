@@ -3,7 +3,6 @@ package config
 import (
 	"context"
 	"log"
-	"os"
 	"path/filepath"
 	"strings"
 
@@ -29,19 +28,10 @@ func runLuaConfig(ctx context.Context) {
 	}
 
 	rcPath := filepath.Join(srwmDir, "srwmrc.lua")
-	widgetsDir := filepath.Join(srwmDir, "widgets")
-
-	if err := os.MkdirAll(widgetsDir, 0755); err != nil {
-		log.Printf("lua: failed to create config/widgets dir: %v", err)
-		return
-	}
 
 	deployDefault(rcPath, defaultSrwmrcScript, 0644)
 	for name, content := range defaultLuaModules {
 		deployDefault(filepath.Join(srwmDir, name), content, 0644)
-	}
-	for name, content := range defaultWidgets {
-		deployDefault(filepath.Join(widgetsDir, name), content, 0755)
 	}
 
 	L := lua.NewState()

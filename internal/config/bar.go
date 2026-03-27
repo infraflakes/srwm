@@ -42,7 +42,7 @@ func RegisterBarAPI(L *lua.LState, srwmMod *lua.LTable, configDir string) func()
 
 	L.SetField(srwmMod, "bar", barTable)
 
-	return nil
+	return func() {}
 }
 
 func luaBarTheme(L *lua.LState) int {
