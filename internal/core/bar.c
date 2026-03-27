@@ -131,9 +131,9 @@ void drawtab(Monitor* m) {
   }
   XMapWindow(dpy, m->tabwin);
 
-  char* btn_prev = "\uf804";
-  char* btn_next = "\uf805";
-  char* btn_close = "\uf6a7 ";
+  char* btn_prev = "";
+  char* btn_next = "";
+  char* btn_close = "";
   int buttons_w = 0;
   int sorted_label_widths[MAXTABS];
   int tot_width = 0;
