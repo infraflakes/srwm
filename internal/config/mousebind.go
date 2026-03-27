@@ -19,12 +19,9 @@ var buttonAliases = map[string]uint{
 
 // Click target name to enum mapping
 var clickAliases = map[string]uint{
-	"root":       core.ClkRootWin,
-	"client":     core.ClkClientWin,
-	"wsbar":      core.ClkWsBar,
-	"tabbar":     core.ClkTabBar,
-	"statustext": core.ClkStatusText,
-	"wintitle":   core.ClkWinTitle,
+	"root":   core.ClkRootWin,
+	"client": core.ClkClientWin,
+	"tabbar": core.ClkTabBar,
 }
 
 func RegisterMousebindAPI(L *lua.LState, srwmMod *lua.LTable) {
@@ -53,7 +50,7 @@ func luaMouseBind(L *lua.LState) int {
 	tgtName := strings.ToLower(targetName)
 	click, ok := clickAliases[tgtName]
 	if !ok {
-		L.RaiseError("srwm.mouse.bind: invalid target %q (expected root, client, wsbar, tabbar, statustext, wintitle)", targetName)
+		L.RaiseError("srwm.mouse.bind: invalid target %q (expected root, client, tabbar)", targetName)
 		return 0
 	}
 

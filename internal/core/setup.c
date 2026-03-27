@@ -125,19 +125,13 @@ void setup(void) {
   netatom[NetWMWindowTypeDock] =
       XInternAtom(dpy, "_NET_WM_WINDOW_TYPE_DOCK", False);
   netatom[NetClientList] = XInternAtom(dpy, "_NET_CLIENT_LIST", False);
-  netatom[NetDesktopNames] = XInternAtom(dpy, "_NET_DESKTOP_NAMES", False);
   netatom[NetClientInfo] = XInternAtom(dpy, "_NET_CLIENT_INFO", False);
-  netatom[SrwmCanvasZoom] = XInternAtom(dpy, "_SRWM_CANVAS_ZOOM", False);
-  netatom[SrwmCanvasCenterX] = XInternAtom(dpy, "_SRWM_CANVAS_CENTER_X", False);
-  netatom[SrwmCanvasCenterY] = XInternAtom(dpy, "_SRWM_CANVAS_CENTER_Y", False);
-  netatom[SrwmCanvasActive] = XInternAtom(dpy, "_SRWM_CANVAS_ACTIVE", False);
   netatom[NetDesktopViewport] =
       XInternAtom(dpy, "_NET_DESKTOP_VIEWPORT", False);
   netatom[NetNumberOfDesktops] =
       XInternAtom(dpy, "_NET_NUMBER_OF_DESKTOPS", False);
   netatom[NetCurrentDesktop] = XInternAtom(dpy, "_NET_CURRENT_DESKTOP", False);
   netatom[NetDesktopNames] = XInternAtom(dpy, "_NET_DESKTOP_NAMES", False);
-  netatom[NetClientInfo] = XInternAtom(dpy, "_NET_CLIENT_INFO", False);
   netatom[SrwmCanvasZoom] = XInternAtom(dpy, "_SRWM_CANVAS_ZOOM", False);
   netatom[SrwmCanvasCenterX] = XInternAtom(dpy, "_SRWM_CANVAS_CENTER_X", False);
   netatom[SrwmCanvasCenterY] = XInternAtom(dpy, "_SRWM_CANVAS_CENTER_Y", False);
@@ -496,7 +490,6 @@ const char* colors[][3] = {
 };
 char* ws_labels[9] = {"1", "2", "3", "4", "5", "6", "7", "8", "9"};
 int ws_count = 5;
-int ws_schemes[9] = {0};
 
 /* button definitions */
 const Button buttons[] = {

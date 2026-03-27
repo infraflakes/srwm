@@ -181,11 +181,6 @@ void srwm_set_ws_count(int len) {
   if (len >= 0 && len <= 9) ws_count = len;
 }
 
-extern int ws_schemes[];
-void srwm_set_ws_scheme(int idx, int scheme_idx) {
-  if (idx >= 0 && idx < 9) ws_schemes[idx] = scheme_idx;
-}
-
 /* srwm_action bindings mapping primitives to internal Arg structs */
 void srwm_action_killclient(void) { killclient(&(Arg){0}); }
 void srwm_action_togglefullscr(void) { togglefullscr(&(Arg){0}); }

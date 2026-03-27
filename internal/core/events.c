@@ -13,7 +13,6 @@ void (*handler[LASTEvent])(XEvent *) = {[ButtonPress] = buttonpress,
                                         [MapRequest] = maprequest,
                                         [MotionNotify] = motionnotify,
                                         [PropertyNotify] = propertynotify,
-                                        [ResizeRequest] = resizerequest,
                                         [UnmapNotify] = unmapnotify};
 
 
@@ -281,7 +280,6 @@ void propertynotify(XEvent *e) {
     if (ev->atom == XA_WM_NAME || ev->atom == netatom[NetWMName]) {
       updatetitle(c);
       if (c == c->mon->sel)
-        drawtab(c->mon);
       drawtab(c->mon);
     }
 
@@ -294,10 +292,6 @@ void propertynotify(XEvent *e) {
     if (ev->atom == netatom[NetWMWindowType])
       updatewindowtype(c);
   }
-}
-
-void resizerequest(XEvent *e) {
-  /* was systray-only, now unused */
 }
 
 void unmapnotify(XEvent *e) {

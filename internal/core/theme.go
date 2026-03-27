@@ -43,7 +43,3 @@ func SetWorkspace(idx int, name string) {
 func SetWorkspacesLen(len int) {
 	C.srwm_set_ws_count(C.int(len))
 }
-
-func SetWorkspaceScheme(idx int, scheme Scheme) {
-	C.srwm_set_ws_scheme(C.int(idx), C.int(scheme))
-}

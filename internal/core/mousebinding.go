@@ -11,15 +11,12 @@ import (
 )
 
 const (
-	ClkWsBar      = 0
-	ClkTabBar     = 1
-	ClkTabPrev    = 2
-	ClkTabNext    = 3
-	ClkTabClose   = 4
-	ClkStatusText = 5
-	ClkWinTitle   = 6
-	ClkClientWin  = 7
-	ClkRootWin    = 8
+	ClkTabBar    = 0
+	ClkTabPrev   = 1
+	ClkTabNext   = 2
+	ClkTabClose  = 3
+	ClkClientWin = 4
+	ClkRootWin   = 5
 )
 
 var (

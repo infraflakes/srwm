@@ -64,7 +64,6 @@ void srwm_set_border_active(const char* hex);
 void srwm_set_border_inactive(const char* hex);
 void srwm_set_ws_label(int idx, const char* name);
 void srwm_set_ws_count(int len);
-void srwm_set_ws_scheme(int idx, int scheme_idx);
 
 /* Actions (Go -> C wrappers for internal static functions) */
 void srwm_action_killclient(void);
