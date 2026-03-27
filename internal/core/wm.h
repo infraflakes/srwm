@@ -48,38 +48,11 @@ extern int ws_count;
 #define TEXTW(X) (drw_fontset_getwidth(drw, (X)) + lrpad)
 #define MAXTABS 50
 
-#define SYSTEM_TRAY_REQUEST_DOCK 0
 
-/* XEMBED messages */
-#define XEMBED_EMBEDDED_NOTIFY 0
-#define XEMBED_WINDOW_ACTIVATE 1
-#define XEMBED_FOCUS_IN 4
-#define XEMBED_MODALITY_ON 10
-
-#define XEMBED_MAPPED (1 << 0)
-#define XEMBED_WINDOW_ACTIVATE 1
-#define XEMBED_WINDOW_DEACTIVATE 2
-
-#define VERSION_MAJOR 0
-#define VERSION_MINOR 0
-#define XEMBED_EMBEDDED_VERSION (VERSION_MAJOR << 16) | VERSION_MINOR
 
 /* enums */
 enum { CurNormal, CurResize, CurMove, CurLast }; /* cursor */
 enum {
-  SchemeNorm,
-  SchemeSel,
-  SchemeTitle,
-  SchemeWs,
-  SchemeWs1,
-  SchemeWs2,
-  SchemeWs3,
-  SchemeWs4,
-  SchemeWs5,
-  SchemeWs6,
-  SchemeWs7,
-  SchemeWs8,
-  SchemeWs9,
   TabSel,
   TabNorm,
   SchemeBtnPrev,
@@ -92,10 +65,6 @@ enum {
   NetWMIcon,
   NetWMState,
   NetWMCheck,
-  NetSystemTray,
-  NetSystemTrayOP,
-  NetSystemTrayOrientation,
-  NetSystemTrayOrientationHorz,
   NetWMFullscreen,
   NetActiveWindow,
   NetWMWindowType,
@@ -113,7 +82,7 @@ enum {
   SrwmCanvasActive,
   NetLast
 }; /* EWMH atoms */
-enum { Manager, Xembed, XembedInfo, XLast }; /* Xembed atoms */
+
 enum {
   WMProtocols,
   WMDelete,
@@ -122,13 +91,10 @@ enum {
   WMLast
 }; /* default atoms */
 enum {
-  ClkWsBar,
   ClkTabBar,
   ClkTabPrev,
   ClkTabNext,
   ClkTabClose,
-  ClkStatusText,
-  ClkWinTitle,
   ClkClientWin,
   ClkRootWin,
   ClkLast
@@ -203,30 +169,22 @@ typedef struct {
 extern DynamicButton dbuttons[MAX_DYNAMIC_BUTTONS];
 extern int dbuttons_len;
 
-typedef struct Systray Systray;
-struct Systray {
-  Window win;
-  Client *icons;
-};
+
 
 struct Monitor {
   int num;
-  int by;             /* bar geometry */
   int ty;             /* tab bar geometry */
   int mx, my, mw, mh; /* screen size */
   int wx, wy, ww, wh; /* window area  */
   unsigned int borderpx;
-  unsigned int colorful_ws;
   CanvasOffset *canvas; /* per-ws canvas offsets, allocated in createmon() */
   float canvas_zoom;      /* global zoom level, shared across all workspaces */
-  int showbar;
-  int topbar, toptab;
+  int toptab;
   Client *clients;
   Client *tail; // last client in list, for O(1) append
   Client *sel;
   Monitor *next;
   Monitor *prev;
-  Window barwin;
   Window tabwin;
   int ntabs;
   Client *tab_order[MAXTABS];
@@ -234,7 +192,6 @@ struct Monitor {
   int tab_btn_w[3];
   int current_ws;
   int previous_ws;
-  int showbar_per_ws[9];
 };
 
 int applysizehints(Client *c, int *x, int *y, int *w, int *h, int interact);
@@ -254,9 +211,6 @@ void destroynotify(XEvent *e);
 void detach(Client *c);
 Monitor *get_neighbor_monitor(int dir);
 void move_window_to_monitor(const Arg *arg);
-void drawbar(Monitor *m);
-void drawbars(void);
-int drawstatusbar(Monitor *m, int bh, char *text);
 void drawtab(Monitor *m);
 void drawtabs(void);
 void enternotify(XEvent *e);
@@ -284,9 +238,7 @@ void motionnotify(XEvent *e);
 void movemouse(const Arg *arg);
 void propertynotify(XEvent *e);
 Monitor *recttomon(int x, int y, int w, int h);
-void removesystrayicon(Client *i);
 void resize(Client *c, int x, int y, int w, int h, int interact);
-void resizebarwin(Monitor *m);
 void resizeclient(Client *c, int x, int y, int w, int h);
 void resizemouse(const Arg *arg);
 void resizerequest(XEvent *e);
@@ -294,7 +246,7 @@ void restack(Monitor *m);
 void run(void);
 void scan(void);
 int sendevent(Window w, Atom proto, int m, long d0, long d1, long d2, long d3,
-              long d4);
+               long d4);
 void sendmon(Client *c, Monitor *m);
 void setclientstate(Client *c, long state);
 void setclientwsprop(Client *c);
@@ -307,25 +259,16 @@ void setup(void);
 void setviewport(void);
 void seturgent(Client *c, int urg);
 void showhide(Monitor *m);
-Monitor *systraytomon(Monitor *m);
 void move_to_ws(const Arg *arg);
-void togglebar(const Arg *arg);
-void togglefullscr(const Arg *arg);
 void freeicon(Client *c);
 void unfocus(Client *c, int setfocus);
 void unmanage(Client *c, int destroyed);
 void unmapnotify(XEvent *e);
 void updatecurrentdesktop(void);
-void updatebarpos(Monitor *m);
-void updatebars(void);
 void updateclientlist(void);
 int updategeom(void);
 void updatenumlockmask(void);
 void rebuild_tab_order(Monitor *m);
-void updatestatus(void);
-void updatesystray(void);
-void updatesystrayicongeom(Client *i, int w, int h);
-void updatesystrayiconstate(Client *i, XPropertyEvent *ev);
 void updatetitle(Client *c);
 void updateicon(Client *c);
 void updatewindowtype(Client *c);
@@ -333,7 +276,6 @@ void updatewmhints(Client *c);
 void view(const Arg *arg);
 Client *wintoclient(Window w);
 Monitor *wintomon(Window w);
-Client *wintosystrayicon(Window w);
 int xerror(Display *dpy, XErrorEvent *ee);
 int xerrordummy(Display *dpy, XErrorEvent *ee);
 int xerrorstart(Display *dpy, XErrorEvent *ee);
@@ -376,12 +318,9 @@ extern void srwm_handle_key(int id);
 #define ALTKEY Mod1Mask
 extern int running;
 extern Display *dpy;
-extern Systray *systray;
 extern const char broken[];
-extern char stext[1024];
 extern int screen;
 extern int sw, sh;
-extern int bh;
 extern int th;
 extern int lrpad;
 extern int (*xerrorxlib)(Display *, XErrorEvent *);
@@ -390,37 +329,22 @@ extern Atom wmatom[], netatom[], xatom[];
 extern Cur *cursor[];
 extern Clr **scheme, clrborder;
 extern Drw *drw;
+extern const char *colors[5][3];
 extern Monitor *mons, *selmon;
 extern Window root, wmcheckwin;
 
 /* Dedicated color globals */
 extern Clr border_active;    /* active window border color */
 extern Clr border_inactive;  /* inactive window border color */
-extern Clr bar_bg;           /* bar background color */
 
 /* Config globals */
 extern unsigned int borderpx;
-extern unsigned int systraypinning;
-extern unsigned int systrayspacing;
-extern int systray_enable;
-extern int showbar;
-extern int bar_horizontal_padding;
-extern int bar_vertical_padding;
 extern int tab_height;
 extern int tab_tile_vertical_padding;
 extern int tab_tile_inner_padding_horizontal;
 extern int tab_tile_outer_padding_horizontal;
-extern unsigned int ws_underline_padding;
-extern unsigned int ws_underline_size;
-extern unsigned int ws_underline_offset_from_bar_bottom;
-extern int ws_underline_for_all;
 extern int toptab;
-extern int topbar;
-extern int colorful_ws;
-extern int ws_colorful_occupied_only;
 extern char *ws_labels[];
-extern int ws_schemes[];
-extern const char *colors[18][3]; // 18 = SchemeBtnClose + 1
 extern const char *fonts[1];
 extern const Button buttons[];
 extern const int buttons_len;

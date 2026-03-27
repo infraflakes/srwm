@@ -506,37 +506,11 @@ int isuniquegeom(XineramaScreenInfo* unique, size_t n,
 
 /* Default configuration fallback values - can be overridden via Lua */
 unsigned int borderpx = 0;
-unsigned int systraypinning = 0;
-unsigned int systrayspacing = 2;
-int systray_enable = 1;
-int showbar = 1;
-int bar_horizontal_padding = 10;
-int bar_vertical_padding = 0;
-int tab_height = 35;
-int tab_tile_vertical_padding = 5;
-int tab_tile_inner_padding_horizontal = 15;
-int tab_tile_outer_padding_horizontal = 15;
-unsigned int ws_underline_padding = 5;
-unsigned int ws_underline_size = 2;
-unsigned int ws_underline_offset_from_bar_bottom = 0;
-int ws_underline_for_all = 0;
+int th = 0;
+int lrpad;
 int toptab = 1;
-int topbar = 1;
-int colorful_ws = 1;
-int ws_colorful_occupied_only = 1;
 const char* fonts[] = {"JetBrainsMonoNerdFont:size=13"};
 const char* colors[][3] = {
-    [SchemeTitle] = {white, black, black},
-    [SchemeWs] = {gray2, black, black},
-    [SchemeWs1] = {blue, black, black},
-    [SchemeWs2] = {purple, black, black},
-    [SchemeWs3] = {pink, black, black},
-    [SchemeWs4] = {blue, black, black},
-    [SchemeWs5] = {purple, black, black},
-    [SchemeWs6] = {pink, black, black},
-    [SchemeWs7] = {blue, black, black},
-    [SchemeWs8] = {purple, black, black},
-    [SchemeWs9] = {pink, black, black},
     [TabSel] = {black, purple, black},
     [TabNorm] = {gray3, black, black},
     [SchemeBtnPrev] = {green, black, black},
@@ -545,9 +519,6 @@ const char* colors[][3] = {
 };
 char* ws_labels[9] = {"1", "2", "3", "4", "5", "6", "7", "8", "9"};
 int ws_count = 5;
-int ws_schemes[9] = {SchemeWs1, SchemeWs2, SchemeWs3,
-                     SchemeWs4, SchemeWs5, SchemeWs6,
-                     SchemeWs7, SchemeWs8, SchemeWs9};
 
 /* button definitions */
 const Button buttons[] = {

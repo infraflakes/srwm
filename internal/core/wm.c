@@ -12,8 +12,8 @@ int applysizehints(Client* c, int* x, int* y, int* w, int* h, int interact) {
     if (*x + *w + 2 * c->bw < 0) *x = 0;
     if (*y + *h + 2 * c->bw < 0) *y = 0;
   }
-  if (*h < bh) *h = bh;
-  if (*w < bh) *w = bh;
+  if (*h < 20) *h = 20;
+  if (*w < 20) *w = 20;
   return *x != c->x || *y != c->y || *w != c->w || *h != c->h;
 }
 
@@ -30,23 +30,18 @@ void arrange(Monitor* m) {
 }
 
 void arrangemon(Monitor* m) {  
-  updatebarpos(m);
-  updatesystray();
-
+  m->wy = m->my;
+  m->wh = m->mh;
   if (th > 0) {
-  /* Position tab bar respecting topbar and toptab */
-  if (m->toptab) {
-    /* Tab at top of window area */
-    m->ty = m->wy;
-    m->wy = m->wy + th;
-    m->wh = m->wh - th;
-  } else {
-    /* Tab at bottom of window area */
-    m->wh = m->wh - th;
-    m->ty = m->wy + m->wh;
-  }
-  XMoveResizeWindow(dpy, m->tabwin, m->wx, m->ty,
-                    m->ww, th);
+    if (m->toptab) {
+      m->ty = m->wy;
+      m->wy += th;
+      m->wh -= th;
+    } else {
+      m->wh -= th;
+      m->ty = m->wy + m->wh;
+    }
+    XMoveResizeWindow(dpy, m->tabwin, m->wx, m->ty, m->ww, th);
   }
 }
 
@@ -110,8 +105,7 @@ void focus(Client* c) {
     XDeleteProperty(dpy, root, netatom[NetActiveWindow]);
   }
   selmon->sel = c;
-  drawbars();
-  drawtabs();
+   drawtabs();
 }
 
 void unfocus(Client* c, int setfocus) {
@@ -174,16 +168,9 @@ Atom getatomprop(Client* c, Atom prop) {
   unsigned long dl;
   unsigned char* p = NULL;
   Atom da, atom = None;
-  /* FIXME getatomprop should return the number of items and a pointer to
-   * the stored data instead of this workaround */
-  Atom req = XA_ATOM;
-  if (prop == xatom[XembedInfo]) req = xatom[XembedInfo];
-
-  if (XGetWindowProperty(dpy, c->win, prop, 0L, sizeof atom, False, req, &da,
-                         &di, &dl, &dl, &p) == Success &&
-      p) {
+  if (XGetWindowProperty(dpy, c->win, prop, 0L, sizeof atom, False, XA_ATOM, &da,
+                         &di, &dl, &dl, &p) == Success && p) {
     atom = *(Atom*)p;
-    if (da == xatom[XembedInfo] && dl == 2) atom = ((Atom*)p)[1];
     XFree(p);
   }
   return atom;
@@ -288,7 +275,7 @@ void manage(Window w, XWindowAttributes* wa) {
 
   wc.border_width = c->bw;
   XConfigureWindow(dpy, w, CWBorderWidth, &wc);
-  XSetWindowBorder(dpy, w, scheme[SchemeNorm][ColBorder].pixel);
+  XSetWindowBorder(dpy, w, border_inactive.pixel);
   configure(c); /* propagates border_width, if size doesn't change */
   updatewindowtype(c);
   updatewmhints(c);
@@ -404,13 +391,10 @@ void resizeclient(Client* c, int x, int y, int w, int h) {
 void restack(Monitor* m) {
   XEvent ev;
 
-  drawbar(m);
   drawtab(m);
   if (!m->sel) return;
   XRaiseWindow(dpy, m->sel->win);
 
-  /* Always raise bar and tab windows so they stay visible on top */
-  XRaiseWindow(dpy, m->barwin);
   if (m->tabwin)
       XRaiseWindow(dpy, m->tabwin);
 
@@ -684,7 +668,7 @@ Monitor* wintomon(Window w) {
 
   if (w == root && getrootptr(&x, &y)) return recttomon(x, y, 1, 1);
   for (m = mons; m; m = m->next)
-    if (w == m->barwin || w == m->tabwin) return m;
+    if (w == m->tabwin) return m;
   if ((c = wintoclient(w))) return c->mon;
   return selmon;
 }
