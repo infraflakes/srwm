@@ -3,7 +3,7 @@ package config
 import (
 	"strings"
 
-	"github.com/infraflakes/srwm/internal/core"
+	"github.com/infraflakes/srwm/c-src"
 	lua "github.com/yuin/gopher-lua"
 )
 

@@ -9,7 +9,7 @@ import (
 
 	"github.com/infraflakes/srwm/internal/config"
 	"github.com/infraflakes/srwm/internal/control"
-	"github.com/infraflakes/srwm/internal/core"
+	"github.com/infraflakes/srwm/c-src"
 	"github.com/infraflakes/srwm/internal/dbus"
 	"github.com/infraflakes/srwm/internal/ipc"
 	"github.com/infraflakes/srwm/internal/xserver"

@@ -5,7 +5,7 @@ import (
 	"fmt"
 	"net"
 
-	"github.com/infraflakes/srwm/internal/core"
+	"github.com/infraflakes/srwm/c-src"
 )
 
 var onRefresh func()
