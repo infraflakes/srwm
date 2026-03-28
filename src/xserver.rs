@@ -1,8 +1,8 @@
 use std::io;
 use std::os::unix::process::CommandExt;
 use std::process::{Child, Command};
-use std::sync::atomic::{AtomicBool, Ordering};
 use std::sync::Arc;
+use std::sync::atomic::{AtomicBool, Ordering};
 use std::time::Duration;
 
 static SIGUSR1_RECEIVED: AtomicBool = AtomicBool::new(false);
