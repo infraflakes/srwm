@@ -7,7 +7,6 @@ all: build
 
 build: clean
 	@echo "Building srwm $(VERSION)..."
-	@mkdir -p bin
 	dagger call build --source=. export --path=./target/release/srwm
 
 fmt:

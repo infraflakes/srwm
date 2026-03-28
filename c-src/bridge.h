@@ -1,4 +1,4 @@
-/* bridge.h — Go ↔ C lifecycle interface for srwm */
+/* bridge.h — Rust ↔ C lifecycle interface for srwm */
 #ifndef SRWM_BRIDGE_H
 #define SRWM_BRIDGE_H
 
