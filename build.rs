@@ -66,7 +66,13 @@ fn main() {
         }
     }
 
-    let bindings = bindgen_builder
+    let bindings = bindgen::Builder::default()
+        .header("c-src/bridge.h")
+        .clang_arg("-I/usr/include/freetype2")
+        .allowlist_function("srwm_.*")
+        .allowlist_var("running")
+        .blocklist_function("srwm_handle_key")
+        .blocklist_function("srwm_handle_mouse")
         .generate()
         .expect("Unable to generate bindings");
 

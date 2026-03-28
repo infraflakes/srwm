@@ -5,9 +5,10 @@ VERSION ?= $(shell git describe --tags --always --dirty --first-parent 2>/dev/nu
 
 all: build
 
-build:
+build: clean
 	@echo "Building srwm $(VERSION)..."
-	dagger call build --source=.
+	@mkdir -p bin
+	dagger call build --source=. export --path=./target/release/srwm
 
 fmt:
 	@echo "Formatting code..."
@@ -18,5 +19,4 @@ lint:
 
 clean:
 	@echo "Cleaning..."
-	rm -rf ./target
-	rm -rf ./bin
+	rm -rf ./target/release
