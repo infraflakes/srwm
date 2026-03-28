@@ -1,4 +1,5 @@
 #include "wm.h"
+#include "bridge.h"
 #include <sys/select.h>
 
 int screen;  
@@ -141,8 +142,14 @@ void setup(void) {
   cursor[CurResize] = drw_cur_create(drw, XC_sizing);
   cursor[CurMove] = drw_cur_create(drw, XC_fleur);
     /* init appearance */
-    drw_clr_create(drw, &border_active, blue);    /* default: blue */
-    drw_clr_create(drw, &border_inactive, gray2); /* default: gray */
+    if (pending_border_active[0])
+        drw_clr_create(drw, &border_active, pending_border_active);
+    else
+        drw_clr_create(drw, &border_active, blue);    /* default: blue */
+    if (pending_border_inactive[0])
+        drw_clr_create(drw, &border_inactive, pending_border_inactive);
+    else
+        drw_clr_create(drw, &border_inactive, gray2); /* default: gray */
    scheme = ecalloc(LENGTH(colors) + 1, sizeof(Clr*));
    scheme[LENGTH(colors)] = drw_scm_create(drw, colors[0], 3);
    for (i = 0; i < LENGTH(colors); i++)

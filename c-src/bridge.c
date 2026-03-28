@@ -5,8 +5,12 @@
 #include <stdio.h>
 #include <string.h>
 
-/* Internal flag: distinguishes restart (running=0) from quit */
+/* Internal flag: distinguishes restart (quit) from restart */
 static int restart_requested = 0;
+
+/* Pending border colors - applied in setup() after drw init */
+char pending_border_active[8] = {0};
+char pending_border_inactive[8] = {0};
 
 KeySym srwm_string_to_keysym(const char *name) {
   return XStringToKeysym(name);
@@ -144,10 +148,18 @@ void srwm_set_toptab(int v) { toptab = v; }
 
 /* Dedicated color getters and setters */
 void srwm_set_border_active(const char* hex) {
-    drw_clr_create(drw, &border_active, hex);
+    if (drw) {
+        drw_clr_create(drw, &border_active, hex);
+    } else {
+        strncpy(pending_border_active, hex, sizeof(pending_border_active) - 1);
+    }
 }
 void srwm_set_border_inactive(const char* hex) {
-    drw_clr_create(drw, &border_inactive, hex);
+    if (drw) {
+        drw_clr_create(drw, &border_inactive, hex);
+    } else {
+        strncpy(pending_border_inactive, hex, sizeof(pending_border_inactive) - 1);
+    }
 }
 
 /* Font and colors */

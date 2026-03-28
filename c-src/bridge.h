@@ -62,6 +62,8 @@ void srwm_set_color(int scheme, int slot, const char* hex);
 /* Dedicated color setters */
 void srwm_set_border_active(const char* hex);
 void srwm_set_border_inactive(const char* hex);
+extern char pending_border_active[8];
+extern char pending_border_inactive[8];
 void srwm_set_ws_label(int idx, const char* name);
 void srwm_set_ws_count(int len);
 

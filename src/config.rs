@@ -137,8 +137,8 @@ fn register_mouse_api(lua: &Lua, srwm: &LuaTable) -> LuaResult<()> {
             };
 
             let click = match target.to_lowercase().as_str() {
-                "root" => 1,   // ClkRootWin = 1
-                "client" => 0, // ClkClientWin = 0
+                "root" => 5,   // ClkRootWin = 5
+                "client" => 4, // ClkClientWin = 4
                 _ => {
                     return Err(mlua::Error::runtime(format!(
                         "invalid target: {} (expected root, client)",
@@ -461,26 +461,6 @@ fn register_bar_api(lua: &Lua, srwm: &LuaTable) -> LuaResult<()> {
             Ok(())
         })?,
     )?;
-
-    let ws_sub = lua.create_table()?;
-    ws_sub.set(
-        "set_label",
-        lua.create_function(|_, input: String| {
-            let parts: Vec<&str> = input.split(',').collect();
-            let count = parts.len().min(9);
-            for (i, part) in parts.iter().take(count).enumerate() {
-                let c = CString::new(part.trim()).unwrap();
-                unsafe {
-                    crate::ffi::srwm_set_ws_label(i as i32, c.as_ptr());
-                }
-            }
-            unsafe {
-                crate::ffi::srwm_set_ws_count(count as i32);
-            }
-            Ok(())
-        })?,
-    )?;
-    bar.set("workspaces", ws_sub)?;
 
     srwm.set("bar", bar)?;
     Ok(())
