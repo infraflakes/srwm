@@ -1,6 +1,16 @@
 fn main() {
-    // Phase 1: Compile C core into a static library
-    cc::Build::new()
+    // Discover include/lib paths via pkg-config
+    let x11 = pkg_config::probe_library("x11").unwrap();
+    let xft = pkg_config::probe_library("xft").unwrap();
+    let xinerama = pkg_config::probe_library("xinerama").unwrap();
+    let xrender = pkg_config::probe_library("xrender").unwrap();
+    let imlib2 = pkg_config::probe_library("imlib2").unwrap();
+    let fontconfig = pkg_config::probe_library("fontconfig").unwrap();
+    let freetype = pkg_config::probe_library("freetype2").unwrap();
+
+    // Collect all include paths
+    let mut build = cc::Build::new();
+    build
         .files(&[
             "c-src/wm.c",
             "c-src/bar.c",
@@ -15,20 +25,48 @@ fn main() {
         ])
         .include("c-src")
         .define("XINERAMA", None)
-        // pkg-config flags for X11 stack
         .flag_if_supported("-Wno-unused-parameter")
-        .flag_if_supported("-Wno-sign-compare")
-        // Add include paths from pkg-config
-        .flag("-I/usr/include/freetype2") // Xft needs this
-        .flag("-I/usr/include/Imlib2")
-        .compile("srwm");
+        .flag_if_supported("-Wno-sign-compare");
+
+    // Add all pkg-config include paths to the C compiler
+    for lib in [
+        &x11,
+        &xft,
+        &xinerama,
+        &xrender,
+        &imlib2,
+        &fontconfig,
+        &freetype,
+    ] {
+        for path in &lib.include_paths {
+            build.include(path);
+        }
+    }
+
+    build.compile("srwm");
 
     // Phase 2: Generate Rust FFI bindings from bridge.h
-    let bindings = bindgen::Builder::default()
+    let mut bindgen_builder = bindgen::Builder::default()
         .header("c-src/bridge.h")
-        .clang_arg("-I/usr/include/freetype2")
         .allowlist_function("srwm_.*")
-        .allowlist_var("running")
+        .allowlist_var("running");
+
+    // Add include paths for bindgen/clang too
+    for lib in [
+        &x11,
+        &xft,
+        &xinerama,
+        &xrender,
+        &imlib2,
+        &fontconfig,
+        &freetype,
+    ] {
+        for path in &lib.include_paths {
+            bindgen_builder = bindgen_builder.clang_arg(format!("-I{}", path.display()));
+        }
+    }
+
+    let bindings = bindgen_builder
         .generate()
         .expect("Unable to generate bindings");
 
@@ -37,7 +75,8 @@ fn main() {
         .write_to_file(out_path.join("bindings.rs"))
         .expect("Couldn't write bindings!");
 
-    // Link system libraries
+    // pkg_config::probe_library already emits cargo:rustc-link-lib directives,
+    // but we need to ensure they're all linked. Add any that pkg-config might miss:
     println!("cargo:rustc-link-lib=X11");
     println!("cargo:rustc-link-lib=Xinerama");
     println!("cargo:rustc-link-lib=Xft");

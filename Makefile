@@ -7,7 +7,7 @@ all: build
 
 build:
 	@echo "Building srwm $(VERSION)..."
-	go build -ldflags="-w -s -X github.com/infraflakes/srwm/cmd.Version=$(VERSION)" -o ./bin/srwm .
+	dagger call build --source=.
 
 fmt:
 	@echo "Formatting code..."
@@ -15,10 +15,8 @@ fmt:
 
 lint:
 	@echo "Linting..."
-	go vet ./...
-	golangci-lint run
 
 clean:
 	@echo "Cleaning..."
+	rm -rf ./target
 	rm -rf ./bin
-	rm -rf ./result

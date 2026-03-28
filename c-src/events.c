@@ -1,4 +1,5 @@
 #include "wm.h"
+#include <X11/XKBlib.h>
 
 void (*handler[LASTEvent])(XEvent *) = {[ButtonPress] = buttonpress,
                                         [ClientMessage] = clientmessage,
@@ -216,7 +217,7 @@ void keypress(XEvent *e) {
   KeySym keysym;
   XKeyEvent *ev;
   ev = &e->xkey;
-  keysym = XKeycodeToKeysym(dpy, (KeyCode)ev->keycode, 0);
+  keysym = XkbKeycodeToKeysym(dpy, (KeyCode)ev->keycode, 0, 0);
 
   for (i = 0; i < dkeys_len; i++)
     if (keysym == dkeys[i].keysym &&

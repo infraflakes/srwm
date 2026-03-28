@@ -242,7 +242,8 @@ drw_picture_create_resized(Drw *drw, char *src, unsigned int srcw, unsigned int 
 			srcw, srch, 0, ZPixmap, src,
 			ImageByteOrder(drw->dpy), BitmapUnit(drw->dpy), BitmapBitOrder(drw->dpy), 32,
 			32, 0, 32,
-			0, 0, 0
+			0, 0, 0,
+      .obdata = NULL
 		};
 		XInitImage(&img);
 
@@ -275,7 +276,8 @@ drw_picture_create_resized(Drw *drw, char *src, unsigned int srcw, unsigned int 
 		    dstw, dsth, 0, ZPixmap, (char *)imlib_image_get_data_for_reading_only(),
 		    ImageByteOrder(drw->dpy), BitmapUnit(drw->dpy), BitmapBitOrder(drw->dpy), 32,
 		    32, 0, 32,
-		    0, 0, 0
+		    0, 0, 0,
+      .obdata = NULL
 		};
 		XInitImage(&img);
 
