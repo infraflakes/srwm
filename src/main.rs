@@ -201,7 +201,5 @@ fn main() -> Result<(), Box<dyn std::error::Error>> {
         data.display_handle.flush_clients().ok();
     })?;
 
-    state::remove_state_file();
-
     Ok(())
 }

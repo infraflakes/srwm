@@ -6,7 +6,7 @@ SYSCONFDIR ?= /etc
 .PHONY: build install uninstall
 
 build:
-	cargo build --release
+	dagger call build --source=. export --path=./bin/srwm
 
 install:
 	install -Dm755 target/release/driftwm $(DESTDIR)$(BINDIR)/driftwm

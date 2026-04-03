@@ -237,7 +237,6 @@ pub fn init_winit(
                 os.last_rendered_camera = os.camera;
                 os.last_rendered_zoom = os.zoom;
             }
-            data.write_state_file_if_dirty();
 
             // --- Put backend back ---
             data.backend = Some(Backend::Winit(backend));
