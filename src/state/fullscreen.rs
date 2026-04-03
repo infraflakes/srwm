@@ -28,7 +28,9 @@ impl Srwm {
         let viewport_size = self.get_viewport_size();
         let saved_location = self.space.element_location(window).unwrap_or_default();
 
-        let (camera, zoom) = self.with_output_state(|os| (os.camera, os.zoom));
+        let (camera, zoom) = self
+            .with_output_state(|os| (os.camera, os.zoom))
+            .unwrap_or_default();
         self.fullscreen.insert(
             output,
             FullscreenState {
@@ -61,7 +63,8 @@ impl Srwm {
         });
 
         // Place window at viewport origin and raise
-        self.space.map_element(window.clone(), camera_i32, true);
+        self.space
+            .map_element(window.clone(), camera_i32.unwrap_or_default(), true);
         self.space.raise_element(window, true);
         self.enforce_below_windows();
         self.update_output_from_camera();
@@ -116,21 +119,25 @@ impl Srwm {
         &mut self,
         canvas_pos: Point<f64, Logical>,
     ) -> Point<f64, Logical> {
-        let (old_camera, old_zoom) = self.with_output_state(|os| (os.camera, os.zoom));
+        let (old_camera, old_zoom) = self
+            .with_output_state(|os| (os.camera, os.zoom))
+            .unwrap_or_default();
         self.exit_fullscreen();
         let screen: Point<f64, Logical> = Point::from((
             (canvas_pos.x - old_camera.x) * old_zoom,
             (canvas_pos.y - old_camera.y) * old_zoom,
         ));
-        let (new_pos, _cur_zoom, _cur_camera) = self.with_output_state(|os| {
-            let cur_zoom = os.zoom;
-            let cur_camera = os.camera;
-            let new_pos = Point::from((
-                screen.x / cur_zoom + cur_camera.x,
-                screen.y / cur_zoom + cur_camera.y,
-            ));
-            (new_pos, cur_zoom, cur_camera)
-        });
+        let (new_pos, _cur_zoom, _cur_camera) = self
+            .with_output_state(|os| {
+                let cur_zoom = os.zoom;
+                let cur_camera = os.camera;
+                let new_pos = Point::from((
+                    screen.x / cur_zoom + cur_camera.x,
+                    screen.y / cur_zoom + cur_camera.y,
+                ));
+                (new_pos, cur_zoom, cur_camera)
+            })
+            .unwrap_or_default();
         self.warp_pointer(new_pos);
         new_pos
     }

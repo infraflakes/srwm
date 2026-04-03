@@ -504,7 +504,8 @@ impl Srwm {
         // position_transformed gives screen-local coords (0..width, 0..height)
         let screen_pos = event.position_transformed(output_geo.size);
         let canvas_pos = self
-            .with_output_state(|os| screen_to_canvas(ScreenPos(screen_pos), os.camera, os.zoom).0);
+            .with_output_state(|os| screen_to_canvas(ScreenPos(screen_pos), os.camera, os.zoom).0)
+            .unwrap_or_default();
 
         // When locked, pointer only targets the lock surface
         if !matches!(self.session_lock, crate::state::SessionLock::Unlocked) {

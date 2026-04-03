@@ -190,8 +190,11 @@ impl Srwm {
 
                                 // Focus + raise (with modal redirect) + start move grab
                                 self.raise_and_focus(&window, serial);
-                                let initial_window_location =
-                                    self.space.element_location(&window).unwrap();
+                                let Some(initial_window_location) =
+                                    self.space.element_location(&window)
+                                else {
+                                    return;
+                                };
                                 let start_data = GrabStartData {
                                     focus: None,
                                     button,
@@ -201,7 +204,9 @@ impl Srwm {
                                     start_data,
                                     window,
                                     initial_window_location,
-                                    self.active_output().unwrap(),
+                                    self.active_output().unwrap_or_else(|| {
+                                        self.space.outputs().next().unwrap().clone()
+                                    }),
                                 );
                                 pointer.set_grab(self, grab, serial, Focus::Clear);
                                 return;
@@ -243,8 +248,11 @@ impl Srwm {
                         {
                             self.raise_and_focus(&window, serial);
 
-                            let initial_window_location =
-                                self.space.element_location(&window).unwrap();
+                            let Some(initial_window_location) =
+                                self.space.element_location(&window)
+                            else {
+                                return;
+                            };
                             let start_data = GrabStartData {
                                 focus: None,
                                 button,
@@ -254,7 +262,13 @@ impl Srwm {
                                 start_data,
                                 window,
                                 initial_window_location,
-                                self.active_output().unwrap(),
+                                self.active_output().unwrap_or_else(|| {
+                                    self.space
+                                        .outputs()
+                                        .next()
+                                        .expect("No outputs available")
+                                        .clone()
+                                }),
                             );
                             pointer.set_grab(self, grab, serial, Focus::Clear);
                             return;
@@ -284,9 +298,11 @@ impl Srwm {
                         return;
                     }
                     MouseAction::CenterNearest => {
-                        let screen_pos = self.with_output_state(|os| {
-                            canvas_to_screen(CanvasPos(pos), os.camera, os.zoom).0
-                        });
+                        let screen_pos = self
+                            .with_output_state(|os| {
+                                canvas_to_screen(CanvasPos(pos), os.camera, os.zoom).0
+                            })
+                            .unwrap_or_default();
                         let start_data = GrabStartData {
                             focus: None,
                             button,
@@ -374,7 +390,9 @@ impl Srwm {
         serial: smithay::utils::Serial,
         explicit_edge: Option<xdg_toplevel::ResizeEdge>,
     ) {
-        let initial_window_location = self.space.element_location(window).unwrap();
+        let Some(initial_window_location) = self.space.element_location(window) else {
+            return;
+        };
         let initial_window_size = window.geometry().size;
 
         let edges = explicit_edge.unwrap_or_else(|| {
@@ -414,7 +432,9 @@ impl Srwm {
             button,
             location: pos,
         };
-        let output = self.active_output().unwrap();
+        let Some(output) = self.active_output() else {
+            return;
+        };
         let grab = ResizeSurfaceGrab {
             start_data,
             window: window.clone(),
@@ -469,7 +489,7 @@ impl Srwm {
             os.last_scroll_pan
                 .is_some_and(|t: std::time::Instant| t.elapsed() < Duration::from_millis(150))
         });
-        let context = if recent_pan {
+        let context = if recent_pan.unwrap_or(false) {
             BindingContext::OnCanvas
         } else {
             self.pointer_context(pos)
@@ -492,7 +512,7 @@ impl Srwm {
                             });
                         }
                         let (zoom, s) = (
-                            self.with_output_state(|os| os.zoom),
+                            self.with_output_state(|os| os.zoom).unwrap_or(1.0),
                             self.config.trackpad_speed,
                         );
                         let canvas_delta: Point<f64, smithay::utils::Logical> =
@@ -523,8 +543,9 @@ impl Srwm {
                     if v != 0.0 {
                         let steps = -v / 30.0;
                         let factor = self.config.zoom_step.powf(steps);
-                        let (cur_zoom, cur_camera) =
-                            self.with_output_state(|os| (os.zoom, os.camera));
+                        let (cur_zoom, cur_camera) = self
+                            .with_output_state(|os| (os.zoom, os.camera))
+                            .unwrap_or((1.0, Point::default()));
                         let new_zoom = (cur_zoom * factor).clamp(self.min_zoom(), canvas::MAX_ZOOM);
 
                         if new_zoom != cur_zoom {
@@ -578,7 +599,8 @@ impl Srwm {
         from_empty_canvas: bool,
     ) -> PanGrab {
         let screen_pos = self
-            .with_output_state(|os| canvas_to_screen(CanvasPos(canvas_pos), os.camera, os.zoom).0);
+            .with_output_state(|os| canvas_to_screen(CanvasPos(canvas_pos), os.camera, os.zoom).0)
+            .unwrap_or_default();
         PanGrab {
             start_data: GrabStartData {
                 focus: None,
@@ -589,7 +611,9 @@ impl Srwm {
             start_screen_pos: screen_pos,
             from_empty_canvas,
             dragged: false,
-            output: self.active_output().unwrap(),
+            output: self
+                .active_output()
+                .unwrap_or_else(|| self.space.outputs().next().unwrap().clone()),
         }
     }
 }

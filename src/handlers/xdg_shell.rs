@@ -43,7 +43,9 @@ impl XdgShellHandler for Srwm {
             .active_output()
             .and_then(|o| self.space.output_geometry(&o))
             .map(|geo| {
-                let (cam, z) = self.with_output_state(|os| (os.camera, os.zoom));
+                let (cam, z) = self
+                    .with_output_state(|os| (os.camera, os.zoom))
+                    .unwrap_or_default();
                 (
                     (cam.x + geo.size.w as f64 / (2.0 * z)) as i32,
                     (cam.y + geo.size.h as f64 / (2.0 * z)) as i32,
@@ -384,9 +386,15 @@ impl Srwm {
                 .unwrap_or_default();
             // Constrain to the visible canvas area (accounts for zoom)
             let viewport_size = output_geo.size;
-            let mut target = self.with_output_state(|os| {
-                srwm::canvas::visible_canvas_rect(os.camera.to_i32_round(), viewport_size, os.zoom)
-            });
+            let mut target = self
+                .with_output_state(|os| {
+                    srwm::canvas::visible_canvas_rect(
+                        os.camera.to_i32_round(),
+                        viewport_size,
+                        os.zoom,
+                    )
+                })
+                .unwrap_or_else(|| Rectangle::new((0, 0).into(), viewport_size));
             // Translate to layer-surface-relative coordinates
             target.loc -= pos;
             target.loc -= get_popup_toplevel_coords(popup);

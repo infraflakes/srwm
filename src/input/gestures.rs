@@ -634,7 +634,7 @@ impl Srwm {
             self.cancel_animations();
             self.gestures.pinned_output = self.active_output();
             self.gestures.state = Some(GestureState::PinchZoom {
-                initial_zoom: self.with_output_state(|os| os.zoom),
+                initial_zoom: self.with_output_state(|os| os.zoom).unwrap_or(1.0),
             });
             return;
         }
@@ -941,7 +941,13 @@ impl Srwm {
             },
             window,
             initial_window_location,
-            self.active_output().unwrap(),
+            self.active_output().unwrap_or_else(|| {
+                self.space
+                    .outputs()
+                    .next()
+                    .expect("No outputs available")
+                    .clone()
+            }),
         );
         pointer.set_grab(self, grab, serial, Focus::Clear);
 
@@ -959,7 +965,9 @@ impl Srwm {
         keyboard.set_focus(self, Some(FocusTarget(wl_surface.clone())), serial);
         self.enforce_below_windows();
 
-        let initial_location = self.space.element_location(&window).unwrap();
+        let Some(initial_location) = self.space.element_location(&window) else {
+            return;
+        };
         let initial_size = window.geometry().size;
         let edges = edges_from_position(pos, initial_location, initial_size);
 
@@ -1025,7 +1033,9 @@ impl Srwm {
     fn gesture_camera_zoom(&self) -> (f64, Point<f64, Logical>) {
         match self.gestures.pinned_output {
             Some(ref o) => self.with_output_state_on(o, |os| (os.zoom, os.camera)),
-            None => self.with_output_state(|os| (os.zoom, os.camera)),
+            None => self
+                .with_output_state(|os| (os.zoom, os.camera))
+                .unwrap_or((1.0, Point::default())),
         }
     }
 

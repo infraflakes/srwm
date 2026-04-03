@@ -303,7 +303,9 @@ impl CompositorHandler for Srwm {
                             };
                             let centered = if output_geo.is_some() {
                                 let vc = self.usable_center_screen();
-                                let (cam, z) = self.with_output_state(|os| (os.camera, os.zoom));
+                                let (cam, z) = self
+                                    .with_output_state(|os| (os.camera, os.zoom))
+                                    .unwrap_or_default();
                                 let cx = (cam.x + vc.x / z).round() as i32 - geo.size.w / 2;
                                 let cy = (cam.y + vc.y / z).round() as i32 - geo.size.h / 2;
                                 (cx, cy)

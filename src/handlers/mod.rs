@@ -210,7 +210,9 @@ impl XdgActivationHandler for Srwm {
                 return;
             }
             let mostly_visible = self.space.element_location(&window).is_some_and(|loc| {
-                let (camera, zoom) = self.with_output_state(|os| (os.camera, os.zoom));
+                let (camera, zoom) = self
+                    .with_output_state(|os| (os.camera, os.zoom))
+                    .unwrap_or_default();
                 srwm::canvas::visible_fraction(
                     loc,
                     window.geometry().size,

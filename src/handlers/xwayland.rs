@@ -93,7 +93,9 @@ impl XwmHandler for Srwm {
                 .active_output()
                 .and_then(|o| self.space.output_geometry(&o))
                 .map(|_| {
-                    let (cam, z) = self.with_output_state(|os| (os.camera, os.zoom));
+                    let (cam, z) = self
+                        .with_output_state(|os| (os.camera, os.zoom))
+                        .unwrap_or_default();
                     (
                         (cam.x + vc.x / z).round() as i32 - geo.size.w / 2,
                         (cam.y + bar / 2.0 + vc.y / z).round() as i32 - geo.size.h / 2,

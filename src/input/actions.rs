@@ -81,19 +81,21 @@ impl Srwm {
                 }
             }
             Action::PanViewport(dir) => {
-                let (_zoom, delta) = self.with_output_state(|os| {
-                    os.camera_target = None;
-                    os.zoom_target = None;
-                    os.zoom_animation_center = None;
-                    os.overview_return = None;
-                    let zoom = os.zoom;
-                    let step = self.config.pan_step / zoom;
-                    let (ux, uy) = dir.to_unit_vec();
-                    let delta: Point<f64, smithay::utils::Logical> =
-                        Point::from((ux * step, uy * step));
-                    os.camera = os.camera + delta;
-                    (zoom, delta)
-                });
+                let (_zoom, delta) = self
+                    .with_output_state(|os| {
+                        os.camera_target = None;
+                        os.zoom_target = None;
+                        os.zoom_animation_center = None;
+                        os.overview_return = None;
+                        let zoom = os.zoom;
+                        let step = self.config.pan_step / zoom;
+                        let (ux, uy) = dir.to_unit_vec();
+                        let delta: Point<f64, smithay::utils::Logical> =
+                            Point::from((ux * step, uy * step));
+                        os.camera = os.camera + delta;
+                        (zoom, delta)
+                    })
+                    .unwrap_or_default();
                 self.update_output_from_camera();
 
                 // Shift pointer so cursor stays at the same screen position
@@ -183,7 +185,9 @@ impl Srwm {
 
                 let viewport_size = self.get_viewport_size();
                 let vc = self.usable_center_screen();
-                let (camera, zoom) = self.with_output_state(|os| (os.camera, os.zoom)).unwrap_or_default();
+                let (camera, zoom) = self
+                    .with_output_state(|os| (os.camera, os.zoom))
+                    .unwrap_or_default();
                 let viewport_center = Point::from((camera.x + vc.x / zoom, camera.y + vc.y / zoom));
 
                 let (origin, skip) = if let Some(ref w) = focused {
@@ -326,8 +330,11 @@ impl Srwm {
                             fullscreen_window: was_fullscreen.clone(),
                         });
                         os.overview_return = None;
-                        let vc =
-                            crate::state::usable_center_for_output(&self.active_output().unwrap()); // Use state helper
+                        let vc = if let Some(output) = self.active_output() {
+                            crate::state::usable_center_for_output(&output)
+                        } else {
+                            Point::default()
+                        };
                         let home = Point::from((-vc.x, -vc.y));
                         os.zoom_animation_center = Some(Point::from((0.0, 0.0)));
                         os.camera_target = Some(home);
@@ -337,7 +344,10 @@ impl Srwm {
             }
             Action::GoToPosition(x, y) => {
                 self.with_output_state(|os| {
-                    let vc = crate::state::usable_center_for_output(&self.active_output().unwrap());
+                    let Some(output) = self.active_output() else {
+                        return;
+                    };
+                    let vc = crate::state::usable_center_for_output(&output);
                     let zoom = os.zoom;
                     let target_camera = Point::from((x - vc.x / zoom, -y - vc.y / zoom));
                     os.overview_return = None;
@@ -345,9 +355,9 @@ impl Srwm {
                 });
             }
             Action::ZoomIn => {
-                let new_zoom = self.with_output_state(|os| {
-                    (os.zoom * self.config.zoom_step).min(canvas::MAX_ZOOM)
-                }).unwrap_or(1.0);
+                let new_zoom = self
+                    .with_output_state(|os| (os.zoom * self.config.zoom_step).min(canvas::MAX_ZOOM))
+                    .unwrap_or(1.0);
                 let new_zoom = canvas::snap_zoom(new_zoom);
                 self.zoom_to_anchored(new_zoom);
             }
@@ -366,8 +376,11 @@ impl Srwm {
                     let overview_ret = os.overview_return.take();
                     if let Some((saved_camera, saved_zoom)) = overview_ret {
                         // Toggle back from overview
-                        let vc =
-                            crate::state::usable_center_for_output(&self.active_output().unwrap());
+                        let vc = if let Some(output) = self.active_output() {
+                            crate::state::usable_center_for_output(&output)
+                        } else {
+                            Point::default()
+                        };
                         os.zoom_animation_center = Some(Point::from((
                             saved_camera.x + vc.x / saved_zoom,
                             saved_camera.y + vc.y / saved_zoom,
@@ -376,10 +389,16 @@ impl Srwm {
                         os.zoom_target = Some(saved_zoom);
                     } else {
                         // Compute bounding box of all windows
-                        let viewport =
-                            crate::state::output_logical_size(&self.active_output().unwrap());
-                        let vc =
-                            crate::state::usable_center_for_output(&self.active_output().unwrap());
+                        let viewport = if let Some(output) = self.active_output() {
+                            crate::state::output_logical_size(&output)
+                        } else {
+                            Size::default()
+                        };
+                        let vc = if let Some(output) = self.active_output() {
+                            crate::state::usable_center_for_output(&output)
+                        } else {
+                            Point::default()
+                        };
                         let windows = self
                             .space
                             .elements()

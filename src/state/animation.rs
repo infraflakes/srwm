@@ -21,16 +21,16 @@ impl Srwm {
 
     /// Fire held compositor action if repeat delay/rate has elapsed.
     pub fn apply_key_repeat(&mut self) {
-        let Some((_, ref action, next_fire)) = self.held_action else {
+        let Some((_, ref action, ref mut next_fire)) = self.held_action else {
             return;
         };
         let now = std::time::Instant::now();
-        if now < next_fire {
+        if now < *next_fire {
             return;
         }
         let action = action.clone();
         let rate_interval = Duration::from_millis(1000 / self.config.repeat_rate.max(1) as u64);
-        self.held_action.as_mut().unwrap().2 = now + rate_interval;
+        *next_fire = now + rate_interval;
         self.execute_action(&action);
     }
 
@@ -41,9 +41,11 @@ impl Srwm {
         canvas_pos: Point<f64, Logical>,
     ) -> Option<(FocusTarget, Point<f64, Logical>)> {
         if self.pointer_over_layer {
-            let screen_pos = self.with_output_state(|os| {
-                canvas::canvas_to_screen(CanvasPos(canvas_pos), os.camera, os.zoom).0
-            });
+            let screen_pos = self
+                .with_output_state(|os| {
+                    canvas::canvas_to_screen(CanvasPos(canvas_pos), os.camera, os.zoom).0
+                })
+                .unwrap_or_default();
             self.layer_surface_under(
                 screen_pos,
                 canvas_pos,
@@ -83,10 +85,12 @@ impl Srwm {
     /// Apply scroll momentum each frame. Suppressed during active
     /// PanGrab to avoid interfering with grab tracking.
     pub fn apply_scroll_momentum(&mut self, dt: Duration) {
-        if self.with_output_state(|os| os.panning) {
+        if self.with_output_state(|os| os.panning).unwrap_or(false) {
             return;
         }
-        let delta = self.with_output_state(|os| os.momentum.tick(dt));
+        let delta = self
+            .with_output_state(|os| os.momentum.tick(dt))
+            .unwrap_or_default();
         let Some(delta) = delta else {
             return;
         };
@@ -103,15 +107,17 @@ impl Srwm {
     /// Synthetic pointer motion keeps cursor at the same screen position and
     /// lets the active MoveSurfaceGrab reposition the window automatically.
     pub fn apply_edge_pan(&mut self) {
-        let canvas_delta = self.with_output_state(|os| {
-            let Some(velocity) = os.edge_pan_velocity else {
-                return None;
-            };
-            let zoom = os.zoom;
-            let delta = Point::from((velocity.x / zoom, velocity.y / zoom));
-            os.camera = os.camera + delta;
-            Some(delta)
-        });
+        let canvas_delta = self
+            .with_output_state(|os| {
+                let Some(velocity) = os.edge_pan_velocity else {
+                    return None;
+                };
+                let zoom = os.zoom;
+                let delta = Point::from((velocity.x / zoom, velocity.y / zoom));
+                os.camera = os.camera + delta;
+                Some(delta)
+            })
+            .flatten();
         let Some(canvas_delta) = canvas_delta else {
             return;
         };
@@ -213,7 +219,7 @@ impl Srwm {
             Some(os.camera - old_camera)
         });
 
-        if let Some(delta) = result {
+        if let Some(delta) = result.flatten() {
             self.update_output_from_camera();
             let pos = self.pointer().current_location();
             self.warp_pointer(pos + delta);
@@ -292,6 +298,7 @@ impl Srwm {
                     Some((old_zoom, old_camera, os.zoom, os.camera, false))
                 }
             })
+            .flatten()
             .unwrap_or((1.0, Point::default(), 1.0, Point::default(), false));
 
         if warp {
@@ -309,7 +316,10 @@ impl Srwm {
         }
 
         // Final snapped check for blur
-        if self.with_output_state(|os| os.zoom_target.is_none()) {
+        if self
+            .with_output_state(|os| os.zoom_target.is_none())
+            .unwrap_or(false)
+        {
             self.render.blur_scene_generation += 1;
         }
     }
