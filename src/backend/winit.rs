@@ -81,6 +81,14 @@ pub fn init_winit(
         data.config.friction,
         Point::from((0, 0)),
     );
+
+    // Restore saved camera/zoom from previous session
+    let saved = crate::state::load_cameras();
+    if let Some(&(saved_cam, saved_zoom)) = saved.get("winit") {
+        let mut os = crate::state::output_state(&output);
+        os.camera = saved_cam;
+        os.zoom = saved_zoom;
+    }
     data.focused_output = Some(output.clone());
 
     // Map the output into the space at the initial camera position

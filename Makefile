@@ -6,10 +6,10 @@ SYSCONFDIR ?= /etc
 .PHONY: build build-verbose fmt install uninstall
 
 build:
-	dagger call build --source=. export --path=./bin/srwm
+	dagger call build --source=. export --path=./target/release/srwm
 
 build-verbose:
-	dagger call build --source=. --progress=plain export --path=./bin/srwm
+	dagger call build --source=. --progress=plain export --path=./target/release/srwm
 
 fmt:
 	cargo fmt

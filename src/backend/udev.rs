@@ -927,6 +927,21 @@ fn create_surface(
 
     init_output_state(&output, camera, state.config.friction, layout_position);
 
+    // Restore saved camera/zoom from previous session
+    let saved = crate::state::load_cameras();
+    if let Some(&(saved_cam, saved_zoom)) = saved.get(&output.name()) {
+        let mut os = crate::state::output_state(&output);
+        os.camera = saved_cam;
+        os.zoom = saved_zoom;
+        tracing::info!(
+            "Restored camera for {}: ({:.1}, {:.1}) zoom={:.3}",
+            output.name(),
+            saved_cam.x,
+            saved_cam.y,
+            saved_zoom
+        );
+    }
+
     // Set focused_output to the first output created
     if state.focused_output.is_none() {
         state.focused_output = Some(output.clone());

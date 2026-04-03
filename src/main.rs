@@ -205,5 +205,8 @@ fn main() -> Result<(), Box<dyn std::error::Error>> {
         data.display_handle.flush_clients().ok();
     })?;
 
+    // Save camera state on exit (fallback for non-Quit exits)
+    data.save_cameras();
+
     Ok(())
 }

@@ -1,17 +1,5 @@
-# srwm — personal config (symlink to ~/.config/srwm/config.toml)
-# ln -sf ~/Documents/work/scripts/srwm/extras/config.toml ~/.config/srwm/config.toml
-
 autostart = [
-    "eval $(gnome-keyring-daemon --start --components=secrets,ssh) && systemctl --user import-environment SSH_AUTH_SOCK GNOME_KEYRING_CONTROL && dbus-update-activation-environment SSH_AUTH_SOCK GNOME_KEYRING_CONTROL",
-    "/usr/libexec/polkit-gnome-authentication-agent-1",
-    "swayosd-server --top-margin 0.95",
-    "swaync",
-     "waybar -c ~/.config/waybar/taskbar.jsonc -s ~/.config/waybar/taskbar.css",
-     "sleep 1 && waybar -c ~/.config/waybar/tray.jsonc -s ~/.config/waybar/tray.css",
-     "vorta -d",
-     "~/Documents/work/scripts/srwm/extras/widgets/launch.sh",
-     "~/Documents/work/scripts/srwm/extras/scripts/battery_notify.sh",
-     "swayidle -w timeout 300 'brightnessctl -s set 10%' resume 'brightnessctl -r' timeout 330 '~/Documents/work/scripts/srwm/extras/scripts/lock.sh' timeout 600 'systemctl suspend' before-sleep '~/Documents/work/scripts/srwm/extras/scripts/lock.sh'",
+     # "vorta -d",
 ]
 
 focus_follows_mouse = true
@@ -30,17 +18,14 @@ theme = "elementary"
 bg_color = "#FDF6E3"
 fg_color = "#5C6A72"
 
-[background]
-shader_path = "/usr/local/share/srwm/wallpapers/pink_cloud.glsl"
+# [background]
+# shader_path = "/usr/local/share/srwm/wallpapers/pink_cloud.glsl"
 
 [output.outline]
 color="#FDF6E3"
 
 [keybindings]
-"mod+return" = "exec ptyxis -s"
-"mod+d" = "exec fuzzel"
-"mod+l" = "spawn ~/Documents/work/scripts/srwm/extras/scripts/lock.sh"
-"mod+n" = "spawn swaync-client -t"
+"mod+return" = "exec ghostty"
 # swayosd instead of default wpctl/brightnessctl
 "XF86AudioRaiseVolume" = "spawn swayosd-client --output-volume raise"
 "XF86AudioLowerVolume" = "spawn swayosd-client --output-volume lower"
@@ -53,98 +38,8 @@ color="#FDF6E3"
 name = "HDMI-A-1"
 transform = "90"
 
-# Dashboard widgets — positioned around origin for home view (1920x1080)
-
-[[window_rules]]
-app_id = "drift-clock"
-position = [-93, 205]
-widget = true
-decoration = "none"
-
-[[window_rules]]
-app_id = "drift-stats"
-position = [-93, 0]
-widget = true
-decoration = "none"
-
-[[window_rules]]
-app_id = "drift-canvas"
-position = [-129, -185]
-widget = true
-decoration = "none"
-
-[[window_rules]]
-app_id = "drift-layout"
-position = [42, -185]
-widget = true
-decoration = "none"
-
-[[window_rules]]
-app_id = "drift-calendar"
-position = [186, 0]
-widget = true
-decoration = "none"
-
-[[window_rules]]
-app_id = "drift-weather"
-position = [186, 205]
-widget = true
-decoration = "none"
-
-[[window_rules]]
-app_id = "drift-notif"
-position = [190, -185]
-widget = true
-decoration = "none"
-
-[[window_rules]]
-app_id = "drift-power"
-position = [274, -259]
-widget = true
-decoration = "none"
-
-[[window_rules]]
-app_id = "drift-power-menu"
-position = [274, -370]
-widget = true
-decoration = "server"
-
-[[window_rules]]
-app_id = "waybar"
-position = [-289, 21]
-widget = true
-decoration = "none"
-
-[[window_rules]]
-app_id = "waybar"
-position = [126, -259]
-widget = true
-decoration = "none"
-
-# Cosmic settings: hide winit window helper and apply fixed window size
-[[window_rules]]
-title = "winit window"
-widget = true
-
-[[window_rules]]
-app_id = "com.system76.CosmicSettings"
-size=[500, 725]
-
-# Server side decoration
-[[window_rules]]
-app_id = "org.telegram.desktop"
-decoration = "server"
-
-# Blur notifications
-[[window_rules]]
-app_id = "swaync-control-center"
-blur = true
-
-[[window_rules]]
-app_id = "swaync-notification-window"
-blur = true
-
 [[window_rules]]
 app_id = "Alacritty"
 opacity = 0.8
 blur = true
+# position = [126, -259]

@@ -396,22 +396,6 @@ source = "registry+https://github.com/rust-lang/crates.io-index"
 checksum = "d8b14ccef22fc6f5a8f4d7d768562a182c04ce9a3b3157b91390b52ddfdf1a76"
 
 [[package]]
-name = "srwm"
-version = "0.1.4"
-dependencies = [
- "image",
- "libc",
- "libdisplay-info",
- "serde",
- "smithay",
- "smithay-drm-extras",
- "toml 0.8.23",
- "tracing",
- "tracing-subscriber",
- "xcursor",
-]
-
-[[package]]
 name = "drm"
 version = "0.14.2"
 source = "registry+https://github.com/rust-lang/crates.io-index"
@@ -1730,6 +1714,23 @@ source = "registry+https://github.com/rust-lang/crates.io-index"
 checksum = "dd538fb6910ac1099850255cf94a94df6551fbdd602454387d0adb2d1ca6dead"
 dependencies = [
  "serde",
+]
+
+[[package]]
+name = "srwm"
+version = "0.1.4"
+dependencies = [
+ "image",
+ "libc",
+ "libdisplay-info",
+ "serde",
+ "serde_json",
+ "smithay",
+ "smithay-drm-extras",
+ "toml 0.8.23",
+ "tracing",
+ "tracing-subscriber",
+ "xcursor",
 ]
 
 [[package]]

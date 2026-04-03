@@ -469,6 +469,7 @@ impl Srwm {
             }
             Action::Quit => {
                 tracing::info!("Quit action triggered — stopping compositor");
+                self.save_cameras();
                 self.loop_signal.stop();
             }
         }

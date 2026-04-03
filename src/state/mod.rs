@@ -244,6 +244,67 @@ pub fn output_state(output: &Output) -> MutexGuard<'_, OutputState> {
         .expect("OutputState mutex poisoned")
 }
 
+fn state_dir() -> Option<std::path::PathBuf> {
+    let base = std::env::var_os("XDG_STATE_HOME")
+        .map(std::path::PathBuf::from)
+        .or_else(|| {
+            std::env::var_os("HOME").map(|h| std::path::PathBuf::from(h).join(".local/state"))
+        })?;
+    Some(base.join("srwm"))
+}
+
+impl Srwm {
+    pub fn save_cameras(&self) {
+        let Some(dir) = state_dir() else { return };
+        if std::fs::create_dir_all(&dir).is_err() {
+            return;
+        }
+
+        // Build a TOML string: [output-name]\ncamera_x = ...\ncamera_y = ...\nzoom = ...\n
+        let mut content = String::new();
+        for output in self.space.outputs() {
+            let name = output.name();
+            let os = output_state(output);
+            content += &format!(
+                "[\"{}\"]\ncamera_x = {:.1}\ncamera_y = {:.1}\nzoom = {:.3}\n\n",
+                name, os.camera.x, os.camera.y, os.zoom
+            );
+        }
+
+        let tmp = dir.join("cameras.toml.tmp");
+        let path = dir.join("cameras.toml");
+        if std::fs::write(&tmp, &content).is_ok() {
+            let _ = std::fs::rename(&tmp, &path);
+        }
+    }
+}
+
+pub fn load_cameras() -> HashMap<String, (Point<f64, Logical>, f64)> {
+    let mut result = HashMap::new();
+    let Some(dir) = state_dir() else {
+        return result;
+    };
+    let Ok(content) = std::fs::read_to_string(dir.join("cameras.toml")) else {
+        return result;
+    };
+    let Ok(table) = content.parse::<toml::Table>() else {
+        return result;
+    };
+
+    for (name, value) in &table {
+        let Some(section) = value.as_table() else {
+            continue;
+        };
+        let cx = section.get("camera_x").and_then(|v| v.as_float());
+        let cy = section.get("camera_y").and_then(|v| v.as_float());
+        let z = section.get("zoom").and_then(|v| v.as_float());
+        if let (Some(x), Some(y), Some(zoom)) = (cx, cy, z) {
+            result.insert(name.clone(), (Point::from((x, y)), zoom));
+        }
+    }
+    result
+}
+
 /// Central compositor state.
 pub struct Srwm {
     // -- global: infrastructure --
