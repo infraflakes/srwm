@@ -21,7 +21,7 @@ use smithay::{
 };
 
 use super::pointer::{edges_from_position, resize_cursor};
-use crate::grabs::{MoveSurfaceGrab, ResizeState, has_bottom, has_left, has_right, has_top};
+use crate::grabs::{MoveSurfaceGrab, ResizeState, compute_resize, send_resize_configure};
 use crate::state::{FocusTarget, Srwm, output_state};
 use srwm::canvas::{self, CanvasPos, canvas_to_screen};
 use srwm::config::{
@@ -399,20 +399,7 @@ impl Srwm {
 
                 *cumulative += clamped_delta;
 
-                let mut new_w = initial_size.w;
-                let mut new_h = initial_size.h;
-                if has_left(*edges) {
-                    new_w -= cumulative.x as i32;
-                } else if has_right(*edges) {
-                    new_w += cumulative.x as i32;
-                }
-                if has_top(*edges) {
-                    new_h -= cumulative.y as i32;
-                } else if has_bottom(*edges) {
-                    new_h += cumulative.y as i32;
-                }
-                new_w = new_w.max(1);
-                new_h = new_h.max(1);
+                let (mut new_w, mut new_h) = compute_resize(*edges, *initial_size, *cumulative);
 
                 if self.config.snap_enabled
                     && let Some(ref output) = self.gestures.pinned_output
@@ -454,14 +441,16 @@ impl Srwm {
                         });
                     }
 
+                    let mut new_w_val = new_w;
+                    let mut new_h_val = new_h;
                     snap_resize_edges(
                         snap,
                         *edges as u32,
                         (initial_location.x, initial_location.y),
                         (initial_size.w, initial_size.h),
                         self_bar,
-                        &mut new_w,
-                        &mut new_h,
+                        &mut new_w_val,
+                        &mut new_h_val,
                         &others,
                         zoom,
                         self.config.snap_gap,
@@ -469,30 +458,12 @@ impl Srwm {
                         self.config.snap_break_force,
                         self.config.snap_same_edge,
                     );
+                    new_w = new_w_val;
+                    new_h = new_h_val;
                 }
 
                 let new_size = Size::from((new_w, new_h));
-                if new_size != *last_size {
-                    *last_size = new_size;
-                    if let Some(toplevel) = window.toplevel() {
-                        toplevel.with_pending_state(|state| {
-                            state.size = Some(new_size);
-                            state.states.set(xdg_toplevel::State::Resizing);
-                        });
-                        toplevel.send_pending_configure();
-                    } else if let Some(x11) = window.x11_surface() {
-                        let now = std::time::Instant::now();
-                        let throttle_ok = last_x11_configure.as_ref().is_none_or(|t| {
-                            now.duration_since(*t) >= std::time::Duration::from_millis(16)
-                        });
-                        if throttle_ok {
-                            *last_x11_configure = Some(now);
-                            let mut geo = x11.geometry();
-                            geo.size = new_size;
-                            x11.configure(geo).ok();
-                        }
-                    }
-                }
+                send_resize_configure(window, new_size, last_size, last_x11_configure);
 
                 self.warp_pointer(warp_target);
             }

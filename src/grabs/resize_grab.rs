@@ -66,6 +66,63 @@ pub fn has_right(edges: xdg_toplevel::ResizeEdge) -> bool {
     edges as u32 & 8 != 0
 }
 
+/// Calculate new dimensions based on resize edges and pointer/gesture delta.
+pub fn compute_resize(
+    edges: xdg_toplevel::ResizeEdge,
+    initial_size: Size<i32, Logical>,
+    delta: Point<f64, Logical>,
+) -> (i32, i32) {
+    let mut new_w = initial_size.w;
+    let mut new_h = initial_size.h;
+
+    if has_left(edges) {
+        new_w -= delta.x as i32;
+    } else if has_right(edges) {
+        new_w += delta.x as i32;
+    }
+    if has_top(edges) {
+        new_h -= delta.y as i32;
+    } else if has_bottom(edges) {
+        new_h += delta.y as i32;
+    }
+
+    (new_w.max(1), new_h.max(1))
+}
+
+/// Send resize configuration to toplevel/X11 window with throttling.
+pub fn send_resize_configure(
+    window: &Window,
+    new_size: Size<i32, Logical>,
+    last_size: &mut Size<i32, Logical>,
+    last_x11_configure: &mut Option<std::time::Instant>,
+) -> bool {
+    if new_size != *last_size {
+        *last_size = new_size;
+
+        if let Some(toplevel) = window.toplevel() {
+            toplevel.with_pending_state(|state| {
+                state.size = Some(new_size);
+                state.states.set(xdg_toplevel::State::Resizing);
+            });
+            toplevel.send_pending_configure();
+            return true;
+        } else if let Some(x11) = window.x11_surface() {
+            let now = std::time::Instant::now();
+            let throttle_ok = last_x11_configure
+                .as_ref()
+                .is_none_or(|t| now.duration_since(*t) >= std::time::Duration::from_millis(16));
+            if throttle_ok {
+                *last_x11_configure = Some(now);
+                let mut geo = x11.geometry();
+                geo.size = new_size;
+                let _ = x11.configure(geo);
+                return true;
+            }
+        }
+    }
+    false
+}
+
 impl PointerGrab<Srwm> for ResizeSurfaceGrab {
     fn motion(
         &mut self,
@@ -108,23 +165,7 @@ impl PointerGrab<Srwm> for ResizeSurfaceGrab {
 
         let delta = clamped - self.start_data.location;
 
-        let mut new_w = self.initial_window_size.w;
-        let mut new_h = self.initial_window_size.h;
-
-        if has_left(self.edges) {
-            new_w -= delta.x as i32;
-        } else if has_right(self.edges) {
-            new_w += delta.x as i32;
-        }
-        if has_top(self.edges) {
-            new_h -= delta.y as i32;
-        } else if has_bottom(self.edges) {
-            new_h += delta.y as i32;
-        }
-
-        // Clamp to minimum 1×1
-        new_w = new_w.max(1);
-        new_h = new_h.max(1);
+        let (mut new_w, mut new_h) = compute_resize(self.edges, self.initial_window_size, delta);
 
         // Snap active resize edges to nearby windows
         if data.config.snap_enabled
@@ -154,31 +195,12 @@ impl PointerGrab<Srwm> for ResizeSurfaceGrab {
         }
 
         let new_size = Size::from((new_w, new_h));
-
-        // Only send configure when size actually changed
-        if new_size != self.last_window_size {
-            self.last_window_size = new_size;
-
-            if let Some(toplevel) = self.window.toplevel() {
-                toplevel.with_pending_state(|state| {
-                    state.size = Some(new_size);
-                    state.states.set(xdg_toplevel::State::Resizing);
-                });
-                toplevel.send_pending_configure();
-            } else if let Some(x11) = self.window.x11_surface() {
-                // Throttle X11 configures to ~60fps — X11 apps redraw synchronously
-                let now = std::time::Instant::now();
-                let throttle_ok = self
-                    .last_x11_configure
-                    .is_none_or(|t| now.duration_since(t) >= std::time::Duration::from_millis(16));
-                if throttle_ok {
-                    self.last_x11_configure = Some(now);
-                    let mut geo = x11.geometry();
-                    geo.size = new_size;
-                    x11.configure(geo).ok();
-                }
-            }
-        }
+        send_resize_configure(
+            &self.window,
+            new_size,
+            &mut self.last_window_size,
+            &mut self.last_x11_configure,
+        );
 
         // Warp pointer to clamped position so it visually stops at output edge
         let clamped_event = MotionEvent {
