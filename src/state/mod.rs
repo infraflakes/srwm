@@ -755,8 +755,6 @@ impl Srwm {
 
         let keyboard = self.keyboard();
         keyboard.set_focus(self, focus_surface, serial);
-
-        self.maybe_activate_pointer_constraint();
     }
 
     /// Find a mapped window wrapping the given X11 surface.
