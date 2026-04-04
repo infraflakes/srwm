@@ -22,7 +22,9 @@ use smithay::{
         },
     },
     utils::{Logical, Point, Rectangle, Size},
+    wayland::input_method::InputMethodManagerState,
     wayland::output::OutputManagerState,
+    wayland::text_input::TextInputManagerState,
     wayland::{
         compositor::{CompositorClientState, CompositorState},
         cursor_shape::CursorShapeManagerState,
@@ -563,6 +565,8 @@ impl Srwm {
             use smithay::wayland::xwayland_keyboard_grab::XWaylandKeyboardGrabState;
             XWaylandKeyboardGrabState::new::<Self>(&dh);
         }
+        TextInputManagerState::new::<Self>(&dh);
+        InputMethodManagerState::new::<Self, _>(&dh, |_client| true);
 
         let config = Config::load();
 

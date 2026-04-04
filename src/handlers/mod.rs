@@ -23,7 +23,7 @@ use smithay::{
         Resource,
         protocol::{wl_output::WlOutput, wl_surface::WlSurface},
     },
-    utils::{Logical, Point},
+    utils::{Logical, Point, Rectangle},
     wayland::{
         dmabuf::{DmabufGlobal, DmabufHandler, DmabufState, ImportNotifier},
         fractional_scale::FractionalScaleHandler,
@@ -303,6 +303,44 @@ impl KeyboardShortcutsInhibitHandler for Srwm {
 }
 
 delegate_keyboard_shortcuts_inhibit!(Srwm);
+
+use smithay::delegate_input_method_manager;
+use smithay::delegate_text_input_manager;
+use smithay::wayland::input_method::{InputMethodHandler, PopupSurface};
+
+impl InputMethodHandler for Srwm {
+    fn new_popup(&mut self, surface: PopupSurface) {
+        if let Err(err) = self
+            .popups
+            .track_popup(smithay::desktop::PopupKind::from(surface))
+        {
+            tracing::warn!("Failed to track IME popup: {}", err);
+        }
+    }
+
+    fn popup_repositioned(&mut self, _: PopupSurface) {}
+
+    fn dismiss_popup(&mut self, surface: PopupSurface) {
+        if let Some(parent) = surface.get_parent().map(|parent| parent.surface.clone()) {
+            let _ = smithay::desktop::PopupManager::dismiss_popup(
+                &parent,
+                &smithay::desktop::PopupKind::from(surface),
+            );
+        }
+    }
+
+    fn parent_geometry(&self, parent: &WlSurface) -> Rectangle<i32, Logical> {
+        self.space
+            .elements()
+            .find_map(|window| {
+                (window.wl_surface().as_deref() == Some(parent)).then(|| window.geometry())
+            })
+            .unwrap_or_default()
+    }
+}
+
+delegate_text_input_manager!(Srwm);
+delegate_input_method_manager!(Srwm);
 
 impl IdleInhibitHandler for Srwm {
     fn inhibit(&mut self, _surface: WlSurface) {}

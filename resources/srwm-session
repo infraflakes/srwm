@@ -4,8 +4,8 @@
 # then imports the full environment into systemd/D-Bus so services like
 # gnome-keyring (PAM-unlocked by GDM) are visible to all activated units.
 
-if [ -z "$_DRIFTWM_WRAPPER" ]; then
-    export _DRIFTWM_WRAPPER=1
+if [ -z "$_SRWM_WRAPPER" ]; then
+    export _SRWM_WRAPPER=1
     exec "$SHELL" -l -c "$0 $@"
 fi
 
@@ -25,8 +25,8 @@ systemctl --user start graphical-session-pre.target
 systemctl --user start graphical-session.target
 
 # Run srwm with logs captured for debugging.
-DRIFTWM_LOG="${XDG_RUNTIME_DIR:-/tmp}/srwm.log"
-srwm 2>"$DRIFTWM_LOG"
+SRWM_LOG="${XDG_RUNTIME_DIR:-/tmp}/srwm.log"
+srwm 2>"$SRWM_LOG"
 STATUS=$?
 
 # Compositor exited — tear down the graphical session so dependent
