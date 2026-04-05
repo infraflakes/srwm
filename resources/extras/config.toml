@@ -14,6 +14,7 @@ focus_follows_mouse = true
 # Each entry is passed to sh -c, so full shell syntax works (pipes, &&, env vars).
 autostart = [
      "xwayland-satellite",
+     "fcitx5"
 ]
 # Environment variables set before any clients launch.
 # Child processes (autostart, exec bindings) inherit these.
@@ -163,7 +164,6 @@ shader_path = "~/.config/srwm/bg/dark_sea.glsl"
 # "mod+alt+down" = "send-to-output down"
 # "mod+alt+left" = "send-to-output left"
 # "mod+alt+right" = "send-to-output right"
-# "mod+l" = "spawn swaylock -f -c 000000 -kl"
 "mod+backspace" = "quit"
 "XF86AudioRaiseVolume" = "spawn wpctl set-volume @DEFAULT_AUDIO_SINK@ 2%+"
 "XF86AudioLowerVolume" = "spawn wpctl set-volume @DEFAULT_AUDIO_SINK@ 2%-"

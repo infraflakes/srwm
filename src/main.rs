@@ -4,6 +4,7 @@ mod focus;
 mod grabs;
 mod handlers;
 mod input;
+mod install;
 mod render;
 mod screenshot_ui;
 mod state;
@@ -20,19 +21,48 @@ fn main() -> Result<(), Box<dyn std::error::Error>> {
         .with_env_filter(tracing_subscriber::EnvFilter::from_default_env())
         .init();
 
+    // Global flags (work regardless of subcommand)
     if std::env::args().any(|a| a == "--version" || a == "-V") {
         println!("srwm {}", env!("CARGO_PKG_VERSION"));
         return Ok(());
     }
 
-    // --check-config: validate config and exit
-    if std::env::args().any(|a| a == "--check-config") {
-        let _config = srwm::config::Config::load();
-        tracing::info!("Config OK");
-        return Ok(());
+    // Subcommand dispatch
+    match std::env::args().nth(1).as_deref() {
+        Some("start") => {} // fall through to compositor startup below
+        Some("install") => {
+            return install::run_install();
+        }
+        Some("uninstall") => {
+            return install::run_uninstall();
+        }
+        Some("check-config") => {
+            let _config = srwm::config::Config::load();
+            tracing::info!("Config OK");
+            return Ok(());
+        }
+        _ => {
+            println!("srwm {}", env!("CARGO_PKG_VERSION"));
+            println!();
+            println!("Usage: srwm <command> [options]");
+            println!();
+            println!("Commands:");
+            println!("  start          Start the compositor");
+            println!("  install        Install session artifacts (desktop file, portals, config)");
+            println!("  uninstall      Remove installed session artifacts");
+            println!("  check-config   Validate configuration and exit");
+            println!();
+            println!("Options:");
+            println!("  --version, -V  Print version");
+            println!();
+            println!("Start options:");
+            println!("  --backend <winit|udev>  Force backend (default: auto-detect)");
+            return Ok(());
+        }
     }
 
     // Parse --backend arg (default: udev on bare metal, winit if nested)
+    // This scans all args, so it works after "start" as well.
     let backend_name = std::env::args()
         .skip_while(|a| a != "--backend")
         .nth(1)
@@ -100,28 +130,42 @@ fn main() -> Result<(), Box<dyn std::error::Error>> {
     unsafe { std::env::set_var("XDG_SESSION_CLASS", "user") };
     unsafe { std::env::set_var("XDG_SESSION_DESKTOP", "srwm") };
 
-    // Export only session-level vars to systemd and D-Bus.
-    // Toolkit hints (MOZ_ENABLE_WAYLAND, QT_QPA_PLATFORM, etc.) stay in our
-    // process env for direct child processes but should NOT leak to
-    // D-Bus-activated services or override PAM-set vars.
-    {
-        let session_vars =
-            "WAYLAND_DISPLAY XDG_CURRENT_DESKTOP XDG_SESSION_TYPE XDG_SESSION_DESKTOP";
-        let cmd = format!(
-            "systemctl --user import-environment {session_vars}; \
-             hash dbus-update-activation-environment 2>/dev/null && \
-             dbus-update-activation-environment {session_vars}"
-        );
+    let is_session = backend_name == "udev";
+    if is_session {
+        // Start graphical-session-pre.target
+        let _ = std::process::Command::new("systemctl")
+            .args(["--user", "start", "graphical-session-pre.target"])
+            .status();
+
+        // Create a transient anchor service that keeps graphical-session.target alive.
+        // BindsTo= means this service requires the target, so:
+        //   1. Starting this service also starts graphical-session.target
+        //   2. The target stays alive because this service "needs" it (StopWhenUnneeded won't trigger)
+        // --remain-after-exit keeps the service in "active" state after /bin/true exits.
+        let _ = std::process::Command::new("systemd-run")
+            .args([
+                "--user",
+                "--unit=srwm-session.service",
+                "--property=BindsTo=graphical-session.target",
+                "--property=After=graphical-session-pre.target",
+                "--remain-after-exit",
+                "/bin/true",
+            ])
+            .status();
+
+        // Import full environment AFTER targets are alive, so D-Bus-activated
+        // services find graphical-session.target active.
+        let cmd = "systemctl --user import-environment; \
+           hash dbus-update-activation-environment 2>/dev/null && \
+           dbus-update-activation-environment WAYLAND_DISPLAY DISPLAY XDG_CURRENT_DESKTOP XDG_SESSION_TYPE XDG_SESSION_DESKTOP";
         match std::process::Command::new("/bin/sh")
-            .args(["-c", &cmd])
+            .args(["-c", cmd])
             .spawn()
         {
             Ok(mut child) => {
-                if let Err(e) = child.wait() {
-                    tracing::warn!("Error waiting for environment import: {e}");
-                }
+                let _ = child.wait();
             }
-            Err(e) => tracing::warn!("Failed to import environment: {e}"),
+            Err(e) => tracing::warn!("Failed to import session environment: {e}"),
         }
     }
 
@@ -208,6 +252,18 @@ fn main() -> Result<(), Box<dyn std::error::Error>> {
 
     // Save camera state on exit (fallback for non-Quit exits)
     data.save_cameras();
+
+    if is_session {
+        // Stop the transient anchor service. This releases graphical-session.target,
+        // which then deactivates (StopWhenUnneeded=yes), cascading to stop portal
+        // services and other dependents.
+        let _ = std::process::Command::new("systemctl")
+            .args(["--user", "stop", "srwm-session.service"])
+            .status();
+        let _ = std::process::Command::new("systemctl")
+            .args(["--user", "unset-environment", "WAYLAND_DISPLAY", "DISPLAY"])
+            .status();
+    }
 
     Ok(())
 }

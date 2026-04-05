@@ -28,7 +28,6 @@ const TOOLKIT_DEFAULTS: &[(&str, &str)] = &[
     ("MOZ_ENABLE_WAYLAND", "1"),
     ("QT_QPA_PLATFORM", "wayland;xcb"),
     ("SDL_VIDEODRIVER", "wayland,x11"),
-    ("GDK_BACKEND", "wayland,x11"),
     ("ELECTRON_OZONE_PLATFORM_HINT", "wayland"),
 ];
 
