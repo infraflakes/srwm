@@ -12,6 +12,8 @@ use smithay::backend::drm::DrmDeviceFd;
 use smithay::backend::renderer::gles::GlesRenderer;
 use smithay::output::Output;
 use smithay::utils::{Physical, Scale, Size};
+use smithay::wayland::seat::WaylandFocus;  
+use smithay::reexports::wayland_server::Resource;
 
 use crate::dbus::mutter_screen_cast::{self, CastSessionId, ScreenCastToSrwm, StreamTargetId};
 use crate::render::OutputRenderElements;
@@ -135,7 +137,11 @@ impl Srwm {
                     }
                     StreamTargetId::Window { id } => {
                         // Find the window by its Introspect index
-                        let window = self.space.elements().nth(id as usize);
+                        let window = self.space.elements().find(|w| {
+                            w.wl_surface()
+                                .map(|s| u64::from(s.id().protocol_id()) == id)
+                                .unwrap_or(false)
+                        });
                         let Some(window) = window else {
                             tracing::warn!("error starting screencast: window id {id} not found");
                             self.stop_cast(session_id);
@@ -282,7 +288,15 @@ impl Srwm {
             };
 
             // Find the window by Introspect index (same order as space.elements().enumerate())
-            let window = self.space.elements().nth(id as usize).cloned();
+            let window = self
+                .space
+                .elements()
+                .find(|w| {
+                    w.wl_surface()
+                        .map(|s| u64::from(s.id().protocol_id()) == id)
+                        .unwrap_or(false)
+                })
+                .cloned();
             let Some(window) = window else {
                 continue;
             };

@@ -11,6 +11,8 @@ mod screencasting;
 mod screenshot_ui;
 mod state;
 
+use smithay::wayland::shell::xdg::XdgToplevelSurfaceData;  
+use smithay::reexports::wayland_server::Resource;
 use state::{ClientState, Srwm};
 use std::sync::Arc;
 
@@ -186,16 +188,16 @@ fn main() -> Result<(), Box<dyn std::error::Error>> {
                         let mut windows = HashMap::new();
                         // Iterate over all windows in the space
                         use smithay::wayland::seat::WaylandFocus;
-                        for (idx, window) in data.space.elements().enumerate() {
+                        for window in data.space.elements() {
                             if let Some(surface) = window.wl_surface() {
-                                use smithay::wayland::shell::xdg::XdgToplevelSurfaceData;
+                                let id = u64::from(surface.id().protocol_id());
                                 smithay::wayland::compositor::with_states(&surface, |states| {
                                     if let Some(data) =
                                         states.data_map.get::<XdgToplevelSurfaceData>()
                                     {
                                         let attrs = data.lock().unwrap();
                                         windows.insert(
-                                            idx as u64,
+                                            id,
                                             dbus::gnome_shell_introspect::WindowProperties {
                                                 title: attrs.title.clone().unwrap_or_default(),
                                                 app_id: attrs
