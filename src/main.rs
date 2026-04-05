@@ -1,4 +1,5 @@
 mod backend;
+mod dbus;
 mod decorations;
 mod focus;
 mod grabs;
@@ -6,6 +7,7 @@ mod handlers;
 mod input;
 mod install;
 mod render;
+mod screencasting;
 mod screenshot_ui;
 mod state;
 
@@ -98,6 +100,34 @@ fn main() -> Result<(), Box<dyn std::error::Error>> {
             None
         }
     };
+
+    // Initialize screencasting + D-Bus ScreenCast service (udev only)
+    if backend_name == "udev" {
+        use std::collections::HashMap;
+        use std::sync::{Arc, Mutex};
+
+        // Initialize screencasting subsystem (creates the PipeWire calloop channel)
+        data.screencasting = Some(screencasting::Screencasting::new(&event_loop.handle()));
+
+        // Create D-Bus calloop channel for ScreenCast messages
+        let (to_srwm, from_screen_cast) = smithay::reexports::calloop::channel::channel();
+        event_loop
+            .handle()
+            .insert_source(from_screen_cast, move |event, _, state| match event {
+                smithay::reexports::calloop::channel::Event::Msg(msg) => {
+                    state.on_screen_cast_msg(msg)
+                }
+                smithay::reexports::calloop::channel::Event::Closed => (),
+            })
+            .unwrap();
+
+        // Build the output map for the D-Bus interface
+        let ipc_outputs = Arc::new(Mutex::new(HashMap::new()));
+
+        // Create and start the ScreenCast D-Bus service
+        let screen_cast = dbus::ScreenCast::new(ipc_outputs, to_srwm);
+        data.conn_screen_cast = dbus::start_screen_cast(screen_cast);
+    }
 
     // Register the Wayland Display as a calloop source so client messages
     // are dispatched automatically. This replaces the old poll_fd approach.

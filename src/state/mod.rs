@@ -498,6 +498,12 @@ pub struct Srwm {
         Instant,
         smithay::reexports::wayland_server::backend::ObjectId,
     )>,
+
+    // -- global: screencasting --
+    pub screencasting: Option<crate::screencasting::Screencasting>,
+    pub conn_screen_cast: Option<zbus::blocking::Connection>,
+    pub gbm_device:
+        Option<smithay::backend::allocator::gbm::GbmDevice<smithay::backend::drm::DrmDeviceFd>>,
 }
 
 /// Per-client state stored by wayland-server for each connected client.
@@ -695,6 +701,9 @@ impl Srwm {
             pending_screenshot_screen: false,
             pending_screenshot_confirm: None,
             last_titlebar_click: None,
+            screencasting: None,
+            conn_screen_cast: None,
+            gbm_device: None,
         }
     }
 

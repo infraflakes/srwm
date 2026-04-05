@@ -282,6 +282,7 @@ pub fn init_udev(
     };
 
     // 4. Store renderer on state + create DMA-BUF global
+    data.gbm_device = Some(gbm.clone());
     data.backend = Some(Backend::Udev(Box::new(renderer)));
     let formats = data.backend.as_mut().unwrap().renderer().dmabuf_formats();
     let default_feedback = DmabufFeedbackBuilder::new(render_node.dev_id(), formats)
@@ -1176,6 +1177,19 @@ fn render_frame(
         }
         data.restore_pointer_to_canvas();
         data.screenshot_ui.close();
+    }
+
+    // Feed frames to active screencasts
+    if data
+        .screencasting
+        .as_ref()
+        .is_some_and(|sc| !sc.casts.is_empty())
+    {
+        let renderer = backend.renderer();
+        // target_presentation_time: use the current monotonic time as a reasonable
+        // approximation — the frame has just been submitted to DRM.
+        let target_time = crate::screencasting::pw_utils::get_monotonic_time();
+        data.render_for_screen_cast(renderer, output, &elements, target_time);
     }
 
     // Fulfill capture requests after main render

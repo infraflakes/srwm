@@ -36,6 +36,7 @@ use srwm::canvas::{self, CanvasPos, canvas_to_screen};
 
 mod background;
 mod blur;
+pub mod dmabuf;
 mod screencopy;
 
 pub use background::{TileShaderElement, init_background, update_background_element};
