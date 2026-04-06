@@ -8,17 +8,15 @@ import (
 
 type Srwc struct{}
 
-// Build compiles the binary for a specific OS.
-// Usage: dagger call build --source=. --os=arch
+// Build compiles the binary for a specific distro.
+// +optional
+// +default="debian"
 func (m *Srwc) Build(
 	ctx context.Context,
 	source *dagger.Directory,
-	// +optional
-	// +default="debian"
-	os string,
+	distro string,
 ) *dagger.File {
-
-	return m.base(os).
+	return m.base(distro).
 		WithDirectory("/src", source.WithoutDirectory("target")).
 		WithWorkdir("/src").
 		WithExec([]string{"cargo", "build", "--release"}).

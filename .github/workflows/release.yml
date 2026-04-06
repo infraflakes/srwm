@@ -1,46 +1,59 @@
-name: srwc Release  
-  
-on:  
-  push:  
-    tags:  
-      - 'v*'  
-  
-jobs:  
-  build-and-release:  
-    runs-on: ubuntu-latest  
-    permissions:  
-      contents: write  
-    steps:  
-      - name: Checkout Source  
-        uses: actions/checkout@v4  
-  
-      - name: Build All Platforms  
-        uses: dagger/dagger-for-github@v8.4.0  
-        with:  
-          verb: call  
-          args: build-all --source=. export --path=./bin  
-  
-      - name: Package and Checksum
+name: srwc Release
+
+on:
+  push:
+    tags: ['v*']
+
+jobs:
+  # STAGE 1: Parallel Build
+  build-distros:
+    runs-on: ubuntu-latest
+    strategy:
+      matrix:
+        distro: [debian, arch, fedora]
+    permissions:
+      contents: write
+    steps:
+      - name: Checkout Source
+        uses: actions/checkout@v4
+
+      - name: Build with Dagger
+        uses: dagger/dagger-for-github@v8.4.0
+        with:
+          verb: call
+          args: build --source=. --distro=${{ matrix.distro }} export --path=./bin
+
+      - name: Prepare Artifact
         run: |
           cd bin
-          for f in srwc-*; do
-            # Skip if it's already a .sha256 file or doesn't exist
-            [ -f "$f" ] || continue
-            [[ "$f" == *.sha256 ]] && continue
-            
-            dist="${f#srwc-}"
-            new_name="srwc-${{ github.ref_name }}-linux-amd64-${dist}"
-            
-            mv "$f" "$new_name"
-            # Use explicit variable quotes to prevent empty string errors
-            sha256sum "$new_name" > "${new_name}.sha256"
-          done
-          ls -lh
-  
-      - name: Create GitHub Release  
-        uses: softprops/action-gh-release@v2  
-        with:  
-          files: bin/*  
-          generate_release_notes: true  
-          draft: false  
+          new_name="srwc-${{ github.ref_name }}-linux-amd64-${{ matrix.distro }}"
+          mv srwc "$new_name"
+          sha256sum "$new_name" > "${new_name}.sha256"
+
+      - name: Upload to Workflow Storage
+        uses: actions/upload-artifact@v4
+        with:
+          name: bin-${{ matrix.distro }}
+          path: bin/*
+          retention-days: 1
+
+  # STAGE 2: Aggregate and Release
+  create-release:
+    needs: build-distros
+    runs-on: ubuntu-latest
+    permissions:
+      contents: write
+    steps:
+      - name: Download All Artifacts
+        uses: actions/download-artifact@v4
+        with:
+          path: release-assets
+          merge-multiple: true
+
+      - name: Create GitHub Release
+        uses: softprops/action-gh-release@v2
+        with:
+          files: release-assets/*
+          generate_release_notes: true
+          draft: false
           prerelease: false

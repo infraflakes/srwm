@@ -8,6 +8,7 @@ on:
       - '**/*.toml'
       - '**/*.conf'
       - '**/*.glsl'
+      - '**/*.go'
       - 'release.yml'
   pull_request:
     branches: [main]
