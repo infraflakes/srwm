@@ -20,15 +20,22 @@ jobs:
           verb: call  
           args: build-all --source=. export --path=./bin  
   
-      - name: Package and Checksum  
-        run: |  
-          cd bin  
-          for f in srwc-*; do  
-            dist="${f#srwc-}"  
-            mv "$f" "srwc-${{ github.ref_name }}-linux-amd64-${dist}"  
-            sha256sum "srwc-${{ github.ref_name }}-linux-amd64-${dist}" \  
-              > "srwc-${{ github.ref_name }}-linux-amd64-${dist}.sha256"  
-          done  
+      - name: Package and Checksum
+        run: |
+          cd bin
+          for f in srwc-*; do
+            # Skip if it's already a .sha256 file or doesn't exist
+            [ -f "$f" ] || continue
+            [[ "$f" == *.sha256 ]] && continue
+            
+            dist="${f#srwc-}"
+            new_name="srwc-${{ github.ref_name }}-linux-amd64-${dist}"
+            
+            mv "$f" "$new_name"
+            # Use explicit variable quotes to prevent empty string errors
+            sha256sum "$new_name" > "${new_name}.sha256"
+          done
+          ls -lh
   
       - name: Create GitHub Release  
         uses: softprops/action-gh-release@v2  

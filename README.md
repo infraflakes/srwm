@@ -1,36 +1,58 @@
-<h1 align="center"><img alt="srwc" src="assets/logo.jpg" width="500"></h1>
+<h1 align="center">srwc (Serein Wayland Compositor)</h1>
 <p align="center">A trackpad-first infinite canvas Wayland compositor.</p>
 <p align="center">
-    <a href="https://github.com/malbiruk/srwc/blob/main/LICENSE"><img alt="License: GPL-3.0-or-later" src="https://img.shields.io/badge/license-GPL--3.0--or--later-blue"></a>
-    <a href="https://github.com/malbiruk/srwc/releases"><img alt="GitHub Release" src="https://img.shields.io/github/v/release/malbiruk/srwc?logo=github"></a>
+    <a href="LICENSE"><img alt="License: GPL-3.0-or-later" src="https://img.shields.io/badge/license-GPL--3.0--or--later-blue"></a>
+    <a href="https://github.com/infraflakes/srwc/releases"><img alt="GitHub Release" src="https://img.shields.io/github/v/release/infraflakes/srwc?logo=github"></a>
 </p>
 
-https://github.com/user-attachments/assets/df24e442-6ad0-4520-9491-cb666da06d05
+Traditional window managers arrange windows to fit your screen, but on `srwc` windows float on an infinite 2D canvas and you move the viewport around them.
 
-Traditional window managers arrange windows to fit your screen. srwc flips this: windows float on an infinite 2D canvas and you move the viewport around them. Designed with laptops in mind — trackpad support keeps getting better while display size stays limited, so treating your screen as a camera onto a larger canvas makes sense. Pan, zoom, and navigate with trackpad gestures. No workspaces, no tiling — just drift.
+> **WARNING:** Project is in early development, please leave suggestions and report bugs if you find one.
 
-Built on [smithay](https://github.com/Smithay/smithay). Inspired by [vxwm](https://codeberg.org/wh1tepearl/vxwm), [hevel](https://git.sr.ht/~dlm/hevel), and [niri](https://github.com/YaLTeR/niri).
+## Lineage
 
-**WARNING:** This is experimental software. Primarily built with AI. Use at your own risk.
+srwc is a fork of [driftwm](https://github.com/malbiruk/driftwm), which introduced optimizations, text-input-v3 protocol, screen casting via GNOME portal, built-in screenshot utility, and more.
 
-## Concept
+## Installation
 
-Think Figma or Google Maps, but for your desktop. Your screen is a viewport
-onto an infinite canvas where windows live. Pan around to find what you need,
-zoom out to see everything at once, zoom back in to focus.
+### CLI install
 
-Zoom is cursor-anchored — the point under your cursor stays fixed as you zoom
-in or out, just like pinch-to-zoom on a map. Multiple monitors are just
-multiple viewports on the same canvas.
+srwc embeds all required session artifacts in the binary:
+
+```bash
+srwc install
+```
+
+This installs config, portal configuration, and wallpaper shaders to user directories, then optionally installs the `.desktop` session file (requires sudo).
+
+To remove:
+
+```bash
+srwc uninstall
+```
+
+### Running
+
+```bash
+srwc start                    # auto-detect backend
+srwc start --backend winit    # nested (inside existing session)
+srwc start --backend udev     # bare metal (from TTY)
+```
+
+Running `srwc` without arguments shows the command list. For display manager integration, select "srwc" from the session menu.
+
+### Other commands
+
+```bash
+srwc check-config    # validate config and exit
+srwc --version       # print version
+```
 
 ## Features
 
 ### Pan & zoom
 
-https://github.com/user-attachments/assets/a5f14739-7762-4515-abb1-0de6990de4a3
-
-Infinite 2D canvas with viewport panning, zoom, and scroll momentum. A quick
-flick carries the viewport smoothly until friction stops it.
+Infinite 2D canvas with viewport panning, zoom, and scroll momentum. A quick flick carries the viewport smoothly until friction stops it.
 
 | Input              | Action            | Context   |
 | ------------------ | ----------------- | --------- |
@@ -46,17 +68,11 @@ flick carries the viewport smoothly until friction stops it.
 
 ### Window navigation
 
-https://github.com/user-attachments/assets/5b7d89cd-b065-4309-ae74-30bfe68a8abb
-
-Jump to the nearest window in any direction via cone search. MRU cycling
-(`Alt-Tab`) with hold-to-commit. Zoom-to-fit shows all windows at once.
-Configurable anchors act as navigation targets for directional jumps even
-with no window there — useful for areas with pinned widgets.
+Jump to the nearest window in any direction via cone search. MRU cycling (`Alt-Tab`) with hold-to-commit. Zoom-to-fit shows all windows at once. Configurable anchors act as navigation targets for directional jumps.
 
 | Input                        | Action                                     |
 | ---------------------------- | ------------------------------------------ |
 | 4-finger swipe               | Jump to nearest window (natural direction) |
-| `Mod+Ctrl` + LMB drag        | Jump to nearest window (natural direction) |
 | `Mod` + arrow                | Jump to nearest window in direction        |
 | `Alt-Tab` / `Alt-Shift-Tab`  | Cycle windows (MRU)                        |
 | 4-finger pinch in / `Mod+W`  | Zoom-to-fit (overview)                     |
@@ -64,25 +80,11 @@ with no window there — useful for areas with pinned widgets.
 | 4-finger hold / `Mod+C`      | Center focused window                      |
 | `Mod+1-4`                    | Jump to bookmarked canvas position         |
 
-All 4-finger navigation gestures also work as `Mod` + 3-finger for smaller
-trackpads.
-
 ### Move, resize, maximize
 
-https://github.com/user-attachments/assets/363d7252-dc28-4cf0-9c30-b7ca2e617972
+Move windows by doubletap-swiping on them. Resize with `Alt` + 3-finger swipe. Windows snap to nearby edges magnetically during drag. Drag to the viewport edge and the canvas auto-pans.
 
-Move windows by doubletap-swiping on them. Resize with `Alt` + 3-finger swipe.
-Windows snap to nearby edges magnetically during drag. Drag to the viewport
-edge and the canvas auto-pans — handy for rearranging windows just beyond the
-visible area.
-
-**Tip:** while dragging a window, keyboard shortcuts still work. Use `Mod+1-4`
-to jump to a bookmark or `Mod+A` to go home — your held window comes with you.
-
-Fit-window (`Mod+M`) is the maximize analogue — centers the viewport, resets
-zoom to 1.0, and resizes the window to fill the screen. Toggle again to
-restore. Fullscreen (`Mod+F`) is a viewport mode, not a window state — any canvas
-action (launching an app, navigating) naturally exits it.
+Fit-window (`Mod+M`) centers the viewport, resets zoom to 1.0, and resizes the window to fill the screen. Fullscreen (`Mod+F`) is a viewport mode — any canvas action naturally exits it.
 
 | Input                         | Action                        |
 | ----------------------------- | ----------------------------- |
@@ -91,49 +93,47 @@ action (launching an app, navigating) naturally exits it.
 | `Alt` + 3-finger swipe        | Resize window                 |
 | `Alt` + RMB drag              | Resize window                 |
 | `Alt` + MMB click / `Mod+M`   | Fit window (maximize/restore) |
-| `Alt` + 2-finger pinch-in/out | Fit window                    |
-| `Alt` + 3-finger pinch-in/out | Toggle fullscreen             |
 | `Mod` + MMB click / `Mod+F`   | Toggle fullscreen             |
 | `Mod+Shift` + arrow           | Nudge window 20px             |
 
+
+### Screenshots
+
+Built-in interactive screenshot UI. Drag to select a region, press Space/Enter to save, Ctrl+C for clipboard only, Escape to cancel, P to toggle cursor visibility.
+
+| Input         | Action                          |
+| ------------- | ------------------------------- |
+| `Print`       | Open interactive screenshot UI  |
+| `Ctrl+Print`  | Instant full-screen screenshot  |
+
+### Screencasting
+
+Native GNOME portal screencasting via PipeWire. OBS, Firefox, Discord, and other apps can capture both monitors and individual windows through the standard `xdg-desktop-portal-gnome` flow — no `xdg-desktop-portal-wlr` needed.
+
+Requires: `xdg-desktop-portal`, `xdg-desktop-portal-gnome`, `xdg-desktop-portal-gtk`, `pipewire`.
+
 ### Infinite background
 
-https://github.com/user-attachments/assets/9064883c-86ea-4db6-a40a-0418d2ee2f5e
-
-The background is part of the canvas — it scrolls and zooms with the viewport,
-not stuck to the screen. This gives spatial awareness when panning.
-
-Two modes: **GLSL shaders** (default: dot grid, or write your own — see
-[docs/shaders.md](docs/shaders.md)) and **tiled images** (any PNG/JPG, tiled
-infinitely across the canvas). Both are infinite by nature.
+The background is part of the canvas — it scrolls and zooms with the viewport. Two modes: **GLSL shaders** (default: dot grid) and **tiled images** (any PNG/JPG, tiled infinitely).
 
 ```toml
 [background]
-shader_path = "~/.config/srwc/bg.glsl"    # custom shader
-# tile_path = "~/.config/srwc/tile.png"   # or tiled image
+shader_path = "~/.config/srwc/bg.glsl"
+# tile_path = "~/.config/srwc/tile.png"
 ```
 
 ### Window rules
 
-https://github.com/user-attachments/assets/af603001-9f08-4d42-b50a-0342d06e954b
+Match windows by `app_id` and/or `title` (glob patterns). Control position, size, decoration mode, blur, opacity, and widget behavior.
 
-Match windows by `app_id` and/or `title` (glob patterns) and control
-everything: position, size, decoration mode, blur, opacity, and widget
-behavior. All fields are independent and combine freely.
-
-**Widgets**: set `widget = true` to pin a window in place — immovable, below
-normal windows, excluded from Alt-Tab. Works for both regular windows and
-layer-shell surfaces (e.g. waybar). Use this for clocks, system stats, trays, or
-anything you want fixed on the canvas.
+**Widgets**: `widget = true` pins a window in place — immovable, below normal windows, excluded from Alt-Tab.
 
 ```toml
-# Frosted-glass terminal
 [[window_rules]]
 app_id = "Alacritty"
 opacity = 0.85
 blur = true
 
-# Desktop widget — pinned, borderless
 [[window_rules]]
 app_id = "my-clock"
 position = [50, 50]
@@ -141,204 +141,23 @@ widget = true
 decoration = "none"
 ```
 
-> **Tip:** to find a window's `app_id`, check `$XDG_RUNTIME_DIR/srwc/state` —
-> the `windows` field lists all open windows by their app ID.
-
-Consistent rounded corners and drop shadows across all CSD and SSD windows.
-SSD fallback for X11/XWayland apps — minimal title bar, close button,
-double-tap to maximize.
-
 ### Multi-monitor
 
-<!--
-  Video (~10s, two monitors):
-  1. Pan on one monitor, show the other monitor's outline moving on canvas
-  2. Zoom out on one monitor to a different zoom level than the other
-  3. Drag a window across the monitor boundary — it teleports to the other viewport
-  4. Mod+Alt+Arrow to send a window to the other output
--->
-
-Multiple monitors are independent viewports on the same canvas — different
-zoom levels, overlapping views. An outline on each monitor shows where the
-other monitors' viewports are. Cursor crosses between monitors freely; dragged
-windows teleport to the target viewport's canvas position.
-
-| Input             | Action                         |
-| ----------------- | ------------------------------ |
-| `Mod+Alt` + arrow | Send window to adjacent output |
-
-### Panels, docks & taskbars
-
-https://github.com/user-attachments/assets/83c2ad30-fbfa-4cf2-aa47-905826889dcb
-
-Layer shell surfaces (waybar, fuzzel, mako) work as expected. Foreign toplevel
-management means your dock/taskbar shows all windows — click one and the
-viewport pans to it and centers it. See [`extras/`](extras/) for a fuzzel
-window-search script that lets you search and jump to any open window.
-
-### Everything else
-
-- XWayland for X11 apps (Steam, Wine, JetBrains, etc.)
-- Session lock (swaylock), idle notify (swayidle/hypridle)
-- Screencasting (OBS, Firefox, Discord — requires `xdg-desktop-portal` + `xdg-desktop-portal-wlr`)
-- Screenshots (grim + slurp)
-- Click-to-focus (default) or focus-follows-mouse (sloppy focus)
-- All bindings (keyboard, mouse, gesture) fully configurable via TOML
-- 30 Wayland protocols
-
-## Install
-
-### Fedora (prebuilt binary)
-
-```bash
-curl -fsSL https://raw.githubusercontent.com/malbiruk/srwc/main/install.sh | sudo sh
-```
-
-Installs the binary, session wrapper, desktop entry, and shader wallpapers.
-Checks for required runtime libraries and tells you what to install if
-anything is missing. To uninstall, run with `sudo sh -s uninstall`.
-
-### Arch Linux (AUR)
-
-```bash
-yay -S srwc
-```
-
-### NixOS / Nix
-
-A `flake.nix` is included. To build:
-
-```bash
-nix build
-```
-
-For development (provides native deps, uses your system Rust):
-
-```bash
-nix develop
-cargo build
-cargo run
-```
-
-To add srwc as a session in your NixOS config:
-
-```nix
-let
-  srwc-flake = builtins.getFlake "github:malbiruk/srwc";
-  srwc = srwc-flake.packages.x86_64-linux.default;
-in
-{
-  services.displayManager.sessionPackages = [ srwc ];
-  environment.systemPackages = [ srwc ];
-}
-```
-
-### Build from source
-
-Requires Rust 1.85+ (edition 2024).
-
-**Fedora:**
-```bash
-sudo dnf install libseat-devel libdisplay-info-devel libinput-devel mesa-libgbm-devel libxkbcommon-devel
-```
-
-**Ubuntu/Debian:**
-```bash
-sudo apt install libseat-dev libdisplay-info-dev libinput-dev libudev-dev libgbm-dev libxkbcommon-dev libwayland-dev
-```
-
-**Arch Linux:**
-```bash
-sudo pacman -S libdisplay-info libinput seatd mesa libxkbcommon
-```
-
-> **Note:** Ubuntu 24.04 ships Rust 1.75 which is too old. Install via
-> [rustup](https://rustup.rs/) instead of `apt install rustc`.
-
-```bash
-git clone https://github.com/malbiruk/srwc.git
-cd srwc
-cargo build --release
-sudo make install
-```
-
-### Running
-
-srwc auto-detects whether it's running nested (inside an existing Wayland
-session) or on real hardware (from a TTY). Just run `srwc`. For display
-manager integration, select "srwc" from the session menu.
-
-## Quick start
-
-`mod` is Super by default. Terminal and launcher are auto-detected
-(foot/alacritty/kitty, fuzzel/wofi/bemenu), can be overridden in config.
-
-| Shortcut           | Action                        |
-| ------------------ | ----------------------------- |
-| `mod+return`       | Open terminal                 |
-| `mod+d`            | Open launcher                 |
-| `mod+q`            | Close window                  |
-| `mod+m`            | Fit window (maximize/restore) |
-| `mod+f`            | Toggle fullscreen             |
-| `mod+c`            | Center focused window         |
-| `mod+x`            | Center window under cursor |
-| `mod+arrow`        | Jump to nearest window        |
-| `mod+a`            | Home toggle                   |
-| `mod+w`            | Zoom-to-fit (overview)        |
-| `mod+=` / `mod+-`  | Zoom in / out                 |
-| `mod+scroll`       | Zoom at cursor                |
-| `alt+tab`          | Cycle windows                 |
-| `mod+l`            | Lock screen                   |
-| `mod+ctrl+shift+q` | Quit                          |
-
-All keybindings are configurable — see [`config.example.toml`](config.example.toml).
+Multiple monitors are independent viewports on the same canvas — different zoom levels, overlapping views. An outline on each monitor shows where the other monitors' viewports are.
 
 ## Configuration
 
 Config file: `~/.config/srwc/config.toml` (respects `XDG_CONFIG_HOME`).
 
-```bash
-mkdir -p ~/.config/srwc
-cp /etc/srwc/config.toml ~/.config/srwc/config.toml
-```
+See [`config.example.toml`](./resources/config.example.toml) for all options.
 
-Missing file uses built-in defaults. Partial configs merge with defaults —
-only specify what you want to change. Use `"none"` to unbind a default binding.
-Validate without starting: `srwc --check-config`.
+## Acknowledgments
 
-```toml
-# Launch programs at startup
-autostart = ["waybar", "swaync", "swayosd-server"]
-```
+srwc would not exist without these projects:
 
-See [`config.example.toml`](config.example.toml) for all options: input
-settings, scroll/momentum tuning, snap behavior, decorations, effects,
-per-output config, gesture bindings, mouse bindings, and window rules.
-
-See [docs/DESIGN.md](docs/DESIGN.md) for the full compositor design specification.
-
-## Example setup
-
-srwc is just a compositor — everything else is standard Wayland tooling.
-Here are some tools that work well with it:
-
-| Tool                  | Purpose                                                        |
-| --------------------- | -------------------------------------------------------------- |
-| waybar                | Status bar / taskbar                                           |
-| crystal-dock          | macOS-style dock                                               |
-| fuzzel / wofi         | App launcher                                                   |
-| mako / swaync         | Notifications                                                  |
-| swaylock              | Lock screen                                                    |
-| swayidle / hypridle   | Idle timeout (lock, suspend)                                   |
-| swayosd               | Volume/brightness OSD                                          |
-| grim + slurp          | Screenshots                                                    |
-| wlr-randr / wdisplays | Output configuration                                           |
-| COSMIC Settings       | Wi-Fi, Bluetooth, sound (or nm-applet + blueman + pavucontrol) |
-
-The [`extras/`](extras/) directory contains a complete setup — srwc config,
-GLSL shader wallpapers, Python widgets (clock, calendar, system stats, power
-menu), waybar with taskbar/tray, fuzzel window-search script, and window rules
-tying it all together. Use it as a starting point or steal pieces.
+- **[driftwm](https://github.com/malbiruk/driftwm)**.
+- **[niri](https://github.com/YaLTeR/niri)**.
+- **[Smithay](https://github.com/Smithay/smithay)**.
 
 ## License
 
