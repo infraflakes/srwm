@@ -3,7 +3,7 @@ name = "srwc"
 version = "0.0.1"
 edition = "2024"
 license = "GPL-3.0-or-later"
-authors = ["Klim Kostiuk <2601074@gmail.com>"]
+authors = ["Nguyen Bao Truong <infraflakes@proton.me>"]
 
 [dependencies]
 smithay = { git = "https://github.com/Smithay/smithay.git", rev = "d28cf38", default-features = false, features = [
