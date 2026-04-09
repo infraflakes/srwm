@@ -3,20 +3,21 @@
 
   inputs = {
     nixpkgs.url = "github:NixOS/nixpkgs/nixos-unstable";
+    dagger = {
+      url = "github:dagger/nix";
+      inputs.nixpkgs.follows = "nixpkgs";
+    };
   };
 
   outputs = {
     self,
     nixpkgs,
+    dagger,
   }: let
     system = "x86_64-linux";
     pkgs = nixpkgs.legacyPackages.${system};
 
     nativeBuildInputs = with pkgs; [
-      cargo
-      clippy
-      rustfmt
-      cargo-edit
       pkg-config
       pkgs.makeWrapper
       rustPlatform.bindgenHook
@@ -120,7 +121,13 @@
     };
 
     devShells.${system}.default = pkgs.mkShell {
-      inherit nativeBuildInputs buildInputs;
+      buildInputs = with pkgs; [
+        cargo
+        clippy
+        rustfmt
+        cargo-edit
+        dagger.packages.${stdenv.hostPlatform.system}.dagger
+      ];
 
       LD_LIBRARY_PATH = pkgs.lib.makeLibraryPath runtimeLibs;
     };
