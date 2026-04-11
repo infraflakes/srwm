@@ -496,9 +496,6 @@ pub fn build_cursor_elements(
     if let Some(dnd_icon) = state.dnd_icon.as_ref()
         && dnd_icon.surface.alive()
     {
-        let pointer = state.pointer();
-        let canvas_pos = pointer.current_location();
-        let screen_pos = canvas_to_screen(CanvasPos(canvas_pos), camera, zoom).0;
         let icon_pos = screen_pos + dnd_icon.offset.to_f64();
         let physical_icon_pos: Point<i32, Physical> = icon_pos.to_physical_precise_round(scale);
 

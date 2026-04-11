@@ -151,14 +151,26 @@ impl WaylandDndGrabHandler for Srwc {
 
         match type_ {
             smithay::input::dnd::GrabType::Pointer => {
-                let pointer = seat.get_pointer().unwrap();
-                let start_data = pointer.grab_start_data().unwrap();
+                let Some(pointer) = seat.get_pointer() else {
+                    tracing::warn!("DnD requested with Pointer type but seat has no pointer");
+                    return;
+                };
+                let Some(start_data) = pointer.grab_start_data() else {
+                    tracing::warn!("DnD requested but pointer grab start data is unavailable");
+                    return;
+                };
                 let grab = DnDGrab::new_pointer(&self.display_handle, start_data, source, seat);
                 pointer.set_grab(self, grab, serial, smithay::input::pointer::Focus::Keep);
             }
             smithay::input::dnd::GrabType::Touch => {
-                let touch = seat.get_touch().unwrap();
-                let start_data = touch.grab_start_data().unwrap();
+                let Some(touch) = seat.get_touch() else {
+                    tracing::warn!("DnD requested with Touch type but seat has no touch device");
+                    return;
+                };
+                let Some(start_data) = touch.grab_start_data() else {
+                    tracing::warn!("DnD requested but touch grab start data is unavailable");
+                    return;
+                };
                 let grab = DnDGrab::new_touch(&self.display_handle, start_data, source, seat);
                 touch.set_grab(self, grab, serial);
             }
