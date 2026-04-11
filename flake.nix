@@ -65,7 +65,7 @@
       systemd
     ];
   in {
-    packages.${system}.default = pkgs.rustPlatform.buildRustPackage rec {
+    packages.${system}.default = pkgs.rustPlatform.buildRustPackage {
       pname = "srwc";
       version = (builtins.fromTOML (builtins.readFile ./Cargo.toml)).package.version;
 
@@ -122,14 +122,18 @@
     };
 
     devShells.${system}.default = pkgs.mkShell {
-      buildInputs = with pkgs; [
-        cargo
-        clippy
-        rustfmt
-        cargo-edit
-        dagger.packages.${stdenv.hostPlatform.system}.dagger
-      ];
+      buildInputs =
+        buildInputs
+        ++ (with pkgs; [
+          cargo
+          clippy
+          rustfmt
+          cargo-edit
+          rustc
+          dagger.packages.${stdenv.hostPlatform.system}.dagger
+        ]);
 
+      inherit runtimeLibs;
       LD_LIBRARY_PATH = pkgs.lib.makeLibraryPath runtimeLibs;
     };
   };

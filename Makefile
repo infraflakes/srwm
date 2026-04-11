@@ -1,8 +1,3 @@
-PREFIX ?= /usr/local
-BINDIR = $(PREFIX)/bin
-DATADIR = $(PREFIX)/share
-SYSCONFDIR ?= /etc
-
 .PHONY: build build-all build-verbose build-all-verbose fmt install uninstall test clean
 
 # Default OS if you just hit enter
