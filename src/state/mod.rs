@@ -51,6 +51,7 @@ use smithay::wayland::pointer_constraints::PointerConstraintsState;
 use smithay::wayland::pointer_gestures::PointerGesturesState;
 use smithay::wayland::presentation::PresentationState;
 use smithay::wayland::relative_pointer::RelativePointerManagerState;
+use smithay::wayland::selection::data_device::set_data_device_selection;
 use smithay::wayland::selection::primary_selection::PrimarySelectionState;
 use smithay::wayland::selection::wlr_data_control::DataControlState;
 use smithay::wayland::session_lock::{LockSurface, SessionLockManagerState, SessionLocker};
@@ -1414,55 +1415,56 @@ impl Srwc {
         pixels: &[u8],
         write_to_disk: bool,
     ) {
-        // Fallback for clipboard if not writing to disk
-        if !write_to_disk {
-            tracing::info!("Screenshot saved to clipboard via wl-copy");
-            use std::io::Write;
-            let cmd = std::process::Command::new("wl-copy")
-                .arg("-t")
-                .arg("image/png")
-                .stdin(std::process::Stdio::piped())
-                .spawn();
-            if let Ok(mut child) = cmd {
-                let mut png_data = Vec::new();
-                {
-                    let mut encoder =
-                        png::Encoder::new(&mut png_data, size.w as u32, size.h as u32);
-                    encoder.set_color(png::ColorType::Rgba);
-                    encoder.set_depth(png::BitDepth::Eight);
-                    if let Ok(mut writer) = encoder.write_header() {
-                        let _ = writer.write_image_data(pixels);
-                    }
-                }
-                if let Some(mut stdin) = child.stdin.take() {
-                    let _ = stdin.write_all(&png_data);
+        let pixels = pixels.to_vec();
+        let size_w = size.w as u32;
+        let size_h = size.h as u32;
+
+        // Set up calloop channel for clipboard
+        let (tx, rx) = calloop::channel::sync_channel::<std::sync::Arc<[u8]>>(1);
+        let _ = self.loop_handle.insert_source(rx, |event, _, state| {
+            if let calloop::channel::Event::Msg(buf) = event {
+                set_data_device_selection(
+                    &state.display_handle,
+                    &state.seat,
+                    vec![String::from("image/png")],
+                    buf,
+                );
+            }
+        });
+
+        // Compute screenshot path for disk write
+        let write_path = if write_to_disk {
+            dirs::picture_dir().map(|dir| {
+                let screenshots_dir = dir.join("Screenshots");
+                let _ = std::fs::create_dir_all(&screenshots_dir);
+                let now = chrono::Local::now();
+                screenshots_dir.join(format!(
+                    "screenshot-{}.png",
+                    now.format("%Y-%m-%d-%H-%M-%S")
+                ))
+            })
+        } else {
+            None
+        };
+
+        // Encode + set clipboard in background thread
+        std::thread::spawn(move || {
+            let mut png_data = Vec::new();
+            {
+                let mut encoder = png::Encoder::new(&mut png_data, size_w, size_h);
+                encoder.set_color(png::ColorType::Rgba);
+                encoder.set_depth(png::BitDepth::Eight);
+                if let Ok(mut writer) = encoder.write_header() {
+                    let _ = writer.write_image_data(&pixels);
                 }
             }
-            return;
-        }
+            let buf: std::sync::Arc<[u8]> = std::sync::Arc::from(png_data.into_boxed_slice());
+            let _ = tx.send(buf.clone());
 
-        // Write to disk
-        let Some(dir) = dirs::picture_dir() else {
-            tracing::warn!("Could not find picture dir");
-            return;
-        };
-        let screenshots_dir = dir.join("Screenshots");
-        let _ = std::fs::create_dir_all(&screenshots_dir);
-
-        let now = chrono::Local::now();
-        let filename = format!("screenshot-{}.png", now.format("%Y-%m-%d-%H-%M-%S"));
-        let path = screenshots_dir.join(filename);
-
-        if let Ok(file) = std::fs::File::create(&path) {
-            let w = &mut std::io::BufWriter::new(file);
-            let mut encoder = png::Encoder::new(w, size.w as u32, size.h as u32);
-            encoder.set_color(png::ColorType::Rgba);
-            encoder.set_depth(png::BitDepth::Eight);
-            if let Ok(mut writer) = encoder.write_header()
-                && writer.write_image_data(pixels).is_ok()
+            if let Some(path) = write_path
+                && std::fs::write(&path, &*buf).is_ok()
             {
                 tracing::info!("Screenshot saved to {:?}", path);
-                // Also fire notify-send
                 let _ = std::process::Command::new("notify-send")
                     .args([
                         "-a",
@@ -1470,12 +1472,13 @@ impl Srwc {
                         "-i",
                         "camera",
                         "Screenshot Saved",
-                        path.to_str().unwrap(),
+                        path.to_str().unwrap_or(""),
                     ])
                     .spawn();
             }
-        }
+        });
     }
+
     pub fn restore_pointer_to_canvas(&mut self) {
         let pointer = self.pointer();
         let screen_pos = pointer.current_location();

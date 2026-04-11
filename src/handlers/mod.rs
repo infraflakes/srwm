@@ -113,7 +113,25 @@ impl SeatHandler for Srwc {
 delegate_seat!(Srwc);
 
 impl SelectionHandler for Srwc {
-    type SelectionUserData = ();
+    type SelectionUserData = std::sync::Arc<[u8]>;
+
+    fn send_selection(
+        &mut self,
+        _ty: smithay::wayland::selection::SelectionTarget,
+        mime_type: String,
+        fd: std::os::fd::OwnedFd,
+        _seat: Seat<Self>,
+        user_data: &Self::SelectionUserData,
+    ) {
+        use std::io::Write;
+        let data = user_data.clone();
+        std::thread::spawn(move || {
+            if mime_type == "image/png" {
+                let mut file = std::fs::File::from(fd);
+                let _ = file.write_all(&data);
+            }
+        });
+    }
 }
 
 impl DataDeviceHandler for Srwc {
