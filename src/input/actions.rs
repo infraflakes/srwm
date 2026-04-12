@@ -413,8 +413,8 @@ impl Srwc {
             Action::ScreenshotScreen => {
                 self.pending_screenshot_screen = true;
             }
-            Action::ConfirmScreenshot { write_to_disk } => {
-                self.confirm_screenshot(*write_to_disk);
+            Action::ConfirmScreenshot => {
+                self.confirm_screenshot();
             }
             Action::CancelScreenshot => {
                 self.restore_pointer_to_canvas();

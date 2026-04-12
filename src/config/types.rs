@@ -58,7 +58,7 @@ pub enum Action {
     Quit,
     Screenshot,
     ScreenshotScreen,
-    ConfirmScreenshot { write_to_disk: bool },
+    ConfirmScreenshot,
     CancelScreenshot,
     ScreenshotTogglePointer,
 }

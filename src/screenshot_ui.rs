@@ -465,14 +465,10 @@ fn action(raw: Keysym, mods: ModifiersState) -> Option<Action> {
         return None;
     }
     if !mods.ctrl && (raw == Keysym::space || raw == Keysym::Return) {
-        return Some(Action::ConfirmScreenshot {
-            write_to_disk: true,
-        });
+        return Some(Action::ConfirmScreenshot);
     }
     if mods.ctrl && raw == Keysym::c {
-        return Some(Action::ConfirmScreenshot {
-            write_to_disk: false,
-        });
+        return Some(Action::CancelScreenshot);
     }
     if !mods.ctrl && raw == Keysym::p {
         return Some(Action::ScreenshotTogglePointer);

@@ -1157,7 +1157,7 @@ fn render_frame(
                 .open(renderer, screenshots, default_output, false);
             if is_screen {
                 data.screenshot_ui.select_all();
-                data.pending_screenshot_confirm = Some(true);
+                data.pending_screenshot_confirm = true;
             }
             // Warp pointer from canvas-space to screen-space for screenshot interaction
             {
@@ -1192,9 +1192,10 @@ fn render_frame(
         }
     }
 
-    if let Some(write_to_disk) = data.pending_screenshot_confirm.take() {
+    if data.pending_screenshot_confirm {
+        data.pending_screenshot_confirm = false;
         if let Ok((size, pixels)) = data.screenshot_ui.capture(renderer) {
-            data.save_screenshot(size, &pixels, write_to_disk);
+            data.save_screenshot(size, &pixels);
         }
         data.restore_pointer_to_canvas();
         data.screenshot_ui.close();
