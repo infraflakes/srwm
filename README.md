@@ -138,12 +138,11 @@ Requires: `xdg-desktop-portal`, `xdg-desktop-portal-gnome`, `xdg-desktop-portal-
 
 ### Infinite background
 
-The background is part of the canvas — it scrolls and zooms with the viewport. Two modes: **GLSL shaders** (default: dot grid) and **tiled images** (any PNG/JPG, tiled infinitely).
+The background is part of the canvas — it scrolls and zooms with the viewport. Uses **GLSL shaders** (default: dot grid).
 
 ```toml
 [background]
 shader_path = "~/.config/srwc/bg.glsl"
-# tile_path = "~/.config/srwc/tile.png"
 ```
 
 ### Window rules

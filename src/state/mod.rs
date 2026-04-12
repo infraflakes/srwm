@@ -1316,12 +1316,10 @@ impl Srwc {
             }
         }
 
-        // Background shader/tile — always clear cached state so that editing
+        // Background shader — always clear cached state so that editing
         // the shader file on disk takes effect after `touch`ing the config.
         self.render.background_shader = None;
         self.render.cached_bg_elements.clear();
-        self.render.tile_shader = None;
-        self.render.cached_tile_bg.clear();
         self.render.cached_wallpaper.clear();
 
         // Cursor theme/size — validate theme before committing

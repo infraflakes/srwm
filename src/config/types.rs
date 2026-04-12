@@ -521,15 +521,13 @@ pub enum OutputMode {
     SizeRefresh(i32, i32, u32),
 }
 
-/// Built-in dot grid shader — used when no shader_path or tile_path is configured.
+/// Built-in dot grid shader — used when no shader_path is configured.
 pub const DEFAULT_SHADER: &str = include_str!("../shaders/dot_grid.glsl");
 
 #[derive(Clone, Debug, Default, PartialEq)]
 pub struct BackgroundConfig {
     /// Path to a GLSL fragment shader. If set, shader is compiled and rendered fullscreen.
     pub shader_path: Option<String>,
-    /// Path to a tile image (PNG/JPG). If set, image is tiled across the canvas.
-    pub tile_path: Option<String>,
     /// Path to a static wallpaper image (PNG/JPG). If set, image is rendered fullscreen (not tiled, not zoomed).
     pub wallpaper_path: Option<String>,
 }

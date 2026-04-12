@@ -205,7 +205,7 @@ pub fn init_winit(
             };
 
             // --- Update cached background element ---
-            let (camera_moved, zoom_changed) = crate::render::update_background_element(
+            let (_camera_moved, _zoom_changed) = crate::render::update_background_element(
                 data, &output, cur_camera, cur_zoom, last_cam, last_zoom,
             );
 
@@ -228,10 +228,7 @@ pub fn init_winit(
                 output.current_scale().fractional_scale(),
                 1.0,
             );
-            let mut age = backend.buffer_age().unwrap_or(0);
-            if !data.render.cached_tile_bg.is_empty() && (camera_moved || zoom_changed) {
-                age = 0;
-            }
+            let age = backend.buffer_age().unwrap_or(0);
             let render_ok = match backend.bind() {
                 Ok((renderer, mut framebuffer)) => {
                     let all_elements =

@@ -568,8 +568,4 @@ fn default_config_background_paths_are_none() {
         config.background.shader_path.is_none(),
         "default config should have no shader_path"
     );
-    assert!(
-        config.background.tile_path.is_none(),
-        "default config should have no tile_path"
-    );
 }

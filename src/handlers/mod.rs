@@ -703,7 +703,6 @@ impl OutputManagementHandler for Srwc {
             output.change_current_state(current_mode, new_transform, new_scale, new_position);
 
             self.render.cached_bg_elements.remove(&cfg.output_name);
-            self.render.cached_tile_bg.remove(&cfg.output_name);
             self.render.cached_wallpaper.remove(&cfg.output_name);
             self.remove_capture_state(&cfg.output_name);
         }

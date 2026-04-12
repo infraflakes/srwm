@@ -39,7 +39,7 @@ mod blur;
 pub mod dmabuf;
 mod screencopy;
 
-pub use background::{TileShaderElement, init_background, update_background_element};
+pub use background::{init_background, update_background_element};
 pub use blur::{
     BlurCache, BlurLayer, BlurRequestData, compile_blur_shaders, process_blur_requests,
 };
@@ -48,7 +48,6 @@ pub use screencopy::{render_capture_frames, render_screencopy};
 render_elements! {
     pub OutputRenderElements<=GlesRenderer>;
     Background=RescaleRenderElement<PixelShaderElement>,
-    TileBg=RescaleRenderElement<TileShaderElement>,
     Decoration=RescaleRenderElement<MemoryRenderBufferRenderElement<GlesRenderer>>,
     Window=RescaleRenderElement<WaylandSurfaceRenderElement<GlesRenderer>>,
     CsdWindow=RescaleRenderElement<RoundedCornerElement>,
@@ -58,9 +57,9 @@ render_elements! {
     Blur=TextureRenderElement<GlesTexture>,
 }
 
-// Shadow and Decoration share inner types with Background and Tile respectively.
+// Shadow and Decoration share inner types with Background.
 // We can't add them to render_elements! because it generates conflicting From impls.
-// Instead we construct them directly using the existing Background/Tile variants.
+// Instead we construct them directly using the existing Background variant.
 // Helpers below create the elements and wrap them in the correct variant.
 
 /// Uniform declarations for background shaders.
@@ -620,7 +619,6 @@ pub fn compose_frame(
 
     // Ensure this output has a background element (lazy init per output, and re-init after config reload)
     if !state.render.cached_bg_elements.contains_key(&output.name())
-        && !state.render.cached_tile_bg.contains_key(&output.name())
         && !state.render.cached_wallpaper.contains_key(&output.name())
     {
         let output_size = crate::state::output_logical_size(output);
@@ -1082,14 +1080,6 @@ pub fn compose_frame(
             vec![OutputRenderElements::Blur(elem)]
         } else if let Some(elem) = state.render.cached_bg_elements.get(&output.name()) {
             vec![OutputRenderElements::Background(
-                RescaleRenderElement::from_element(
-                    elem.clone(),
-                    Point::<i32, Physical>::from((0, 0)),
-                    zoom,
-                ),
-            )]
-        } else if let Some(elem) = state.render.cached_tile_bg.get(&output.name()) {
-            vec![OutputRenderElements::TileBg(
                 RescaleRenderElement::from_element(
                     elem.clone(),
                     Point::<i32, Physical>::from((0, 0)),

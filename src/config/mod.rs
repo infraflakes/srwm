@@ -283,7 +283,6 @@ impl Config {
 
         let background = BackgroundConfig {
             shader_path: raw.background.shader_path.map(|p| expand_tilde(&p)),
-            tile_path: raw.background.tile_path.map(|p| expand_tilde(&p)),
             wallpaper_path: raw.background.wallpaper_path.map(|p| expand_tilde(&p)),
         };
 
