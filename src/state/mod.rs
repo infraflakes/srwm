@@ -1421,16 +1421,20 @@ impl Srwc {
 
         // Set up calloop channel for clipboard
         let (tx, rx) = calloop::channel::sync_channel::<std::sync::Arc<[u8]>>(1);
-        let _ = self.loop_handle.insert_source(rx, |event, _, state| {
-            if let calloop::channel::Event::Msg(buf) = event {
-                set_data_device_selection(
-                    &state.display_handle,
-                    &state.seat,
-                    vec![String::from("image/png")],
-                    buf,
-                );
-            }
-        });
+        let clipboard_active = self
+            .loop_handle
+            .insert_source(rx, |event, _, state| {
+                if let calloop::channel::Event::Msg(buf) = event {
+                    set_data_device_selection(
+                        &state.display_handle,
+                        &state.seat,
+                        vec![String::from("image/png")],
+                        buf,
+                    );
+                }
+            })
+            .map_err(|e| tracing::error!("Failed to register screenshot clipboard source: {e}"))
+            .is_ok();
 
         // Compute screenshot path for disk write
         let write_path = if write_to_disk {
@@ -1459,7 +1463,9 @@ impl Srwc {
                 }
             }
             let buf: std::sync::Arc<[u8]> = std::sync::Arc::from(png_data.into_boxed_slice());
-            let _ = tx.send(buf.clone());
+            if clipboard_active {
+                let _ = tx.send(buf.clone());
+            }
 
             if let Some(path) = write_path
                 && std::fs::write(&path, &*buf).is_ok()

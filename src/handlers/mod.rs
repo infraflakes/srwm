@@ -124,6 +124,9 @@ impl SelectionHandler for Srwc {
         user_data: &Self::SelectionUserData,
     ) {
         use std::io::Write;
+        if mime_type != "image/png" {
+            return; // fd dropped here; client sees EOF for unrecognised types
+        }
         let data = user_data.clone();
         std::thread::spawn(move || {
             if mime_type == "image/png" {
