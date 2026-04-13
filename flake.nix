@@ -99,9 +99,15 @@
             rustc
             seatd.dev
             udev.dev
+            go_1_26
+            golangci-lint
             dagger.packages.${stdenv.hostPlatform.system}.dagger
           ];
           LD_LIBRARY_PATH = pkgs.lib.makeLibraryPath runtimeLibs;
+
+          shellHook = ''
+            go env -w GOPATH=$HOME/.local/share/go
+          '';
         };
       };
 

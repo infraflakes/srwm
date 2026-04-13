@@ -3,6 +3,10 @@
 # Default OS if you just hit enter
 DEFAULT_DISTRO := debian
 
+init:
+	dagger develop
+	cargo check
+
 build: clean
 	@echo "Select target distro [debian|arch|fedora] (default: $(DEFAULT_DISTRO)):"
 	@read -p "> " DISTRO; \
