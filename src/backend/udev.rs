@@ -282,7 +282,7 @@ pub fn init_udev(
     };
 
     // 4. Store renderer on state + create DMA-BUF global
-    data.gbm_device = Some(gbm.clone());
+    data.screencast.gbm_device = Some(gbm.clone());
     data.backend = Some(Backend::Udev(Box::new(renderer)));
     let formats = data.backend.as_mut().unwrap().renderer().dmabuf_formats();
     let default_feedback = DmabufFeedbackBuilder::new(render_node.dev_id(), formats)
@@ -542,7 +542,7 @@ pub fn init_udev(
                                     tracing::info!("Hotplug: CRTC {crtc:?} disconnected");
                                     if let Some(surface) = surfaces.remove(&crtc) {
                                         // Remove from screencast output map
-                                        if let Some(ref ipc_outputs) = data.ipc_outputs {
+                                        if let Some(ref ipc_outputs) = data.screencast.ipc_outputs {
                                             ipc_outputs
                                                 .lock()
                                                 .unwrap()
@@ -872,7 +872,7 @@ fn create_surface(
     );
     output.set_preferred(output_mode);
     output.create_global::<Srwc>(dh);
-    if let Some(ref ipc_outputs) = state.ipc_outputs {
+    if let Some(ref ipc_outputs) = state.screencast.ipc_outputs {
         let transform = output.current_transform();
         let transformed_size = transform.transform_size(output_mode.size);
         ipc_outputs.lock().unwrap().insert(
@@ -1051,7 +1051,7 @@ fn render_frame(
     } else {
         data.config.inactive_cursor_opacity as f32
     };
-    let (cursor_cam, cursor_zoom) = if data.screenshot_ui.is_open() {
+    let (cursor_cam, cursor_zoom) = if data.screenshot.ui.is_open() {
         (Point::from((0.0, 0.0)), 1.0)
     } else {
         (cur_camera, cur_zoom)
@@ -1087,10 +1087,10 @@ fn render_frame(
     }
 
     // --- Screenshot UI integration ---
-    if data.pending_screenshot || data.pending_screenshot_screen {
-        let is_screen = data.pending_screenshot_screen;
-        data.pending_screenshot = false;
-        data.pending_screenshot_screen = false;
+    if data.screenshot.pending || data.screenshot.pending_screen {
+        let is_screen = data.screenshot.pending_screen;
+        data.screenshot.pending = false;
+        data.screenshot.pending_screen = false;
 
         use smithay::backend::renderer::{Bind, Offscreen};
         let buf_size = output_logical_size(output).to_buffer(1, smithay::utils::Transform::Normal);
@@ -1154,11 +1154,12 @@ fn render_frame(
             #[allow(clippy::mutable_key_type)]
             let mut screenshots = std::collections::HashMap::new();
             screenshots.insert(output.clone(), (tw, two));
-            data.screenshot_ui
+            data.screenshot
+                .ui
                 .open(renderer, screenshots, default_output, false);
             if is_screen {
-                data.screenshot_ui.select_all();
-                data.pending_screenshot_confirm = true;
+                data.screenshot.ui.select_all();
+                data.screenshot.pending_confirm = true;
             }
             // Warp pointer from canvas-space to screen-space for screenshot interaction
             {
@@ -1193,17 +1194,18 @@ fn render_frame(
         }
     }
 
-    if data.pending_screenshot_confirm {
-        data.pending_screenshot_confirm = false;
-        if let Ok((size, pixels)) = data.screenshot_ui.capture(renderer) {
+    if data.screenshot.pending_confirm {
+        data.screenshot.pending_confirm = false;
+        if let Ok((size, pixels)) = data.screenshot.ui.capture(renderer) {
             data.save_screenshot(size, &pixels);
         }
         data.restore_pointer_to_canvas();
-        data.screenshot_ui.close();
+        data.screenshot.ui.close();
     }
 
     // Feed frames to active screencasts
     if data
+        .screencast
         .screencasting
         .as_ref()
         .is_some_and(|sc| !sc.casts.is_empty())
@@ -1211,7 +1213,7 @@ fn render_frame(
         let renderer = backend.renderer();
         // target_presentation_time: use the current monotonic time as a reasonable
         // approximation — the frame has just been submitted to DRM.
-        let target_time = crate::screencasting::pw_utils::get_monotonic_time();
+        let target_time = crate::dbus::screencasting::pw_utils::get_monotonic_time();
         data.render_for_screen_cast(renderer, output, &elements, target_time);
         // Also render individual window casts
         let renderer = backend.renderer();

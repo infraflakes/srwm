@@ -296,5 +296,5 @@ impl PointerGrab<Srwc> for MoveSurfaceGrab {
         output_state(&self.output).edge_pan_velocity = None;
     }
 
-    crate::grabs::forward_pointer_grab_methods!();
+    crate::input::grabs::forward_pointer_grab_methods!();
 }

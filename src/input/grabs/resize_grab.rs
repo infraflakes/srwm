@@ -230,7 +230,7 @@ impl PointerGrab<Srwc> for ResizeSurfaceGrab {
         data.cursor.cursor_status = CursorImageStatus::default_named();
     }
 
-    crate::grabs::forward_pointer_grab_methods!();
+    crate::input::grabs::forward_pointer_grab_methods!();
 }
 
 #[cfg(test)]

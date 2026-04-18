@@ -1,5 +1,7 @@
 mod actions;
+pub(crate) mod focus;
 pub(crate) mod gestures;
+pub(crate) mod grabs;
 mod pointer;
 
 use smithay::{
@@ -25,7 +27,7 @@ use smithay::wayland::seat::WaylandFocus;
 use smithay::utils::{Logical, Rectangle};
 use smithay::wayland::compositor::{RectangleKind, RegionAttributes};
 
-use crate::decorations::DecorationHit;
+use crate::render::decorations::DecorationHit;
 use crate::state::{FocusTarget, Srwc};
 use srwc::canvas::{ScreenPos, screen_to_canvas};
 
@@ -34,11 +36,8 @@ fn window_origin_for_surface(
     state: &Srwc,
     surface: &smithay::reexports::wayland_server::protocol::wl_surface::WlSurface,
 ) -> Option<Point<f64, smithay::utils::Logical>> {
-    let window = state
-        .space
-        .elements()
-        .find(|w| w.wl_surface().as_deref() == Some(surface))?;
-    Some(state.space.element_location(window)?.to_f64())
+    let window = state.window_for_surface(surface)?;
+    Some(state.space.element_location(&window)?.to_f64())
 }
 
 /// Compute the bounding box of all Add rectangles in a region.
@@ -185,7 +184,7 @@ impl Srwc {
             time,
             |state, modifiers, handle| {
                 // If cycling is active and the cycle modifier was released, end cycle
-                if state.cycle_state.is_some()
+                if state.focus.cycle_index.is_some()
                     && !state.config.input.cycle_modifier.is_pressed(modifiers)
                 {
                     state.end_cycle();
@@ -196,8 +195,8 @@ impl Srwc {
                     let sym = handle.modified_sym();
 
                     // Intercept keys for screenshot UI
-                    if state.screenshot_ui.is_open() {
-                        if let Some(action) = state.screenshot_ui.action(sym, *modifiers) {
+                    if state.screenshot.ui.is_open() {
+                        if let Some(action) = state.screenshot.ui.action(sym, *modifiers) {
                             state.execute_action(&action);
                         }
                         return FilterResult::Intercept(None);
@@ -517,14 +516,14 @@ impl Srwc {
             .unwrap_or_default();
 
         // Intercept pointer motion for screenshot UI
-        if self.screenshot_ui.is_open() {
+        if self.screenshot.ui.is_open() {
             let serial = SERIAL_COUNTER.next_serial();
             let time = Event::time_msec(&event);
             if let Some(output) = self.active_output() {
                 let scale = output.current_scale().fractional_scale();
                 let pt: smithay::utils::Point<i32, smithay::utils::Physical> =
                     Point::from(((screen_pos.x * scale) as i32, (screen_pos.y * scale) as i32));
-                self.screenshot_ui.pointer_motion(pt, &output);
+                self.screenshot.ui.pointer_motion(pt, &output);
             }
             let pointer = self.pointer();
             pointer.motion(
@@ -580,7 +579,7 @@ impl Srwc {
     /// then to target output's canvas coords.
     fn on_pointer_motion_relative<I: InputBackend>(&mut self, event: I::PointerMotionEvent) {
         // Intercept pointer motion for screenshot UI
-        if self.screenshot_ui.is_open() {
+        if self.screenshot.ui.is_open() {
             let pointer = self.pointer();
             let old_pos = pointer.current_location();
             let delta = event.delta();
@@ -597,7 +596,7 @@ impl Srwc {
                 let scale = output.current_scale().fractional_scale();
                 let pt: smithay::utils::Point<i32, smithay::utils::Physical> =
                     Point::from(((new_pos.x * scale) as i32, (new_pos.y * scale) as i32));
-                self.screenshot_ui.pointer_motion(pt, &output);
+                self.screenshot.ui.pointer_motion(pt, &output);
             }
 
             let serial = SERIAL_COUNTER.next_serial();
@@ -774,10 +773,7 @@ impl Srwc {
                     Some(surface_origin + clamped_local)
                 } else {
                     // No region = confine to entire surface
-                    let window = self
-                        .space
-                        .elements()
-                        .find(|w| w.wl_surface().as_deref() == Some(&focus.0))?;
+                    let window = self.window_for_surface(&focus.0)?;
                     let size = window.geometry().size;
                     let clamped_local: Point<f64, smithay::utils::Logical> = (
                         local.x.clamp(0.0, size.w as f64),
@@ -870,10 +866,16 @@ impl Srwc {
             // Then check SSD decoration areas for this window
             if self.decorations.contains_key(&wl_surface.id()) {
                 let size = window.geometry().size;
-                if crate::decorations::close_button_contains(pos, loc, size.w, bar_height)
-                    || crate::decorations::title_bar_contains(pos, loc, size.w, bar_height)
-                    || crate::decorations::resize_edge_at(pos, loc, size, bar_height, border_width)
-                        .is_some()
+                if crate::render::decorations::close_button_contains(pos, loc, size.w, bar_height)
+                    || crate::render::decorations::title_bar_contains(pos, loc, size.w, bar_height)
+                    || crate::render::decorations::resize_edge_at(
+                        pos,
+                        loc,
+                        size,
+                        bar_height,
+                        border_width,
+                    )
+                    .is_some()
                 {
                     return Some((FocusTarget((*wl_surface).clone()), loc.to_f64()));
                 }
@@ -929,7 +931,7 @@ impl Srwc {
             && deco.close_hovered != hovered
         {
             deco.close_hovered = hovered;
-            deco.title_bar = crate::decorations::render_title_bar(
+            deco.title_bar = crate::render::decorations::render_title_bar(
                 deco.width,
                 deco.focused,
                 hovered,
@@ -943,7 +945,7 @@ impl Srwc {
         for deco in self.decorations.values_mut() {
             if deco.close_hovered {
                 deco.close_hovered = false;
-                deco.title_bar = crate::decorations::render_title_bar(
+                deco.title_bar = crate::render::decorations::render_title_bar(
                     deco.width,
                     deco.focused,
                     false,
@@ -976,18 +978,18 @@ impl Srwc {
             let size = window.geometry().size;
 
             // Close button (checked before title bar)
-            if crate::decorations::close_button_contains(pos, loc, size.w, bar_height) {
+            if crate::render::decorations::close_button_contains(pos, loc, size.w, bar_height) {
                 return Some((window.clone(), DecorationHit::CloseButton));
             }
 
             // Title bar
-            if crate::decorations::title_bar_contains(pos, loc, size.w, bar_height) {
+            if crate::render::decorations::title_bar_contains(pos, loc, size.w, bar_height) {
                 return Some((window.clone(), DecorationHit::TitleBar));
             }
 
             // Resize borders
             if let Some(edge) =
-                crate::decorations::resize_edge_at(pos, loc, size, bar_height, border_width)
+                crate::render::decorations::resize_edge_at(pos, loc, size, bar_height, border_width)
             {
                 return Some((window.clone(), DecorationHit::ResizeBorder(edge)));
             }

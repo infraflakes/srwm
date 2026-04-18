@@ -44,11 +44,7 @@ impl Srwc {
             Action::CloseWindow => {
                 let keyboard = self.keyboard();
                 if let Some(focus) = keyboard.current_focus() {
-                    let window = self
-                        .space
-                        .elements()
-                        .find(|w| w.wl_surface().as_deref() == Some(&focus.0))
-                        .cloned();
+                    let window = self.window_for_surface(&focus.0);
                     if let Some(window) = window {
                         window.send_close();
                     }
@@ -60,11 +56,7 @@ impl Srwc {
                     if srwc::config::applied_rule(&focus.0).is_some_and(|r| r.widget) {
                         return;
                     }
-                    let window = self
-                        .space
-                        .elements()
-                        .find(|w| w.wl_surface().as_deref() == Some(&focus.0))
-                        .cloned();
+                    let window = self.window_for_surface(&focus.0);
                     if let Some(window) = window
                         && let Some(loc) = self.space.element_location(&window)
                     {
@@ -99,10 +91,7 @@ impl Srwc {
                     if srwc::config::applied_rule(&focus.0).is_some_and(|r| r.widget) {
                         return None;
                     }
-                    self.space
-                        .elements()
-                        .find(|w| w.wl_surface().as_deref() == Some(&focus.0))
-                        .cloned()
+                    self.window_for_surface(&focus.0)
                 });
                 if let Some(window) = focused_non_widget {
                     self.navigate_to_window(&window, true);
@@ -146,12 +135,9 @@ impl Srwc {
                 }
 
                 let keyboard = self.keyboard();
-                let focused = keyboard.current_focus().and_then(|focus| {
-                    self.space
-                        .elements()
-                        .find(|w| w.wl_surface().as_deref() == Some(&focus.0))
-                        .cloned()
-                });
+                let focused = keyboard
+                    .current_focus()
+                    .and_then(|focus| self.window_for_surface(&focus.0));
 
                 let viewport_size = self.get_viewport_size();
                 let vc = self.usable_center_screen();
@@ -213,12 +199,12 @@ impl Srwc {
                 }
             }
             Action::CycleWindows { backward } => {
-                if self.focus_history.is_empty() {
+                if self.focus.history.is_empty() {
                     return;
                 }
 
-                let len = self.focus_history.len();
-                if let Some(ref mut idx) = self.cycle_state {
+                let len = self.focus.history.len();
+                if let Some(ref mut idx) = self.focus.cycle_index {
                     if *backward {
                         *idx = (*idx + len - 1) % len;
                     } else {
@@ -226,11 +212,11 @@ impl Srwc {
                     }
                 } else {
                     // First Tab press: jump to previous window (index 1)
-                    self.cycle_state = Some(1 % len);
+                    self.focus.cycle_index = Some(1 % len);
                 }
 
-                let idx = self.cycle_state.unwrap();
-                if let Some(window) = self.focus_history.get(idx).cloned() {
+                let idx = self.focus.cycle_index.unwrap();
+                if let Some(window) = self.focus.history.get(idx).cloned() {
                     self.navigate_to_window(&window, false);
                 }
             }
@@ -317,11 +303,7 @@ impl Srwc {
                 } else {
                     let keyboard = self.keyboard();
                     if let Some(focus) = keyboard.current_focus() {
-                        let window = self
-                            .space
-                            .elements()
-                            .find(|w| w.wl_surface().as_deref() == Some(&focus.0))
-                            .cloned();
+                        let window = self.window_for_surface(&focus.0);
                         if let Some(window) = window {
                             self.enter_fullscreen(&window);
                         }
@@ -331,11 +313,7 @@ impl Srwc {
             Action::FitWindow => {
                 let keyboard = self.keyboard();
                 if let Some(focus) = keyboard.current_focus() {
-                    let window = self
-                        .space
-                        .elements()
-                        .find(|w| w.wl_surface().as_deref() == Some(&focus.0))
-                        .cloned();
+                    let window = self.window_for_surface(&focus.0);
                     if let Some(window) = window {
                         self.toggle_fit_window(&window);
                     }
@@ -347,11 +325,7 @@ impl Srwc {
                     if srwc::config::applied_rule(&focus.0).is_some_and(|r| r.widget) {
                         return;
                     }
-                    let window = self
-                        .space
-                        .elements()
-                        .find(|w| w.wl_surface().as_deref() == Some(&focus.0))
-                        .cloned();
+                    let window = self.window_for_surface(&focus.0);
                     if let Some(window) = window
                         && let Some(from_output) = self.output_for_window(&window)
                         && let Some(target_output) = self.output_in_direction(&from_output, dir)
@@ -386,20 +360,20 @@ impl Srwc {
             Action::Screenshot => {
                 // Open interactive screenshot UI — capture happens in render loop
                 // where the renderer is available.
-                self.pending_screenshot = true;
+                self.screenshot.pending = true;
             }
             Action::ScreenshotScreen => {
-                self.pending_screenshot_screen = true;
+                self.screenshot.pending_screen = true;
             }
             Action::ConfirmScreenshot => {
                 self.confirm_screenshot();
             }
             Action::CancelScreenshot => {
                 self.restore_pointer_to_canvas();
-                self.screenshot_ui.close();
+                self.screenshot.ui.close();
             }
             Action::ScreenshotTogglePointer => {
-                self.screenshot_ui.toggle_pointer();
+                self.screenshot.ui.toggle_pointer();
             }
         }
     }

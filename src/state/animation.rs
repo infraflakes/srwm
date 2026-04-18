@@ -83,49 +83,6 @@ impl Srwc {
         pointer.frame(self);
     }
 
-    /// Apply scroll momentum each frame. Suppressed during active
-    /// PanGrab to avoid interfering with grab tracking.
-    pub fn apply_scroll_momentum(&mut self, dt: Duration) {
-        if self.with_output_state(|os| os.panning).unwrap_or(false) {
-            return;
-        }
-        let delta = self
-            .with_output_state(|os| os.momentum.tick(dt))
-            .unwrap_or_default();
-        let Some(delta) = delta else {
-            return;
-        };
-
-        self.with_output_state(|os| os.camera += delta);
-        self.update_output_from_camera();
-
-        // Shift pointer canvas position so screen position stays fixed
-        let pos = self.pointer().current_location();
-        self.warp_pointer(pos + delta);
-    }
-
-    /// Apply edge auto-pan each frame during a window drag near viewport edges.
-    /// Synthetic pointer motion keeps cursor at the same screen position and
-    /// lets the active MoveSurfaceGrab reposition the window automatically.
-    pub fn apply_edge_pan(&mut self) {
-        let canvas_delta = self
-            .with_output_state(|os| {
-                let velocity = os.edge_pan_velocity?;
-                let zoom = os.zoom;
-                let delta = Point::from((velocity.x / zoom, velocity.y / zoom));
-                os.camera += delta;
-                Some(delta)
-            })
-            .flatten();
-        let Some(canvas_delta) = canvas_delta else {
-            return;
-        };
-        self.update_output_from_camera();
-
-        let pos = self.pointer().current_location();
-        self.warp_pointer(pos + canvas_delta);
-    }
-
     /// Apply a viewport pan delta with momentum accumulation.
     /// Call this from any input path that should drift (scroll, click-drag, future gestures).
     /// Targets the active output (where the pointer is).
@@ -199,32 +156,6 @@ impl Srwc {
         super::output_state(output).momentum.launch();
     }
 
-    /// Advance the camera animation toward `camera_target` using frame-rate independent lerp.
-    /// Shifts the pointer by the camera delta so the cursor stays at the same screen position.
-    pub fn apply_camera_animation(&mut self, dt: Duration) {
-        let factor = self.animation_factor(dt);
-        let result = self.with_output_state(|os| {
-            let target = os.camera_target?;
-            let old_camera = os.camera;
-            let dx = target.x - old_camera.x;
-            let dy = target.y - old_camera.y;
-
-            if dx * dx + dy * dy < 0.25 {
-                os.camera = target;
-                os.camera_target = None;
-            } else {
-                os.camera = Point::from((old_camera.x + dx * factor, old_camera.y + dy * factor));
-            }
-            Some(os.camera - old_camera)
-        });
-
-        if let Some(delta) = result.flatten() {
-            self.update_output_from_camera();
-            let pos = self.pointer().current_location();
-            self.warp_pointer(pos + delta);
-        }
-    }
-
     /// Manage the loading cursor: activate after grace period, clear after deadline.
     pub fn check_exec_cursor_timeout(&mut self) {
         let Some(deadline) = self.cursor.exec_cursor_deadline else {
@@ -244,88 +175,8 @@ impl Srwc {
         }
     }
 
-    /// Advance zoom animation toward `zoom_target` using frame-rate independent lerp.
-    /// When `zoom_animation_center` is set (combined zoom+camera animation), lerps
-    /// the on-screen center directly and derives camera, preventing lateral drift.
-    /// Otherwise just adjusts pointer so cursor stays at the same screen position.
-    pub fn apply_zoom_animation(&mut self, dt: Duration) {
-        let factor = self.animation_factor(dt);
-        let vc = self.usable_center_screen();
-
-        let (old_zoom, old_camera, new_zoom, new_camera, warp) = self
-            .with_output_state(|os| {
-                let target = os.zoom_target?;
-                let old_zoom = os.zoom;
-                let old_camera = os.camera;
-
-                let dz = target - old_zoom;
-                if dz.abs() < 0.001 {
-                    os.zoom = target;
-                    os.zoom_target = None;
-                    // Trigger blur update if zoom finished
-                    // self.render.blur_scene_generation += 1; // Handled below
-                } else {
-                    os.zoom = old_zoom + dz * factor;
-                }
-
-                if let Some(target_center) = os.zoom_animation_center {
-                    let current_center: Point<f64, Logical> = Point::from((
-                        old_camera.x + vc.x / old_zoom,
-                        old_camera.y + vc.y / old_zoom,
-                    ));
-                    let cx = current_center.x + (target_center.x - current_center.x) * factor;
-                    let cy = current_center.y + (target_center.y - current_center.y) * factor;
-
-                    let cur_zoom = os.zoom;
-                    os.camera = Point::from((cx - vc.x / cur_zoom, cy - vc.y / cur_zoom));
-
-                    // Suppress camera_animation — we set camera directly
-                    os.camera_target = None;
-
-                    if os.zoom_target.is_none() {
-                        let final_camera = Point::from((
-                            target_center.x - vc.x / cur_zoom,
-                            target_center.y - vc.y / cur_zoom,
-                        ));
-                        os.zoom_animation_center = None;
-                        os.camera_target = Some(final_camera);
-                    }
-                    Some((old_zoom, old_camera, os.zoom, os.camera, true))
-                } else if os.zoom != old_zoom {
-                    Some((old_zoom, old_camera, os.zoom, os.camera, true))
-                } else {
-                    Some((old_zoom, old_camera, os.zoom, os.camera, false))
-                }
-            })
-            .flatten()
-            .unwrap_or((1.0, Point::default(), 1.0, Point::default(), false));
-
-        if warp && ((new_zoom - old_zoom).abs() > 0.0 || (new_camera.x - old_camera.x).abs() > 0.0)
-        {
-            self.update_output_from_camera();
-            let pos = self.pointer().current_location();
-            let screen_x: f64 = (pos.x - old_camera.x) * old_zoom;
-            let screen_y: f64 = (pos.y - old_camera.y) * old_zoom;
-            let new_pos = Point::from((
-                screen_x / new_zoom + new_camera.x,
-                screen_y / new_zoom + new_camera.y,
-            ));
-            self.warp_pointer(new_pos);
-        }
-
-        // Final snapped check for blur
-        if self
-            .with_output_state(|os| os.zoom_target.is_none())
-            .unwrap_or(false)
-        {
-            self.render.blur_scene_generation += 1;
-        }
-    }
-
-    // -- Multi-output animation ticking (udev backend) --
-    // The existing apply_* methods above operate on active_output() and are used
-    // by the winit backend (single output, timer-based). Winit gets away with
-    // tick-in-render because it's always single-output with a fixed timer.
+    // -- Per-output animation ticking --
+    // Called from tick_all_animations() for both winit and udev backends.
 
     /// Tick all per-output animations once per iteration.
     /// Called from udev render_if_needed() before any render_frame() calls.

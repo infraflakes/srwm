@@ -51,9 +51,13 @@ impl Screencasting {
 
 impl Srwc {
     fn prepare_pw_cast(&mut self) -> anyhow::Result<(GbmDevice<DrmDeviceFd>, FormatSet)> {
-        let gbm = self.gbm_device.clone().context("no GBM device available")?;
+        let gbm = self
+            .screencast
+            .gbm_device
+            .clone()
+            .context("no GBM device available")?;
 
-        let casting = self.screencasting.as_mut().unwrap();
+        let casting = self.screencast.screencasting.as_mut().unwrap();
 
         // Ensure PipeWire is initialized.
         if casting.pipewire.is_none() {
@@ -76,7 +80,7 @@ impl Srwc {
             PwToSrwc::StopCast { session_id } => self.stop_cast(session_id),
             PwToSrwc::Redraw { stream_id } => {
                 // Request a redraw for the output associated with this cast.
-                let casting = self.screencasting.as_ref();
+                let casting = self.screencast.screencasting.as_ref();
                 if let Some(casting) = casting
                     && let Some(cast) = casting.casts.iter().find(|c| c.stream_id == stream_id)
                     && cast.is_active()
@@ -89,7 +93,7 @@ impl Srwc {
             }
             PwToSrwc::FatalError => {
                 tracing::warn!("stopping PipeWire due to fatal error");
-                if let Some(ref mut casting) = self.screencasting
+                if let Some(ref mut casting) = self.screencast.screencasting
                     && let Some(pw) = casting.pipewire.take()
                 {
                     let mut ids = HashSet::new();
@@ -182,6 +186,7 @@ impl Srwc {
                     }
                 };
                 let pw = self
+                    .screencast
                     .screencasting
                     .as_ref()
                     .unwrap()
@@ -203,7 +208,12 @@ impl Srwc {
                 );
                 match res {
                     Ok(cast) => {
-                        self.screencasting.as_mut().unwrap().casts.push(cast);
+                        self.screencast
+                            .screencasting
+                            .as_mut()
+                            .unwrap()
+                            .casts
+                            .push(cast);
                     }
                     Err(err) => {
                         tracing::warn!("error starting screencast: {err:?}");
@@ -229,7 +239,7 @@ impl Srwc {
 
         let mut casts_to_stop = vec![];
 
-        let casting = self.screencasting.as_mut().unwrap();
+        let casting = self.screencast.screencasting.as_mut().unwrap();
         let mut casts = mem::take(&mut casting.casts);
         for cast in &mut casts {
             if !cast.is_active() {
@@ -260,7 +270,7 @@ impl Srwc {
                 cast.last_frame_time = target_presentation_time;
             }
         }
-        self.screencasting.as_mut().unwrap().casts = casts;
+        self.screencast.screencasting.as_mut().unwrap().casts = casts;
 
         for id in casts_to_stop {
             self.stop_cast(id);
@@ -276,7 +286,7 @@ impl Srwc {
         let scale = Scale::from(output.current_scale().fractional_scale());
         let mut casts_to_stop = vec![];
 
-        let casting = self.screencasting.as_mut().unwrap();
+        let casting = self.screencast.screencasting.as_mut().unwrap();
         let mut casts = mem::take(&mut casting.casts);
         for cast in &mut casts {
             if !cast.is_active() {
@@ -349,7 +359,7 @@ impl Srwc {
                 cast.last_frame_time = target_presentation_time;
             }
         }
-        self.screencasting.as_mut().unwrap().casts = casts;
+        self.screencast.screencasting.as_mut().unwrap().casts = casts;
 
         for id in casts_to_stop {
             self.stop_cast(id);
@@ -357,7 +367,7 @@ impl Srwc {
     }
 
     pub fn stop_cast(&mut self, session_id: CastSessionId) {
-        let Some(casting) = self.screencasting.as_mut() else {
+        let Some(casting) = self.screencast.screencasting.as_mut() else {
             return;
         };
 
@@ -374,7 +384,7 @@ impl Srwc {
         }
 
         // Also stop the D-Bus session
-        if let Some(ref conn) = self.conn_screen_cast {
+        if let Some(ref conn) = self.screencast.conn_screen_cast {
             let server = conn.object_server();
             let path = format!("/org/gnome/Mutter/ScreenCast/Session/u{}", session_id.get());
             if let Ok(iface) = server.interface::<_, mutter_screen_cast::Session>(path) {

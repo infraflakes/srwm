@@ -18,8 +18,8 @@ use smithay::{
 
 use smithay::wayland::seat::WaylandFocus;
 
-use crate::decorations::DecorationHit;
-use crate::grabs::{MoveSurfaceGrab, NavigateGrab, PanGrab, ResizeState, ResizeSurfaceGrab};
+use crate::input::grabs::{MoveSurfaceGrab, NavigateGrab, PanGrab, ResizeState, ResizeSurfaceGrab};
+use crate::render::decorations::DecorationHit;
 use crate::state::{FocusTarget, PendingMiddleClick, Srwc};
 use smithay::reexports::wayland_server::Resource;
 use srwc::canvas::{self, CanvasPos, canvas_to_screen};
@@ -60,7 +60,7 @@ impl Srwc {
         }
 
         // Intercept buttons for screenshot UI
-        if self.screenshot_ui.is_open() && button == config::BTN_LEFT {
+        if self.screenshot.ui.is_open() && button == config::BTN_LEFT {
             let serial = SERIAL_COUNTER.next_serial();
             let time = Event::time_msec(&event);
             let screen_pos = pointer.current_location();
@@ -70,10 +70,10 @@ impl Srwc {
                     let scale = output.current_scale().fractional_scale();
                     let pt: smithay::utils::Point<i32, smithay::utils::Physical> =
                         Point::from(((screen_pos.x * scale) as i32, (screen_pos.y * scale) as i32));
-                    self.screenshot_ui.pointer_down(&output, pt);
+                    self.screenshot.ui.pointer_down(&output, pt);
                 }
             } else {
-                self.screenshot_ui.pointer_up();
+                self.screenshot.ui.pointer_up();
             }
 
             pointer.button(

@@ -1,9 +1,9 @@
 [package]
 name = "srwc"
-version = "0.2.0"
+version = "0.2.2"
 edition = "2024"
 license = "GPL-3.0-or-later"
-authors = ["Nguyen Bao Truong <infraflakes@proton.me>"]
+authors = ["infraflakes <infraflakes@proton.me>"]
 
 [dependencies]
 smithay-drm-extras = { git = "https://github.com/infraflakes/smithay.git"}

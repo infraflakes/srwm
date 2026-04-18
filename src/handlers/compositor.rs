@@ -1,7 +1,7 @@
 use std::cell::RefCell;
 
-use crate::grabs::{ResizeState, has_left, has_top};
 use crate::handlers::layer_shell::LayerDestroyedMarker;
+use crate::input::grabs::{ResizeState, has_left, has_top};
 use crate::state::{ClientState, FocusTarget, Srwc};
 use smithay::desktop::layer_map_for_output;
 use smithay::input::pointer::CursorImageStatus;
@@ -240,11 +240,7 @@ impl CompositorHandler for Srwc {
             while let Some(parent) = get_parent(&root) {
                 root = parent;
             }
-            let window = self
-                .space
-                .elements()
-                .find(|w| w.wl_surface().as_deref() == Some(&root))
-                .cloned();
+            let window = self.window_for_surface(&root);
             if let Some(window) = window {
                 window.on_commit();
 
@@ -375,8 +371,8 @@ impl CompositorHandler for Srwc {
                         }
 
                         if rule.widget {
-                            self.focus_history.retain(|w| w != &window);
-                            if let Some(prev) = self.focus_history.first().cloned() {
+                            self.focus.history.retain(|w| w != &window);
+                            if let Some(prev) = self.focus.history.first().cloned() {
                                 let serial = smithay::utils::SERIAL_COUNTER.next_serial();
                                 let keyboard = self.keyboard();
                                 let focus = prev.wl_surface().map(|s| FocusTarget(s.into_owned()));
@@ -405,7 +401,7 @@ impl CompositorHandler for Srwc {
                                 && !is_none_mode
                                 && !self.decorations.contains_key(&root.id())
                             {
-                                let deco = crate::decorations::WindowDecoration::new(
+                                let deco = crate::render::decorations::WindowDecoration::new(
                                     geo.size.w,
                                     true,
                                     &self.config.decorations,

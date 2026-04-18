@@ -7,7 +7,7 @@ use smithay::{
     utils::{Logical, Point, SERIAL_COUNTER},
 };
 
-use crate::focus::FocusTarget;
+use crate::input::focus::FocusTarget;
 use crate::state::{Srwc, output_state};
 use srwc::canvas::{CanvasPos, canvas_to_screen};
 
@@ -101,5 +101,5 @@ impl PointerGrab<Srwc> for PanGrab {
 
     fn unset(&mut self, _data: &mut Srwc) {}
 
-    crate::grabs::forward_pointer_grab_methods!();
+    crate::input::grabs::forward_pointer_grab_methods!();
 }

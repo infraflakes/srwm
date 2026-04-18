@@ -20,7 +20,7 @@ use smithay::{
 };
 
 use super::pointer::{edges_from_position, resize_cursor};
-use crate::grabs::{MoveSurfaceGrab, ResizeState, compute_resize, send_resize_configure};
+use crate::input::grabs::{MoveSurfaceGrab, ResizeState, compute_resize, send_resize_configure};
 use crate::state::{FocusTarget, Srwc};
 use srwc::canvas::{self, CanvasPos, canvas_to_screen};
 use srwc::config::{

@@ -92,5 +92,5 @@ impl PointerGrab<Srwc> for NavigateGrab {
 
     fn unset(&mut self, _data: &mut Srwc) {}
 
-    crate::grabs::forward_pointer_grab_methods!();
+    crate::input::grabs::forward_pointer_grab_methods!();
 }

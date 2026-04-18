@@ -152,7 +152,7 @@ pub fn spawn_xwayland(
                     data.pending_center.remove(&*wl_surface);
                     data.pending_size.remove(&*wl_surface);
                 }
-                data.focus_history.retain(|fw| fw != w);
+                data.focus.history.retain(|fw| fw != w);
                 data.space.unmap_elem(w);
             }
 

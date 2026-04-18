@@ -4,6 +4,7 @@ use zbus::blocking::Connection;
 use zbus::object_server::Interface;
 pub mod gnome_shell_introspect;
 pub mod mutter_display_config;
+pub(crate) mod screencasting;
 
 pub use mutter_screen_cast::ScreenCast;
 

@@ -12,9 +12,9 @@ use smithay::{
 
 use super::OutputRenderElements;
 
-static BLUR_DOWN_SRC: &str = include_str!("../shaders/blur_down.glsl");
-static BLUR_UP_SRC: &str = include_str!("../shaders/blur_up.glsl");
-static BLUR_MASK_SRC: &str = include_str!("../shaders/blur_mask.glsl");
+static BLUR_DOWN_SRC: &str = include_str!("shaders/blur_down.glsl");
+static BLUR_UP_SRC: &str = include_str!("shaders/blur_up.glsl");
+static BLUR_MASK_SRC: &str = include_str!("shaders/blur_mask.glsl");
 
 /// Per-window cached textures for Kawase blur ping-pong passes.
 pub struct BlurCache {

@@ -446,7 +446,7 @@ pub fn applied_rule(
             .data_map
             .get::<std::sync::Mutex<AppliedWindowRule>>()
             .and_then(|m| m.lock().ok())
-            .map(|guard| guard.clone())
+            .map(|guard| AppliedWindowRule::clone(&guard))
     })
 }
 
@@ -522,7 +522,7 @@ pub enum OutputMode {
 }
 
 /// Built-in dot grid shader — used when no shader_path is configured.
-pub const DEFAULT_SHADER: &str = include_str!("../shaders/dot_grid.glsl");
+pub const DEFAULT_SHADER: &str = include_str!("../render/shaders/dot_grid.glsl");
 
 #[derive(Clone, Debug, Default, PartialEq)]
 pub struct BackgroundConfig {

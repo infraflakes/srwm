@@ -102,7 +102,7 @@ impl SeatHandler for Srwc {
         set_primary_focus(dh, seat, client);
 
         // Update focus history (skip during Alt-Tab cycling — history is frozen)
-        if self.cycle_state.is_none()
+        if self.focus.cycle_index.is_none()
             && let Some(focus) = focused
         {
             self.update_focus_history(&focus.0);
@@ -129,10 +129,8 @@ impl SelectionHandler for Srwc {
         }
         let data = user_data.clone();
         std::thread::spawn(move || {
-            if mime_type == "image/png" {
-                let mut file = std::fs::File::from(fd);
-                let _ = file.write_all(&data);
-            }
+            let mut file = std::fs::File::from(fd);
+            let _ = file.write_all(&data);
         });
     }
 }
@@ -284,11 +282,7 @@ impl XdgActivationHandler for Srwc {
         if token_data.serial.is_none() {
             return;
         }
-        let window = self
-            .space
-            .elements()
-            .find(|w| w.wl_surface().as_deref() == Some(&surface))
-            .cloned();
+        let window = self.window_for_surface(&surface);
         if let Some(window) = window {
             // Skip windows that haven't rendered yet — navigate_to_window on a
             // zero-sized window sets a fractional camera that breaks cascade.
@@ -363,11 +357,7 @@ impl PointerConstraintsHandler for Srwc {
         }
 
         // location is surface-local. Find the surface's canvas origin to convert.
-        let window = self
-            .space
-            .elements()
-            .find(|w| w.wl_surface().as_deref() == Some(surface))
-            .cloned();
+        let window = self.window_for_surface(surface);
         if let Some(window) = window
             && let Some(loc) = self.space.element_location(&window)
         {
@@ -529,15 +519,11 @@ impl XdgDecorationHandler for Srwc {
             self.pending_ssd.insert(wl_surface.id());
             // If the window is already mapped (request_mode came after first commit),
             // create the SSD decoration immediately.
-            let window = self
-                .space
-                .elements()
-                .find(|w| w.wl_surface().as_deref() == Some(&wl_surface))
-                .cloned();
+            let window = self.window_for_surface(&wl_surface);
             if let Some(window) = window {
                 let geo = window.geometry();
                 if geo.size.w > 0 && !self.decorations.contains_key(&wl_surface.id()) {
-                    let deco = crate::decorations::WindowDecoration::new(
+                    let deco = crate::render::decorations::WindowDecoration::new(
                         geo.size.w,
                         true,
                         &self.config.decorations,
@@ -575,33 +561,21 @@ impl ForeignToplevelHandler for Srwc {
     }
 
     fn activate(&mut self, wl_surface: WlSurface) {
-        let window = self
-            .space
-            .elements()
-            .find(|w| w.wl_surface().as_deref() == Some(&wl_surface))
-            .cloned();
+        let window = self.window_for_surface(&wl_surface);
         if let Some(window) = window {
             self.navigate_to_window(&window, true);
         }
     }
 
     fn close(&mut self, wl_surface: WlSurface) {
-        let window = self
-            .space
-            .elements()
-            .find(|w| w.wl_surface().as_deref() == Some(&wl_surface))
-            .cloned();
+        let window = self.window_for_surface(&wl_surface);
         if let Some(window) = window {
             window.send_close();
         }
     }
 
     fn set_fullscreen(&mut self, wl_surface: WlSurface, _wl_output: Option<WlOutput>) {
-        let window = self
-            .space
-            .elements()
-            .find(|w| w.wl_surface().as_deref() == Some(&wl_surface))
-            .cloned();
+        let window = self.window_for_surface(&wl_surface);
         if let Some(window) = window {
             self.enter_fullscreen(&window);
         }
@@ -614,22 +588,14 @@ impl ForeignToplevelHandler for Srwc {
     }
 
     fn set_maximized(&mut self, wl_surface: WlSurface) {
-        let window = self
-            .space
-            .elements()
-            .find(|w| w.wl_surface().as_deref() == Some(&wl_surface))
-            .cloned();
+        let window = self.window_for_surface(&wl_surface);
         if let Some(window) = window {
             self.toggle_fit_window(&window);
         }
     }
 
     fn unset_maximized(&mut self, wl_surface: WlSurface) {
-        let window = self
-            .space
-            .elements()
-            .find(|w| w.wl_surface().as_deref() == Some(&wl_surface))
-            .cloned();
+        let window = self.window_for_surface(&wl_surface);
         if let Some(window) = window {
             self.unfit_window(&window);
         }
@@ -764,7 +730,7 @@ impl SessionLockHandler for Srwc {
         self.session_lock = SessionLock::Unlocked;
         self.lock_surfaces.clear();
         // Restore focus to the most recent window
-        if let Some(window) = self.focus_history.first().cloned() {
+        if let Some(window) = self.focus.history.first().cloned() {
             let serial = smithay::utils::SERIAL_COUNTER.next_serial();
             let keyboard = self.keyboard();
             let focus = window.wl_surface().map(|s| FocusTarget(s.into_owned()));

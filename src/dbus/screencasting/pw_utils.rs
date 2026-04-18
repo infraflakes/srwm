@@ -900,7 +900,7 @@ impl Cast {
                 let source = Generic::new(sync_fd, Interest::READ, Mode::OneShot);
                 self.event_loop
                     .insert_source(source, move |_, _, state| {
-                        if let Some(ref mut casting) = state.screencasting {
+                        if let Some(ref mut casting) = state.screencast.screencasting {
                             for cast in &mut casting.casts {
                                 if cast.stream_id == stream_id {
                                     cast.queue_completed_buffers();

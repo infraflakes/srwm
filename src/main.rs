@@ -1,16 +1,12 @@
 mod backend;
 mod dbus;
-mod decorations;
-mod focus;
-mod grabs;
 mod handlers;
 mod input;
 mod install;
 mod render;
-mod screencasting;
-mod screenshot_ui;
 mod state;
 
+use crate::dbus::screencasting::Screencasting;
 use smithay::reexports::wayland_server::Resource;
 use smithay::wayland::shell::xdg::XdgToplevelSurfaceData;
 use state::{ClientState, Srwc};
@@ -23,6 +19,23 @@ fn has_systemctl() -> bool {
         .stderr(std::process::Stdio::null())
         .status()
         .is_ok_and(|s| s.success())
+}
+
+fn update_dbus_activation_env() {
+    let session_vars = "WAYLAND_DISPLAY DISPLAY XDG_CURRENT_DESKTOP XDG_SESSION_TYPE XDG_SESSION_DESKTOP XDG_SESSION_CLASS";
+    let cmd = format!(
+        "hash dbus-update-activation-environment 2>/dev/null && \
+         dbus-update-activation-environment {session_vars}"
+    );
+    match std::process::Command::new("/bin/sh")
+        .args(["-c", &cmd])
+        .spawn()
+    {
+        Ok(mut child) => {
+            let _ = child.wait();
+        }
+        Err(e) => tracing::warn!("Failed to import session environment: {e}"),
+    }
 }
 
 fn main() -> Result<(), Box<dyn std::error::Error>> {
@@ -112,6 +125,30 @@ fn main() -> Result<(), Box<dyn std::error::Error>> {
         }
     };
 
+    // Now create listening socket and advertise it to child processes
+    // BEFORE D-Bus connections (zbus receiver threads) are initialized.
+    let listening_socket = smithay::wayland::socket::ListeningSocketSource::new_auto()?;
+    let socket_name = listening_socket
+        .socket_name()
+        .to_string_lossy()
+        .into_owned();
+    tracing::info!("Listening on WAYLAND_DISPLAY={socket_name}");
+    // Standard Wayland session env vars for child processes.
+    // SAFETY: No threads have been spawned yet — Config::load() ran in
+    // Srwc::new() and backend init does not start background threads.
+    // D-Bus connections (which spawn zbus receiver threads) are created below.
+    unsafe {
+        std::env::set_var("WAYLAND_DISPLAY", &socket_name);
+        std::env::set_var("XDG_SESSION_TYPE", "wayland");
+        std::env::set_var("XDG_CURRENT_DESKTOP", "srwc");
+        std::env::set_var("XDG_SESSION_CLASS", "user");
+        std::env::set_var("XDG_SESSION_DESKTOP", "srwc");
+    }
+
+    let is_session = backend_name == "udev";
+    let has_systemd = is_session && has_systemctl();
+    data.has_systemd = has_systemd;
+
     // Initialize screencasting + D-Bus ScreenCast service (udev only)
     if backend_name == "udev" {
         use std::collections::HashMap;
@@ -135,10 +172,10 @@ fn main() -> Result<(), Box<dyn std::error::Error>> {
             .expect("failed to insert service channel source");
 
         let service_channel = dbus::mutter_service_channel::ServiceChannel::new(service_tx);
-        data.conn_service_channel = dbus::try_start(service_channel);
+        data.screencast.conn_service_channel = dbus::try_start(service_channel);
 
         // Initialize screencasting subsystem (creates the PipeWire calloop channel)
-        data.screencasting = Some(screencasting::Screencasting::new(&event_loop.handle()));
+        data.screencast.screencasting = Some(Screencasting::new(&event_loop.handle()));
 
         // Create D-Bus calloop channel for ScreenCast messages
         let (to_srwc, from_screen_cast) = smithay::reexports::calloop::channel::channel();
@@ -154,7 +191,7 @@ fn main() -> Result<(), Box<dyn std::error::Error>> {
 
         // Build the output map for the D-Bus interface
         let ipc_outputs = Arc::new(Mutex::new(HashMap::new()));
-        data.ipc_outputs = Some(ipc_outputs.clone());
+        data.screencast.ipc_outputs = Some(ipc_outputs.clone());
 
         // Backfill outputs created during init_udev() before ipc_outputs was set.
         for output in data.space.outputs() {
@@ -176,11 +213,11 @@ fn main() -> Result<(), Box<dyn std::error::Error>> {
 
         // Create and start the ScreenCast D-Bus service
         let screen_cast = dbus::ScreenCast::new(ipc_outputs.clone(), to_srwc);
-        data.conn_screen_cast = dbus::start_screen_cast(screen_cast);
+        data.screencast.conn_screen_cast = dbus::start_screen_cast(screen_cast);
 
         // DisplayConfig — shares the same ipc_outputs Arc as ScreenCast
         let display_config = dbus::mutter_display_config::DisplayConfig::new(ipc_outputs.clone());
-        data.conn_display_config = dbus::try_start(display_config);
+        data.screencast.conn_display_config = dbus::try_start(display_config);
 
         // Introspect — window list for the portal picker
         let (introspect_tx, introspect_rx) = calloop::channel::channel();
@@ -229,7 +266,7 @@ fn main() -> Result<(), Box<dyn std::error::Error>> {
             .expect("failed to insert introspect source");
 
         let introspect = dbus::gnome_shell_introspect::Introspect::new(introspect_tx, from_srwc);
-        data.conn_introspect = dbus::try_start(introspect);
+        data.screencast.conn_introspect = dbus::try_start(introspect);
     }
 
     // Register the Wayland Display as a calloop source so client messages
@@ -247,26 +284,7 @@ fn main() -> Result<(), Box<dyn std::error::Error>> {
             Ok(smithay::reexports::calloop::PostAction::Continue)
         })?;
 
-    // Now create listening socket and advertise it to child processes
-    let listening_socket = smithay::wayland::socket::ListeningSocketSource::new_auto()?;
-    let socket_name = listening_socket
-        .socket_name()
-        .to_string_lossy()
-        .into_owned();
-    tracing::info!("Listening on WAYLAND_DISPLAY={socket_name}");
-    // Standard Wayland session env vars for child processes
-    unsafe { std::env::set_var("WAYLAND_DISPLAY", &socket_name) };
-    unsafe { std::env::set_var("XDG_SESSION_TYPE", "wayland") };
-    unsafe { std::env::set_var("XDG_CURRENT_DESKTOP", "srwc") };
-    // Toolkit env vars (MOZ_ENABLE_WAYLAND, QT_QPA_PLATFORM, etc.) are now
-    // set in Config::load() with user [env] overrides taking precedence.
-    unsafe { std::env::set_var("XDG_SESSION_CLASS", "user") };
-    unsafe { std::env::set_var("XDG_SESSION_DESKTOP", "srwc") };
-
-    let is_session = backend_name == "udev";
-    let has_systemd = is_session && has_systemctl();
-    data.has_systemd = has_systemd;
-
+    // Initialize screencasting + D-Bus ScreenCast service (udev only)
     if has_systemd {
         // systemd-specific: start graphical-session targets via transient anchor
         let _ = std::process::Command::new("systemctl")
@@ -286,36 +304,17 @@ fn main() -> Result<(), Box<dyn std::error::Error>> {
 
         // Import specific session vars to systemd
         let session_vars = "WAYLAND_DISPLAY DISPLAY XDG_CURRENT_DESKTOP XDG_SESSION_TYPE XDG_SESSION_DESKTOP XDG_SESSION_CLASS";
-        let cmd = format!(
-            "systemctl --user import-environment {session_vars}; \
-             hash dbus-update-activation-environment 2>/dev/null && \
-             dbus-update-activation-environment {session_vars}"
-        );
-        match std::process::Command::new("/bin/sh")
+        let cmd = format!("systemctl --user import-environment {session_vars}");
+        let _ = std::process::Command::new("/bin/sh")
             .args(["-c", &cmd])
             .spawn()
-        {
-            Ok(mut child) => {
-                let _ = child.wait();
-            }
-            Err(e) => tracing::warn!("Failed to import session environment: {e}"),
-        }
+            .inspect_err(|e| tracing::warn!("Failed to import session environment to systemd: {e}"))
+            .and_then(|mut c| c.wait());
+        // Also update D-Bus activation environment
+        update_dbus_activation_env();
     } else if is_session {
         // Non-systemd: only update D-Bus activation environment
-        let session_vars = "WAYLAND_DISPLAY DISPLAY XDG_CURRENT_DESKTOP XDG_SESSION_TYPE XDG_SESSION_DESKTOP XDG_SESSION_CLASS";
-        let cmd = format!(
-            "hash dbus-update-activation-environment 2>/dev/null && \
-             dbus-update-activation-environment {session_vars}"
-        );
-        match std::process::Command::new("/bin/sh")
-            .args(["-c", &cmd])
-            .spawn()
-        {
-            Ok(mut child) => {
-                let _ = child.wait();
-            }
-            Err(e) => tracing::warn!("Failed to import session environment: {e}"),
-        }
+        update_dbus_activation_env();
         tracing::info!("systemd not found, skipping graphical-session target setup");
     }
 

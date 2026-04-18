@@ -88,19 +88,19 @@ impl Srwc {
             if window.is_modal() {
                 return;
             }
-            self.focus_history.retain(|w| w != &window);
-            self.focus_history.insert(0, window);
+            self.focus.history.retain(|w| w != &window);
+            self.focus.history.insert(0, window);
         }
     }
 
     /// End Alt-Tab cycling: commit the selected window to focus history.
     pub fn end_cycle(&mut self) {
-        let idx = self.cycle_state.take();
+        let idx = self.focus.cycle_index.take();
         if let Some(idx) = idx
-            && let Some(window) = self.focus_history.get(idx).cloned()
+            && let Some(window) = self.focus.history.get(idx).cloned()
         {
-            self.focus_history.retain(|w| w != &window);
-            self.focus_history.insert(0, window);
+            self.focus.history.retain(|w| w != &window);
+            self.focus.history.insert(0, window);
         }
     }
 }

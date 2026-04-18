@@ -153,7 +153,7 @@ impl XwmHandler for Srwc {
                 self.update_output_from_camera();
             }
 
-            self.focus_history.retain(|w| w != &smithay_window);
+            self.focus.history.retain(|w| w != &smithay_window);
             self.space.unmap_elem(&smithay_window);
         }
     }
@@ -204,8 +204,8 @@ impl XwmHandler for Srwc {
             let is_resizing = with_states(&wl_surface, |states| {
                 states
                     .data_map
-                    .get::<std::cell::RefCell<crate::grabs::ResizeState>>()
-                    .is_some_and(|s| !matches!(*s.borrow(), crate::grabs::ResizeState::Idle))
+                    .get::<std::cell::RefCell<crate::input::grabs::ResizeState>>()
+                    .is_some_and(|s| !matches!(*s.borrow(), crate::input::grabs::ResizeState::Idle))
             });
             if is_resizing {
                 let new_loc = loc + smithay::utils::Point::from((dx, dy));
@@ -246,8 +246,8 @@ impl XwmHandler for Srwc {
         with_states(&wl_surface, |states| {
             states
                 .data_map
-                .get_or_insert(|| std::cell::RefCell::new(crate::grabs::ResizeState::Idle))
-                .replace(crate::grabs::ResizeState::Resizing {
+                .get_or_insert(|| std::cell::RefCell::new(crate::input::grabs::ResizeState::Idle))
+                .replace(crate::input::grabs::ResizeState::Resizing {
                     edges: xdg_edge,
                     initial_window_location,
                     initial_window_size,
@@ -259,7 +259,7 @@ impl XwmHandler for Srwc {
 
         let output = self.active_output().unwrap();
         let serial = SERIAL_COUNTER.next_serial();
-        let grab = crate::grabs::ResizeSurfaceGrab {
+        let grab = crate::input::grabs::ResizeSurfaceGrab {
             start_data,
             window: smithay_window,
             edges: xdg_edge,
@@ -293,7 +293,7 @@ impl XwmHandler for Srwc {
         };
 
         let initial_window_location = self.space.element_location(&smithay_window).unwrap();
-        let grab = crate::grabs::MoveSurfaceGrab::new(
+        let grab = crate::input::grabs::MoveSurfaceGrab::new(
             start_data,
             smithay_window,
             initial_window_location,
@@ -406,7 +406,7 @@ impl XWaylandShellHandler for Srwc {
         if (wants_ssd || rule_forces_ssd) && !rule_forces_none {
             let geo = smithay_window.geometry();
             if geo.size.w > 0 && !self.decorations.contains_key(&wl_surface.id()) {
-                let deco = crate::decorations::WindowDecoration::new(
+                let deco = crate::render::decorations::WindowDecoration::new(
                     geo.size.w,
                     true,
                     &self.config.decorations,
@@ -424,8 +424,8 @@ impl XWaylandShellHandler for Srwc {
             self.navigate_to_window(&smithay_window, true);
         } else {
             // Widget: refocus previous window if this stole focus
-            self.focus_history.retain(|w| w != &smithay_window);
-            if let Some(prev) = self.focus_history.first().cloned() {
+            self.focus.history.retain(|w| w != &smithay_window);
+            if let Some(prev) = self.focus.history.first().cloned() {
                 let serial = SERIAL_COUNTER.next_serial();
                 let keyboard = self.keyboard();
                 let focus = prev.wl_surface().map(|s| FocusTarget(s.into_owned()));

@@ -1,4 +1,5 @@
-pub mod canvas;
 pub mod config;
 pub mod protocols;
-pub mod window_ext;
+mod shell;
+pub use shell::canvas;
+pub use shell::window_ext;

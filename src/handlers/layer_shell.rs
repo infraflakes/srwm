@@ -150,7 +150,8 @@ impl WlrLayerShellHandler for Srwc {
         if current_focus.as_ref().is_some_and(|f| f.0 == wl_surface) {
             let serial = SERIAL_COUNTER.next_serial();
             let new_focus = self
-                .focus_history
+                .focus
+                .history
                 .first()
                 .and_then(|w| w.wl_surface().map(|s| FocusTarget(s.into_owned())));
             keyboard.set_focus(self, new_focus, serial);
